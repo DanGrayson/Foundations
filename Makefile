@@ -113,4 +113,4 @@ isolate-bug: sub/coq-tools/find-bug.py
 		--arg " -indices-matter" \
 		--arg " -type-in-type" \
 		Foundations/Generalities/uu0a.v \
-		isolated-bug.v
+		isolated-bug.v 
