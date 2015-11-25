@@ -196,8 +196,20 @@ intros a b . simpl in * .  intro e . set ( int := intdomax X ( pr1 a ) ( pr1 b )
 
 simpl .  apply ( nonzeroax X ) . Defined .
 
-
-
+Definition intdomnonzerosubmonoid_ne (X:intdom) (neq:neqReln X) :
+  @subabmonoids ( rngmultabmonoid X ) .
+Proof.
+  intros. exists (λ x, neq x 0).
+  split.
+  { intros x y. apply neg_to_negProp.
+    apply (negf (pr2 (pr2 X) (pr1 x) (pr1 y))).
+    intro or; apply (or hfalse); clear or; intro or.
+    induction or as [a|b].
+    - contradicts (negProp_to_neg (pr2 x)) a.
+    - contradicts (negProp_to_neg (pr2 y)) b. }
+  apply neg_to_negProp.
+  exact (pr1 (pr2 X)).
+Defined.
 
 (** **** Relations similar to "greater" on integral domains *)
 
