@@ -50,11 +50,11 @@ Section def_hss.
 Variable C : precategory.
 Variable hs : has_homsets C.
 
-Variable CP : Coproducts C.
+Variable CP : Coproducts C hs.
 
 Local Notation "'EndC'":= ([C, C, hs]) .
 Let hsEndC : has_homsets EndC := functor_category_has_homsets C C hs.
-Let CPEndC : Coproducts EndC := Coproducts_functor_precat _ _ CP hs.
+Let CPEndC : Coproducts EndC hsEndC := Coproducts_functor_precat _ _ hs hs CP .
 
 Variable H : Signature C hs.
 
@@ -65,7 +65,7 @@ Let θ_strength2_int := Sig_strength_law2 _ _ H.
 
 Let Id_H
 : functor EndC EndC
-  := coproduct_functor _ _ CPEndC
+  := coproduct_functor _ _ hsEndC hsEndC CPEndC
                        (constant_functor _ _ (functor_identity _ : EndC))
                        H.
 
@@ -75,11 +75,13 @@ Local Notation "'Ptd'" := (precategory_Ptd C hs).
 Local Notation "'EndC'":= ([C, C, hs]) .
 
 
+Set Automatic Introduction.
+
 (* An Id_H algebra is a pointed functor *)
 
 Definition eta_from_alg (T : algebra_ob Id_H) : EndC ⟦ functor_identity _,  `T ⟧.
 Proof.
-  exact (CoproductIn1 _ _ ;; alg_map _ T).
+  exact (CoproductIn1 _ _ _ ;; alg_map _ T).
 Defined.
 
 Local Notation η := eta_from_alg.
@@ -92,7 +94,7 @@ Defined.
 
 Definition tau_from_alg (T : algebra_ob Id_H) : EndC ⟦H `T, `T⟧.
 Proof.
-  exact (CoproductIn2 _ _ ;; alg_map _ T).
+  exact (CoproductIn2 _ _ _ ;; alg_map _ T).
 Defined.
 Local Notation τ := tau_from_alg.
 
@@ -102,16 +104,16 @@ Local Notation "'p' T" := (ptd_from_alg T) (at level 3).
 Coercion functor_from_algebra_ob (X : algebra_ob _ Id_H) : functor C C  := pr1 X.
 *)
 
-Local Notation "f ⊕ g" := (CoproductOfArrows _ (CPEndC _ _ ) (CPEndC _ _ ) f g) (at level 40).
-
+Local Notation "f ⊕ g" := (CoproductOfArrows _ _ (CPEndC _ _ ) (CPEndC _ _ ) f g) (at level 40).
 
 Definition bracket_property (T : algebra_ob Id_H) {Z : Ptd} (f : Z ⇒ ptd_from_alg T)
            (h : `T • (U Z)  ⇒ `T) : UU
   :=
     alg_map _ T •• (U Z) ;; h =
           identity (U Z) ⊕ θ (`T ⊗ Z) ;;
+          identity (U Z) ⊕ θ (`T ⊗ Z) ;;
           identity (U Z) ⊕ #H h ;;
-          CoproductArrow _ (CPEndC _ _ ) (#U f) (tau_from_alg T).
+          CoproductArrow EndC hsEndC (CPEndC (U Z) (H `T) ) (#U f) (tau_from_alg T).
 
 Definition bracket_at (T : algebra_ob Id_H) {Z : Ptd} (f : Z ⇒ ptd_from_alg T): UU :=
   ∃! h : `T • (U Z)  ⇒ `T, bracket_property T f h.

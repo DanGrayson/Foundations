@@ -1,6 +1,6 @@
 Require Import UniMath.Ktheory.Representation.
 Require Import UniMath.Ktheory.Precategories.
-Local Set Automatic Introduction.
+Set Automatic Introduction.
 
 Open Scope cat.
 
@@ -34,7 +34,7 @@ Section A.
   Definition CoproductIn2 {a b : C'} (CC : CoproductCocone a b) : b → CoproductObject CC
     := in_2 CC.
 
-  Definition CoproductOfArrows {a b : C'} (CCab : CoproductCocone a b) {c d : C}
+  Definition CoproductOfArrows {a b : C'} (CCab : CoproductCocone a b) {c d : C'}
              (CCcd : CoproductCocone c d) (f : a → c) (g : b → d) :
     CoproductObject CCab → CoproductObject CCcd :=
     CoproductArrow CCab (CoproductIn1 CCcd ∘ f) (CoproductIn2 CCcd ∘ g).
