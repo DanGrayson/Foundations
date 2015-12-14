@@ -34,9 +34,8 @@ Record DirectSum {C:Precategory} (h:hasZeroMaps C) I (dec : isdeceq I) (c : I ->
       ds_pr : ∀ i, Hom C ds (c i);
       ds_in : ∀ i, Hom C (c i) ds;
       ds_id : ∀ i j, ds_pr i ∘ ds_in j = identity_matrix h c dec i j;
-      ds_isprod : isUniversal (ds_pr : HomFamily C    c ds : hSet);
-      ds_issum  : isUniversal (ds_in : HomFamily C^op c ds : hSet) }.
-
+      ds_isprod : ∀ c, isweq (λ f : Hom C c ds, λ i, ds_pr i ∘ f);
+      ds_issum  : ∀ c, isweq (λ f : Hom C ds c, λ i, f ∘ ds_in i) }.
 Definition toDirectSum {C:Precategory} (h:hasZeroMaps C) {I} (dec : isdeceq I) (d:I -> ob C)
            (B:Sum d) (D:Product d)
            (is: is_isomorphism (identity_map h dec B D)) : DirectSum h I dec d.

@@ -68,10 +68,10 @@ Ltac set_logic :=
                 try apply impred_isaset;
                 try apply isasetaprop)) using M.
 
-Definition functorPrecategory (C D:Precategory) : Precategory.
+Definition functorPrecategory (C:precategory) (D:Precategory) : Precategory.
 Proof.
-  exists (functor_precategory C D (homset_property D)).
-  abstract set_logic using L.
+  exists ([C , D , homset_property D]).
+  apply functor_category_has_homsets.
 Defined.
 
 Notation "[ C , D ]" := (functorPrecategory C D) : cat.
