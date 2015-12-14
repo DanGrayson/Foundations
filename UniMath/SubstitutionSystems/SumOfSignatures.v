@@ -54,12 +54,11 @@ Section sum_of_signatures.
 Variable C : precategory.
 Variable hs : has_homsets C.
 (* Variable PP : Products C. *)
-Variable CC : Coproducts C.
+Variable CC : Coproducts C hs.
 
 Section construction.
 
-Local Notation "'CCC'" := (Coproducts_functor_precat C C CC hs : Coproducts [C, C, hs]).
-
+Let CCC := Coproducts_functor_precat C C hs hs CC : Coproducts [C, C, hs] _.
 
 Variables H1 H2 : functor [C, C, hs] [C, C, hs].
 
@@ -73,18 +72,19 @@ Variable S22 : θ_Strength2 θ2.
 
 (** * Definition of the data of the sum of two signatures *)
 
-Definition H : functor [C, C, hs] [C, C, hs] := coproduct_functor _ _ CCC H1 H2.
+Definition H : functor [C, C, hs] [C, C, hs] := coproduct_functor _ _ (functor_category_has_homsets C C hs) _ CCC H1 H2.
 
+Set Automatic Introduction.
 
 Local Definition bla1 (X : [C, C] hs) (Z : precategory_Ptd C hs) :
    ∀ c : C,
     (functor_composite_data (pr1 Z)
-     (coproduct_functor_data C C CC (H1 X) (H2 X))) c
-   ⇒ (coproduct_functor_data C C CC (H1 (functor_composite (pr1 Z) X))
+     (coproduct_functor C C hs hs CC (H1 X) (H2 X))) c
+   ⇒ (coproduct_functor C C hs hs CC (H1 (functor_composite (pr1 Z) X))
        (H2 (functor_composite (pr1 Z) X))) c.
 Proof.
   intro c.
-  apply CoproductOfArrows.
+  refine (CoproductOfArrows _ _ _ _ _ _).
   - exact (pr1 (θ1 (X ⊗ Z)) c).
   - exact (pr1 (θ2 (X ⊗ Z)) c).
 Defined.
@@ -92,13 +92,12 @@ Defined.
 Local Lemma bar (X : [C, C] hs) (Z : precategory_Ptd C hs):
    is_nat_trans
      (functor_composite_data (pr1 Z)
-        (coproduct_functor_data C C CC (H1 X) (H2 X)))
-     (coproduct_functor_data C C CC (H1 (functor_composite (pr1 Z) X))
+        (coproduct_functor C C hs hs CC (H1 X) (H2 X)))
+     (coproduct_functor C C hs hs CC (H1 (functor_composite (pr1 Z) X))
         (H2 (functor_composite (pr1 Z) X))) (bla1 X Z).
 Proof.
   intros x x' f; simpl.
   unfold bla1; simpl.
-  unfold coproduct_functor_mor.
   eapply pathscomp0; [ apply CoproductOfArrows_comp | ].
   eapply pathscomp0; [ | eapply pathsinv0; apply CoproductOfArrows_comp].
   apply CoproductOfArrows_eq.

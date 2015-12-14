@@ -185,7 +185,7 @@ End interface.
 
 Section def_functor_pointwise_coprod.
 
-Variable C D : Precategories.Precategory.
+Variable C D : precategory.
 Variable HD : Coproducts D.
 
 Definition hsD := Precategories.homset_property D.
