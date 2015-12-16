@@ -66,6 +66,26 @@ Section B.
        let G := G:[C,D] in
        functorBinarySum HD F G.
 
+  Goal ∀ (F G : [C', D', hD]) (c : C'),
+           coproduct_functor F G c = CoproductObject _ _ (HD ((F : _ ==> _) c) ((G : _ ==> _) c)).
+    intros.
+    reflexivity.
+  Qed.
+
+  Goal ∀ (F G F' G': [C', D', hD]) (p : F → F') (q : G → G') (c : C'),
+         (CoproductOfArrows _ _
+                           (Coproducts_functor_precat F G)
+                           (Coproducts_functor_precat F' G')
+                           p q : nat_trans _ _ ) c
+         =
+         CoproductOfArrows _ _
+                           (HD ((F : _ ==> _) c) ((G : _ ==> _) c))
+                           (HD ((F' : _ ==> _) c) ((G' : _ ==> _) c))
+                           ((p : nat_trans _ _) c) ((q : nat_trans _ _) c).
+    intros.
+    reflexivity.
+
+
 End B.
 
 (*  *)
