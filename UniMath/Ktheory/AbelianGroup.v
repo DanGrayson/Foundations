@@ -304,13 +304,13 @@ Module Presentation.
   Definition universalMarkedAbelianGroup0 {X I} (R:I->reln X) : abgr.
     intros.
     { exists (univ_setwithbinop R). split.
-      { refine (_,,_).
+      { unshelve refine (_,,_).
         { split.
           { exact (isassoc_univ_binop R). }
           { exists (setquotpr _ word_unit). split.
             { exact (is_left_unit_univ_binop R). }
             { exact (is_right_unit_univ_binop R). } } }
-        { refine (_,,_).
+        { unshelve refine (_,,_).
           { exact (univ_inverse R). }
           { split.
             { exact (is_left_inverse_univ_binop R). }
@@ -348,10 +348,10 @@ Module Presentation.
          { intermediate_path (unel M). exact (unitproperty f). exact (!unitproperty g). }
          { apply p. }
          (* compare duplication with the proof of MarkedAbelianGroupMap_compat *)
-         { refine (monoidfuninvtoinv f (setquotpr (smallestAdequateRelation R) w)
+         { unshelve refine (monoidfuninvtoinv f (setquotpr (smallestAdequateRelation R) w)
              @ _ @ ! monoidfuninvtoinv g (setquotpr (smallestAdequateRelation R) w)).
            apply (ap (grinv M)). apply agreement_on_gens0. assumption. }
-         { refine (
+         { unshelve refine (
                Monoid.multproperty f (setquotpr (smallestAdequateRelation R) v)
                    (setquotpr (smallestAdequateRelation R) w)
              @ _ @ !
@@ -442,13 +442,13 @@ Module Sum.                   (* coproducts *)
   Definition make {I} (G:I->abgr) : abgr.
     intros. exact (Presentation.universalMarkedAbelianGroup (R G)). Defined.
   Definition Incl {I} (G:I->abgr) (i:I) : Hom_abgr (G i) (make G).
-    intros. refine (_,,_).
+    intros. unshelve refine (_,,_).
     { intro g. apply setquotpr. apply word_gen. exact (i,,g). } { split.
       { intros g h. apply iscompsetquotpr. exact (base (adequacy _) (J_sum _ (i,,(g,,h)))). }
       { apply iscompsetquotpr. exact (base (adequacy _) (J_zero _ i)). } } Defined.
   Definition Map0 {I} {G:I->abgr} {T:abgr} (f: ∀ i, Hom_abgr (G i) T) :
       MarkedAbelianGroup (R G).
-    intros. refine (make_MarkedAbelianGroup (R G) T _ _).
+    intros. unshelve refine (make_MarkedAbelianGroup (R G) T _ _).
     { intros [i g]. exact (f i g). }
     { intros [i|[i [g h]]].
       { simpl. apply unitproperty. }
@@ -492,7 +492,7 @@ Module Category.
     intros. apply Monoid.funEquality. assumption. Qed.
 
   Definition Precat : Precategory.
-    refine (_,,_).
+    unshelve refine (_,,_).
     { exists Data. split.
       { simpl. split.
         { simpl. intros. apply MorEquality. reflexivity. }
@@ -505,7 +505,7 @@ Module Category.
 
   Module Product.
     Definition make {I} (X:I->ob Precat) : Product X.
-      intros. refine (makeRepresentation _ _).
+      intros. unshelve refine (makeRepresentation _ _).
       - exact (Product.make X).
       - exact (Product.Proj X).
       - intros T. split.
@@ -520,7 +520,7 @@ Module Category.
 
   Module Sum.
     Definition make {I} (X:I->ob Precat) : Sum X.
-      intros. refine (makeRepresentation _ _).
+      intros. unshelve refine (makeRepresentation _ _).
       - exact (Sum.make X).
       - exact (Sum.Incl X).
       - intros T. split.

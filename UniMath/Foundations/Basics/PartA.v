@@ -280,6 +280,17 @@ Proof.
   intros. destruct ex. destruct ey. apply idpath.
 Defined.
 
+Lemma dirprodeq (A B : UU) (ab ab' : A × B) :
+  pr1 ab = pr1 ab' -> pr2 ab = pr2 ab' -> ab = ab'.
+Proof.
+  intros A B ab ab' H H'.
+  induction ab as [a b].
+  induction ab' as [a' b']; simpl in *.
+  induction H.
+  induction H'.
+  apply idpath.
+Defined.
+
 
 (** *** The function [ maponpaths ] between paths types defined by a
     function between ambient types and its behavior relative to [ @ ]
@@ -537,12 +548,6 @@ Proof.
     (tpair (fun x => B x) a1 b1) (tpair (fun x => B x) a2 b2) p q).
 Defined.
 
-Lemma dirprod_eq {X Y:UU} {p q:X×Y} : pr1 p = pr1 q -> pr2 p = pr2 q -> p = q.
-Proof.
-  intros ? ? ? ?. induction p as [x y]; induction q as [x' y']; simpl.
-  intros r s. induction r. induction s. reflexivity.
-Defined.
-
 Definition pair_path_in2 {X} (P:X->Type) {x:X} {p q:P x} (e:p = q) : x,,p = x,,q.
 Proof. intros. now apply maponpaths. Defined.
 
@@ -696,6 +701,15 @@ Proof.
   induction is as [y fe].
   apply (fe x @ !(fe x')).
 Defined.
+
+Lemma path_to_ctr (A : UU) (B : A -> UU) (isc : ∃! a, B a)
+           (a : A) (p : B a) : a = pr1 (pr1 isc).
+Proof.
+  intros A B isc a p.
+  set (Hi := tpair _ a p).
+  apply (maponpaths pr1 (pr2 isc Hi)).
+Defined.
+
 
 (** Coconuses: spaces of paths which begin (coconusfromt) or end (coconustot)
     at a given point. *)
@@ -1334,7 +1348,7 @@ Definition bijective {X Y:UU} (f:X->Y) :=
 Corollary bijection_to_weq {X Y:UU} (f:X->Y) : bijective f -> isweq f.
 Proof.
   intros ? ? ? bij. assert (sur := pr1 bij). assert (inj := pr2 bij).
-  refine (gradth f _ _ _).
+  unshelve refine (gradth f _ _ _).
   - intros y. exact (pr1 (sur y)).
   - intros. simpl. apply inj. exact (pr2 (sur (f x))).
   - intros. simpl. exact (pr2 (sur y)).
@@ -1828,7 +1842,7 @@ split with f . apply ( gradth _ _ egf  efg ) . Defined .
 Definition weqtotal2dirprodcomm {X Y:UU} (P: X × Y -> UU) : (Σ xy : X×Y, P xy) ≃ (Σ xy : Y×X, P (weqdirprodcomm _ _ xy)).
 Proof.
   intros.
-  refine (weqgradth _ _ _ _).
+  unshelve refine (weqgradth _ _ _ _).
   - intros xyp. induction xyp as [xy p]. induction xy as [x y]. exact ((y,,x),,p).
   - intros yxp. induction yxp as [yx p]. induction yx as [y x]. exact ((x,,y),,p).
   - intros xyp. induction xyp as [xy p]. induction xy as [x y]. reflexivity.
@@ -1837,7 +1851,7 @@ Defined.
 
 Definition weqtotal2dirprodassoc  {X Y:UU} (P: X × Y -> UU) : (Σ xy : X×Y, P xy) ≃ (Σ (x:X) (y:Y), P (x,,y)).
   intros.
-  refine (weqgradth _ _ _ _).
+  unshelve refine (weqgradth _ _ _ _).
   - intros xyp. induction xyp as [xy p]. induction xy as [x y]. exact (x,,y,,p).
   - intros xyp. induction xyp as [x yp]. induction yp as [y p]. exact ((x,,y),,p).
   - intros xyp. induction xyp as [xy p]. induction xy as [x y]. reflexivity.
@@ -1847,7 +1861,7 @@ Defined.
 Definition weqtotal2dirprodassoc' {X Y:UU} (P: X × Y -> UU) : (Σ xy : X×Y, P xy) ≃ (Σ (y:Y) (x:X), P (x,,y)).
 Proof.
   intros.
-  refine (weqgradth _ _ _ _).
+  unshelve refine (weqgradth _ _ _ _).
   - intros xyp. induction xyp as [xy p]. induction xy as [x y]. exact (y,,x,,p).
   - intros yxp. induction yxp as [x yp]. induction yp as [y p]. exact ((y,,x),,p).
   - intros xyp. induction xyp as [xy p]. induction xy as [x y]. reflexivity.
@@ -1858,7 +1872,7 @@ Definition weqtotal2comm12 {X} (P Q : X -> UU) :
   (Σ (w : Σ x, P x), Q (pr1 w)) ≃ (Σ (w : Σ x, Q x), P (pr1 w)).
 Proof.
   intros.
-  refine (weqgradth _ _ _ _).
+  unshelve refine (weqgradth _ _ _ _).
   - intros [[x p] q]. exact ((x,,q),,p).
   - intros [[x q] p]. exact ((x,,p),,q).
   - intros [[x p] q]. reflexivity.
@@ -2642,10 +2656,10 @@ Defined.
 
 Definition weqfp {X Y : UU} (w : X ≃ Y) (P:Y->UU) : (Σ x : X, P (w x)) ≃ (Σ y, P y).
 Proof. intros. exists (weqfp_map w P). refine (gradth _ (weqfp_invmap w P) _ _).
-  { intros xp. refine (total2_paths _ _).
+  { intros xp. unshelve refine (total2_paths _ _).
     { simpl. apply homotinvweqweq. }
     simpl. rewrite <- weq_transportf_adjointness. rewrite transport_f_f. rewrite pathsinv0l. reflexivity. }
-  { intros yp. refine (total2_paths _ _).
+  { intros yp. unshelve refine (total2_paths _ _).
     { simpl. apply homotweqinvweq. }
     simpl. rewrite transport_f_f. rewrite pathsinv0l. reflexivity. }
 Defined.
@@ -2797,7 +2811,7 @@ Defined.
 
 Definition hfp_right {X Y Z:UU} (f:X->Z) (g:Y->Z) : hfp f g ≃ Σ y, hfiber f (g y).
 Proof.
-  intros. refine (weqgradth _ _ _ _).
+  intros. unshelve refine (weqgradth _ _ _ _).
   - intros [[x y] e]. exact (y,,x,,!e).
   - intros [x [y e]]. exact ((y,,x),,!e).
   - intros [[x y] e]. apply maponpaths, pathsinv0inv0.
@@ -2806,7 +2820,7 @@ Defined.
 
 Definition hfiber_comm {X Y Z:UU} (f:X->Z) (g:Y->Z) : (Σ x, hfiber g (f x)) ≃ (Σ y, hfiber f (g y)).
 Proof.
-  intros. refine (weqgradth _ _ _ _).
+  intros. unshelve refine (weqgradth _ _ _ _).
   - intros [x [y e]]. exact (y,,x,,!e).
   - intros [y [x e]]. exact (x,,y,,!e).
   - intros [x [y e]]. apply maponpaths, maponpaths, pathsinv0inv0.

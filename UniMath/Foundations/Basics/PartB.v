@@ -294,10 +294,10 @@ Proof. intros n X is .  apply ( isofhlevelweqf n ( weqhfibertounit X ) ( is tt )
 
 Definition weqhfiberunit {X Z} (i:X->Z) (z:Z) : (Σ x, hfiber (λ _:unit, z) (i x)) ≃ hfiber i z.
 Proof.
-  intros. refine (weqgradth _ _ _ _).
+  intros. unshelve refine (weqgradth _ _ _ _).
   + intros [x [t e]]. exact (x,,!e).
   + intros [x e]. exact (x,,tt,,!e).
-  + intros [x [t e]]. apply maponpaths. refine (total2_paths2 _ _).
+  + intros [x [t e]]. apply maponpaths. unshelve refine (total2_paths2 _ _).
     * apply isapropunit.
     * simpl. induction e. rewrite pathsinv0inv0. induction t. reflexivity.
   + intros [x e]. apply maponpaths. apply pathsinv0inv0.
@@ -567,10 +567,10 @@ Corollary set_bijection_to_weq {X Y:UU} (f:X->Y) : bijective f -> isaset Y -> is
 Proof.
   (* compare with bijection_to_weq: this one doesn't use gradth *)
   intros ? ? ? bij i y. set (sur := pr1 bij); set (inj := pr2 bij).
-  refine (_,,_).
+  unshelve refine (_,,_).
   - exists (pr1 (sur y)). exact (pr2 (sur y)).
   - intro w.
-    refine (total2_paths _ _).
+    unshelve refine (total2_paths _ _).
     + simpl. apply inj. intermediate_path y.
       * exact (pr2 w).
       * exact (! pr2 (sur y)).
