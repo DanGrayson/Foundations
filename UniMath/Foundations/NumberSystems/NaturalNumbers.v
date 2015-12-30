@@ -922,6 +922,13 @@ Definition plusminusnmm ( n m : nat ) : ( n + m ) - m = n .
 Proof. intros . set ( int1 := natgehplusnmm n m ) . apply ( natplusrcan _ _ m ) .  rewrite ( minusplusnmm _ _ int1 ) .  apply idpath. Defined.
 
 
+Lemma natlthlehsub m n i : i ≥ m -> m+n > i -> n > i-m.
+Proof.
+  intros ? ? ? r s. set (j := i-m).
+  assert (t := ! minusplusnmm i m r); clear r.
+  change (i-m) with j in t; clearbody j. rewrite t in s; clear t.
+  rewrite natpluscomm in s. exact (natlthandplusrinv _ _ _ s).
+Defined.
 
 
 (* *** Two-sided minus and comparisons *)
