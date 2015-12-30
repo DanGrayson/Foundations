@@ -16,7 +16,15 @@ Definition sequencePair {X n} (f:stn n -> X) : Sequence X := (n,,f).
 
 Definition transport_stn m n i (b:i<m) (p:m=n) :
   transportf stn p (i,,b) = (i,,transportf (λ m,i<m) p b).
-Proof. induction p. reflexivity. Defined.
+Proof. now induction p. Defined.
+
+Definition transport_stn' m n (i:stn m) (p:m=n) :
+  stntonat n (transportf stn p i) = stntonat m i.
+Proof. now induction p. Defined.
+
+Definition transport_stn'' m n (i:stn m) (p:m=n) :
+  pr1 (transportf stn p i) = pr1 i.
+Proof. now induction p. Defined.
 
 Definition sequenceEquality {X m n} (f:stn m->X) (g:stn n->X) (p:m=n) :
   (∀ i, f i = g (transportf stn p i))
@@ -39,8 +47,8 @@ Proof. exact (0,, empty_fun). Defined.
 Definition append_fun {X n} : (stn n -> X) -> X -> stn (S n) -> X.
 Proof.
   intros x y i.
-  induction (natlehchoice4 (pr1 i) n (pr2 i)) as [c|d].
-  { exact (x (pr1 i,,c)). }
+  induction (natlehchoice4 (stntonat _ i) n (stnlt i)) as [c|d].
+  { exact (x (stntonat _ i,,c)). }
   { exact y. }
 Defined.
 
@@ -326,8 +334,61 @@ Defined.
 Definition concatenateStep {X}  (x : Sequence X) {n} (y : stn (S n) -> X) :
   concatenate x (S n,,y) = append (concatenate x (n,,y ∘ dni_lastelement)) (y (lastelement _)).
 Proof.
-
-Abort.
+  (* this is painful *)
+  induction x as [m x].
+  simple refine (sequenceEquality' _ _ _ _).
+  - simpl. apply natplusnsm.
+  - intro. simpl. simpl in i.
+    induction (natgthorleh m i) as [c|c].
+    + rewrite (weqfromcoprodofstn_inv_1 m (S n) i c).
+      unfold append_fun.
+      match goal with |- context [ coprod_rect _ _ _ (natlehchoice4 ?a ?b ?c) ]
+                      => induction (natlehchoice4 a b c) as [r|r] end.
+      * unfold coprod_rect.
+        match goal with |- context [ invmap _ ?a ] => assert (M : stntonat _ a < m) end.
+        { unfold stntonat.
+          rewrite rewrite_pr1_tpair.
+          change (S (m+n)) with (S m + n).
+          rewrite (transport_stn'' _ _ i (natplusnsm m n)).
+          exact c. }
+        rewrite (weqfromcoprodofstn_inv_1 _ _ _ M).
+        apply maponpaths.
+        apply ( invmaponpathsincl _ ( isinclstntonat _ ) _ _ ).
+        unfold stntonat, stnpair.
+        rewrite rewrite_pr1_tpair.
+        change (S (m+n)) with (S m + n).
+        rewrite (transport_stn'' _ _ i (natplusnsm m n)).
+        reflexivity.
+      * unfold coprod_rect. apply fromempty. generalize r; clear r.
+        unfold stntonat.
+        change (S (m+n)) with (S m + n).
+        rewrite (transport_stn'' _ _ i (natplusnsm m n)).
+        induction i as [i I]; simpl.
+        intro e.
+        change (m > stntonat _ (i,, I)) with (m>i) in c.
+        induction (!e); clear e I.
+        assert (d := natlehnplusnm m n : m+n ≥ m).
+        assert (e := natgthgehtrans _ _ _ c d); clear c d.
+        exact (isirreflnatgth m e).
+    + rewrite (weqfromcoprodofstn_inv_2 m (S n) i c). simpl.
+      unfold append_fun.
+      match goal with |- context [ coprod_rect _ _ _ (natlehchoice4 ?a ?b ?c) ]
+                      => induction (natlehchoice4 a b c) as [r|r] end.
+      * simpl. generalize r; clear r. unfold stntonat.
+        change (S (m+n)) with (S m + n).
+        rewrite (transport_stn'' _ _ i (natplusnsm m n)).
+        intro r.
+        match goal with |- context [invmap (weqfromcoprodofstn _ _) ?a] =>
+                        rewrite (weqfromcoprodofstn_inv_2 _ _ a c) end.
+        unfold coprod_rect, funcomp. apply maponpaths.
+        apply ( invmaponpathsincl _ ( isinclstntonat _ ) _ _ ). reflexivity.
+      * simpl. apply maponpaths. apply ( invmaponpathsincl _ ( isinclstntonat _ ) _ _ ).
+        simpl. generalize r; clear r. unfold stntonat.
+        change (S (m+n)) with (S m + n).
+        rewrite (transport_stn'' _ _ i (natplusnsm m n)).
+        induction i as [i I]; simpl. intro e. induction (!e).
+        rewrite natpluscomm. apply plusminusnmm.
+Qed.
 
 Definition partition {X n} (f:stn n -> nat) (x:stn (stnsum f) -> X) : Sequence (Sequence X).
 Proof. exists n. intro i. exists (f i). intro j. exact (x(inverse_lexicalEnumeration f (i,,j))).
