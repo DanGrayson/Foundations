@@ -108,6 +108,9 @@ Definition stnset n := hSetpair (stn n) (isasetstn n).
 
 Definition stn_to_nat n : stnset n -> natset := pr1.
 
+Lemma isinjstntonat n : isInjectiveFunction (pr1 : stnset n -> natset).
+Proof. intros ? i j. apply (invmaponpathsincl pr1). apply isinclstntonat. Defined.
+
 Definition stnposet ( n : nat ) : Poset .
 Proof.
   intro.
@@ -449,6 +452,21 @@ Lemma weqfromcoprodofstn_l0' m i : invmap (weqfromcoprodofstn 0 m) i = ii2 i.
 Proof.
   intros. apply pathsinv0, pathsweq1.
   apply weqfromcoprodofstn_l0.
+Defined.
+
+(** Computation of the inverse of weqfromcoprodofstn *)
+
+Lemma weqfromcoprodofstn_inv_1 m n (i:stn (m+n)) (l : i < m) :
+  invmap (weqfromcoprodofstn m n) i = ii1 (stnpair m i l).
+Proof.
+  intros. now apply pathsinv0, pathsweq1, isinjstntonat.
+Defined.
+
+Lemma weqfromcoprodofstn_inv_2 m n (i:stn (m+n)) (l : i ≥ m) :
+  invmap (weqfromcoprodofstn m n) i = ii2 (stnpair n (i-m) (natlthlehsub m n i l (stnlt i))).
+Proof.
+  intros. apply pathsinv0, pathsweq1.  apply isinjstntonat; simpl. rewrite natpluscomm.
+  now apply minusplusnmm.
 Defined.
 
 (** Associativity of [weqfromcoprodofstn] *)
@@ -943,9 +961,6 @@ set ( F' := fun n' : nat => hexists ( fun n'' => dirprod ( natleh n'' n' ) ( F n
 assert ( is' : isdecprop ( F' n' ) ) . apply ( isdecbexists n' F is ) .   destruct ( pr1 is' ) as [ f | nf ] .  apply ( IHn'  f ) .  split with ( S n' ) .  split with is'' . intros n0 fn0 . destruct ( natlthorgeh n0 ( S n' ) )  as [ l' | g' ] .  set ( i' := natlthtolehsn _ _ l' ) .  destruct ( nf ( hinhpr ( tpair _ n0 ( dirprodpair i' fn0 ) ) ) ) .   apply g' .
 
 apply ( X n ( hinhpr ( tpair _ n ( dirprodpair ( isreflnatleh n ) l ) ) ) ) .  Defined .
-
-Lemma isinjstntonat n : isInjectiveFunction (pr1 : stnset n -> natset).
-Proof. intros ? i j. apply (invmaponpathsincl pr1). apply isinclstntonat. Defined.
 
 (* a tactic for proving things by induction over a finite number of cases *)
 Ltac inductive_reflexivity i b :=
