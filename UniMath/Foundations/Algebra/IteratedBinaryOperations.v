@@ -64,16 +64,15 @@ Proof.
     intros y [m z].
     induction m as [|m IHm].
     { change (sequenceProduct (0,, z)) with (unel M). rewrite runax.
-(*       change (concatenate (flatten (n,, y)) (0,, z)) with (flatten (n,, y)). *)
-(*       exact (IHn y). } *)
-(*     { rewrite sequenceProductStep, concatenateStep. *)
-(*       generalize (z (lastelement m)) as w; generalize (z ∘ dni _ (lastelement _)) as v; intros. *)
-(*       rewrite <- assocax. *)
-(*       rewrite sequenceProduct_append. *)
-(*       apply (maponpaths (λ u, u*w)). *)
-(*       apply IHm. } } *)
-(* Defined. *)
-Abort.
+      rewrite (concatenate_0 (flatten (n,, y)) (0,, z) (idpath 0)).
+      exact (IHn y). }
+    { rewrite sequenceProductStep, concatenateStep.
+      generalize (z (lastelement m)) as w; generalize (z ∘ dni _ (lastelement _)) as v; intros.
+      rewrite <- assocax.
+      rewrite sequenceProduct_append.
+      apply (maponpaths (λ u, u*w)).
+      apply IHm. } }
+Defined.
 
 (** commutativity *)
 
