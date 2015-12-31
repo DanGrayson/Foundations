@@ -398,6 +398,15 @@ Definition flatten {X} : Sequence (Sequence X) -> Sequence X.
 Proof. intros x. exists (stnsum (length ∘ x)). exact (λ j, uncurry (pr2 x) (lexicalEnumeration _ j)).
 Defined.
 
+Definition flatten_partition {X n} (f:stn n -> nat) (x:stn (stnsum f) -> X) :
+  flatten (partition f x) ~ x.
+Proof.
+  intro i. unfold flatten. change (length ∘ partition f x) with f.
+  unfold partition. simpl. unfold inverse_lexicalEnumeration.
+  unfold uncurry. apply maponpaths. apply ( invmaponpathsincl _ ( isinclstntonat _ ) _ _ ).
+  unfold stntonat. rewrite <- tppr. rewrite homotweqinvweq. reflexivity.
+Defined.
+
 Definition total2_step_f {n} (X:stn (S n) -> UU) :
   (Σ i, X i)
     ->
