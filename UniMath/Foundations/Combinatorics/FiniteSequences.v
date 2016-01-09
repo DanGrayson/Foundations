@@ -26,6 +26,10 @@ Definition transport_stn'' m n (i:stn m) (p:m=n) :
   pr1 (transportf stn p i) = pr1 i.
 Proof. now induction p. Defined.
 
+Definition transport_stn''' m n (i:stn m) (p:m=n) :
+  transportf stn p i = stnpair n (stntonat m i) (transportf (λ k, _ < k) p (stnlt i)).
+Proof. induction i as [i I]. now induction p. Defined.
+
 Definition sequenceEquality {X m n} (f:stn m->X) (g:stn n->X) (p:m=n) :
   (∀ i, f i = g (transportf stn p i))
   -> transportf (λ m, stn m->X) p f = g.
@@ -390,8 +394,12 @@ Proof.
         rewrite natpluscomm. apply plusminusnmm.
 Qed.
 
+Definition partition' {X n} (f:stn n -> nat) (x:stn (stnsum f) -> X) : stn n -> Sequence X.
+Proof. intro i. exists (f i). intro j. exact (x(inverse_lexicalEnumeration f (i,,j))).
+Defined.
+
 Definition partition {X n} (f:stn n -> nat) (x:stn (stnsum f) -> X) : Sequence (Sequence X).
-Proof. exists n. intro i. exists (f i). intro j. exact (x(inverse_lexicalEnumeration f (i,,j))).
+Proof. exists n. exact (partition' f x).
 Defined.
 
 Definition flatten {X} : Sequence (Sequence X) -> Sequence X.

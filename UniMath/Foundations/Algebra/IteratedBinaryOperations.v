@@ -23,11 +23,34 @@ Proof.
   { exact ((doubleProduct (x ∘ dni_lastelement) * sequenceProduct (x (lastelement _)))). }
 Defined.
 
-(* some rewriting rules *)
-
 Definition sequenceProductStep {M:monoid} {n} (x:stn (S n) -> M) :
   sequenceProduct (S n,,x) = sequenceProduct (n,,x ∘ dni_lastelement) * x (lastelement _).
 Proof. intros. reflexivity. Defined.
+
+Lemma sequenceProduct9 {M:monoid} (x : stn 0 -> M) :
+  sequenceProduct (sequencePair x) = unel M.
+Proof.
+  reflexivity.
+Defined.
+
+Lemma sequenceProduct1 {M:monoid} (x : stn 1 -> M) :
+  sequenceProduct (sequencePair x) = x (lastelement 0).
+Proof.
+  change (sequenceProduct (sequencePair x)) with (unel M * x (lastelement 0)).
+  apply lunax.
+Defined.
+
+Lemma sequenceProduct_homot {M:monoid} {n} (x y : stn n -> M) :
+  x ~ y -> sequenceProduct(n,,x) = sequenceProduct(n,,y).
+Proof.
+  intros h.
+  induction n as [|n N].
+  - reflexivity.
+  - rewrite 2? sequenceProductStep.
+    intermediate_path (sequenceProduct (n,, x ∘ dni_lastelement) * y (lastelement n)).
+    + apply maponpaths. exact (h _).
+    + apply (maponpaths (λ m, m * _)). apply N. apply funhomot. exact h.
+Defined.
 
 Local Definition sequenceProduct_append {M:monoid} (x:Sequence M) (m:M) :
   sequenceProduct (append x m) = sequenceProduct x * m.
@@ -68,9 +91,26 @@ Proof.
       apply (maponpaths (λ u, u*w)). apply IHm. } }
 Defined.
 
+Corollary associativityOfProducts' {M:monoid} {n} (f:stn n -> nat) (x:stn (stnsum f) -> M) :
+  sequenceProduct (stnsum f,,x) = doubleProduct (partition f x).
+Proof.
+  change (Sequence_to_function (stnsum f,, x)) with x.
+  refine (_ @ associativityOfProducts (partition f x)).
+  assert (L := flatten_partition f x). apply pathsinv0. exact (sequenceProduct_homot _ _ L).
+Defined.
+
 (** commutativity *)
 
+Definition maponpaths2 {X Y Z:UU} (f:X->Y->Z) {x x' y y'} : x=x' -> y=y' -> f x y = f x' y'.
+  (* move upstream *)
+Proof.
+  intros r s. induction r. induction s. reflexivity.
+Defined.
 
+Ltac change_lhs a := match goal with |- @paths ?T ?x ?y
+                                     => change (@paths T x y) with (@paths T a y) end.
+Ltac change_rhs a := match goal with |- @paths ?T ?x ?y
+                                     => change (@paths T x y) with (@paths T x a) end.
 
 Lemma commutativityOfProducts_helper {M:abmonoid} {n} (x:stn (S n) -> M) (j:stn (S n)) :
   sequenceProduct (S n,,x) = sequenceProduct (n,,x ∘ dni n j) * x j.
@@ -78,19 +118,83 @@ Proof.
   induction j as [j jlt].
   assert (jle := natlthsntoleh _ _ jlt).
   Local Notation "s □ x" := (append s x) (at level 64, left associativity).
-  Local Open Scope nat.
-  set (m := nil □ j □ 1 □ n-j).
-  assert (B : stnsum m = S n).
-  { unfold stnsum; simpl. repeat unfold append_fun; simpl. rewrite natplusassoc.
+  Local Open Scope transport.
+  set (f := nil □ j □ S O □ n-j : stn 3 -> nat).
+  assert (B : stnsum f = S n).
+  { unfold stnsum, f; simpl. repeat unfold append_fun; simpl. rewrite natplusassoc.
     rewrite (natpluscomm 1). rewrite <- natplusassoc.
     rewrite natpluscomm. apply (maponpaths S). rewrite natpluscomm. now apply minusplusnmm. }
-  set (w := weqstnsum1 m). rewrite B in w. change (length m) with 3 in w.
-
-
-  (* assert (L := associativityOfProducts (3,, x ∘ w)). *)
-
-
-Abort.
+  set (r := weqfibtototal _ _ (λ k, eqweqmap (maponpaths (λ n, k < n : UU) B) ) :
+              stn (stnsum f) ≃ stn (S n)).
+  set (x' := x ∘ r).
+  intermediate_path (sequenceProduct (stnsum f,, x')).
+  { induction B. apply sequenceProduct_homot. intros i. unfold x'.
+    unfold funcomp. apply maponpaths.
+    apply ( invmaponpathsincl _ ( isinclstntonat _ ) _ _).
+    reflexivity. }
+  refine (associativityOfProducts' f x' @ _).
+  unfold partition.
+  rewrite 3? doubleProductStep.
+  change (doubleProduct (0,,_)) with (unel M); rewrite lunax.
+  unfold funcomp at 1 2.
+  set (s0 := dni_lastelement (dni_lastelement (lastelement 0))).
+  unfold funcomp at 1.
+  set (s1 := dni_lastelement (lastelement 1)).
+  set (s2 := lastelement 2).
+  unfold partition'. unfold inverse_lexicalEnumeration.
+  change (f s0) with j; change (f s1) with (S O); change (f s2) with (n-j).
+  set (f' := nil □ j □ n-j : stn 2 -> nat).
+  assert (B' : stnsum f' = n).
+  { unfold stnsum, f'; simpl. repeat unfold append_fun; simpl.
+    rewrite natpluscomm. now apply minusplusnmm. }
+  set (r' := weqfibtototal _ _ (λ k, eqweqmap (maponpaths (λ n, k < n : UU) B') ) :
+              stn (stnsum f') ≃ stn n).
+  set (x'' := x ∘ dni n (j,, jlt) ∘ r').
+  intermediate_path (sequenceProduct (stnsum f',, x'') * x (j,, jlt)).
+  { assert (L := sequenceProduct1 (λ j0 : stn 1, x' ((weqstnsum1 f) (s1,, j0)))).
+    unfold sequencePair in L.
+    rewrite L. rewrite assocax. refine (transportf (λ k, _*k=_) (commax _ _ _) _).
+    rewrite <- assocax.
+    apply maponpaths2.
+    { refine (_ @ !associativityOfProducts' f' x'').
+      unfold partition. rewrite 2? doubleProductStep.
+      change (doubleProduct (0,,_)) with (unel M); rewrite lunax. apply maponpaths2.
+      { unfold funcomp. set (s0' := dni_lastelement (lastelement 0)).
+        unfold partition'. change (f' s0') with j.
+        apply sequenceProduct_homot. intro i. unfold x', x'', funcomp. apply maponpaths.
+        apply (invmaponpathsincl _ ( isinclstntonat _ ) _ _).
+        change_lhs (stntonat _ i).
+        unfold dni. unfold di.
+        match goal with |- context [ natlthorgeh ?x ?y ]
+                        => induction (natlthorgeh x y) as [c|c] end.
+        { reflexivity. }
+        { apply fromempty. assert (P : i ≥ j).
+          { exact c. }
+          clear c. exact (natlthtonegnatgeh _ _ (stnlt i) P). } }
+      { unfold partition'. change (f' (lastelement 1)) with (n-j).
+        apply sequenceProduct_homot. intro i. unfold x', x'', funcomp. apply maponpaths.
+        apply (invmaponpathsincl _ ( isinclstntonat _ ) _ _).
+        change_lhs (j+1+i). unfold dni, di.
+        match goal with |- context [ natlthorgeh ?x ?y ]
+                        => induction (natlthorgeh x y) as [c|c] end.
+        { apply fromempty. exact (negnatlthplusnmn j i c). }
+        { change_rhs (1 + (j + i)).
+          rewrite <- natplusassoc.
+          rewrite (natpluscomm j 1).
+          reflexivity.
+        }
+      }
+    }
+    unfold x'. unfold funcomp. apply maponpaths.
+    apply (invmaponpathsincl _ ( isinclstntonat _ ) _ _).
+    match goal with |- ?x = _ => change x with (j+0) end.
+    simpl.
+    apply natplusr0. }
+  { apply (maponpaths (λ k, k * _)). induction (!B'). apply sequenceProduct_homot; intros i.
+    unfold x''. unfold funcomp. apply maponpaths.
+    apply ( invmaponpathsincl _ ( isinclstntonat _ ) _ _).
+    reflexivity. }
+Qed.
 
 Theorem commutativityOfProducts {M:abmonoid} {n} (x:stn n->M) (f:stn n ≃ stn n) :
   sequenceProduct (n,,x) = sequenceProduct (n,,x∘f).
