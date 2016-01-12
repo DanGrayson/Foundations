@@ -274,6 +274,11 @@ Proof.
   refine (weqtotal2comm12 _ _).
 Defined.
 
+Lemma weqdnicompl_compute n (i:stn(S n)) (j:stn n) : pr1 (weqdnicompl n i j) = dni n i j.
+Proof.
+  intros. apply (invmaponpathsincl _ (isinclstntonat _) _ _). now induction j as [j J].
+Defined.
+
 Definition weqdnicompl_compute_last n i : pr1 (pr1 (weqdnicompl n (lastelement n) i)) = pr1 i.
 Proof.
   intros. induction i as [i b]. simpl. unfold di; simpl.
