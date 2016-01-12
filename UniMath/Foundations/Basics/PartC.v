@@ -222,24 +222,20 @@ Proof . intros . intro x' . induction x' as [ x' nexx' ] . apply ( invmaponpaths
 Definition complementary P Q := (P -> Q -> ∅) × (P ⨿ Q).
 Definition complementary_to_neg_iff {P Q} : complementary P Q -> ¬P <-> Q.
 Proof.
-  intros ? ? c.
-  induction c as [n c]. split.
+  intros ? ? c. induction c as [n c]. split.
   - intro np. induction c as [p|q].
     * contradicts p np.
     * exact q.
-  - intro q. induction c as [p|_].
-    * intros _. exact (n p q).
-    * intros p. exact (n p q).
+  - intros q p. exact (n p q).
 Defined.
 
 Lemma negProp_to_complementary P (Q:negProp P) : P ⨿ Q <-> complementary P Q.
 Proof.
-  intros ? [Q [i [r s]]]; simpl in *.
-  split.
+  intros ? [Q [i [r s]]]; simpl in *. split.
   * intros pq. split.
-    - intros p q. now apply s.
-    - assumption.
-  * intros [j c]. assumption.
+    - intros p q. exact (s q p).
+    - exact pq.
+  * intros c. exact (pr2 c).
 Defined.
 
 Lemma negProp_to_uniqueChoice P (Q:negProp P) : (isaprop P × (P ⨿ Q)) <-> iscontr (P ⨿ Q).
