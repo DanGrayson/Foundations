@@ -626,24 +626,29 @@ Proof.
   apply (istransnatleh W); clear W. apply natlehnplusnm.
 Defined.
 
+Lemma weqstnsum_invmap_helper {n : nat} {f : stn (S n) -> nat} {l : nat} :
+  l < stnsum f ->
+  ¬ (l < f (firstelement n))%dnat ->
+  l - f (firstelement n) < stnsum (f ∘ dni n (firstelement n)).
+Proof.
+  intros ? ? ? L b.
+  rewrite (stnsum_dni _ (firstelement _)) in L.
+  rewrite natpluscomm in L.
+  assert ( c := minusplusnmm l (f (firstelement _)) (negnatgthtoleh b)).
+  rewrite natpluscomm in c.
+  rewrite <- c in L; clear c.
+  exact (natlthandpluslinv _ _ _ L).
+Qed.
+
 Definition weqstnsum_invmap { n : nat } (f : stn n -> nat) : (Σ i, stn (f i)) <- stn (stnsum f).
 Proof.
   intros ? ?. induction n as [|n IH].
-  { intros l. induction (negstn0 l). }
-  intros l. induction l as [l L].
-  choose (l < f (firstelement _))%dnat a b.
-  { exact (firstelement _,, (l,,a)). }
-  assert (b' : f (firstelement _) ≤ l). { exact (negnatgthtoleh b). } clear b.
-  rewrite (stnsum_dni _ (firstelement _)) in L.
-  rewrite natpluscomm in L.
-  assert ( c := minusplusnmm l (f (firstelement _)) b'); clear b'.
-  rewrite natpluscomm in c.
-  rewrite <- c in L; clear c.
-  assert ( d := natlthandpluslinv _ _ _ L); clear L.
-  set (l' := (l - f (firstelement n),,d) : stn _).
-  assert ( e := IH (f ∘ dni n (firstelement n)) l' ).
-  induction e as [r s].
-  exact (dni _ (firstelement _) r,,s).
+  { intros l. now apply fromempty, negstn0. }
+  { intros l. choose (pr1 l < f (firstelement n))%dnat a b.
+    { exact (firstelement n,, (pr1 l,,a)). }
+    { assert ( e := IH _ (pr1 l - f (firstelement n),,
+                          weqstnsum_invmap_helper (pr2 l) b)).
+      exact (dni _ _ (pr1 e),,(pr2 e)). } }
 Defined.
 
 Lemma stn_right_first n i : stn_right i (S n) (firstelement n) = stnpair (i + S n) i (natltplusS n i).
