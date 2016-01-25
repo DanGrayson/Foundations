@@ -135,7 +135,7 @@ Proof. exact (invmap (weqsecovercontr P i) p0). Defined.
 
 Definition iscontr_rect_compute'' X (i : iscontr X) (P : X -> UU) (p : P(pr1 i)) :
   iscontr_rect'' X i P p (pr1 i) = p.
-Proof. try reflexivity. intros. exact (homotweqinvweq (weqsecovercontr _ i) _).
+Proof. try reflexivity. intros. exact (homotweqinvweq (weqsecovercontr P i) p).
 Defined.
 
 (* .... or use transport explicitly: *)
@@ -239,19 +239,21 @@ Proof.
   { intros. induction x as [n x]. induction n as [|n].
     { apply nil_unique. }
     apply drop_and_append'. }
-  { intros co. induction co as [t|p].
-    { simpl. apply maponpaths. apply proofirrelevancecontr. apply iscontrunit. }
-    induction p as [x y]. induction y as [n y].
-    apply (maponpaths (@inr unit (X × Sequence X))).
-    unfold append_fun, lastelement, funcomp; simpl.
-    induction (natlehchoice4 n n (natgthsnn n)) as [e|e].
-    { contradicts e (isirreflnatlth n). }
-    simpl. apply maponpaths. apply maponpaths.
-    apply funextfun; intro i. clear e. induction i as [i b].
-    unfold funcomp, dni_lastelement; simpl.
-    induction (natlehchoice4 i n (natlthtolths i n b)) as [d|d].
-    { simpl. apply maponpaths. now apply isinjstntonat. }
-    simpl. induction d; contradicts b (isirreflnatlth i). }
+  intros co. induction co as [t|p].
+  { unfold disassembleSequence; simpl. apply maponpaths.
+    apply proofirrelevancecontr. apply iscontrunit. }
+  induction p as [x y]. induction y as [n y].
+  apply (maponpaths (@inr unit (X × Sequence X))).
+  unfold append_fun, lastelement, funcomp; simpl.
+  unfold append_fun. simpl.
+  induction (natlehchoice4 n n (natgthsnn n)) as [e|e].
+  { contradicts e (isirreflnatlth n). }
+  simpl. apply maponpaths, maponpaths.
+  apply funextfun; intro i. clear e. induction i as [i b].
+  unfold funcomp, dni_lastelement; simpl.
+  induction (natlehchoice4 i n (natlthtolths i n b)) as [d|d].
+  { simpl. apply maponpaths. now apply isinjstntonat. }
+  simpl. induction d; contradicts b (isirreflnatlth i).
 Defined.
 
 Goal ∀ X, invmap (@SequenceAssembly X) (ii1 tt) = nil.
@@ -262,7 +264,7 @@ Goal ∀ X (x:Sequence X) (y:X), invmap SequenceAssembly (ii2 (y,,x)) = append x
   reflexivity.
 Defined.
 
-Definition Sequence_rect {X} {P : Sequence X -> UU}
+Definition Sequence_rect {X} {P : Sequence X ->UU}
            (p0 : P nil)
            (ind : ∀ (x : Sequence X) (y : X), P x -> P (append x y))
            (x : Sequence X) : P x.
@@ -453,13 +455,13 @@ Proof.
   unfold total2_step_b, total2_step_f.
   induction (natlehchoice4 j n J) as [J'|K].
   + simpl.
-    unshelve refine (total2_paths _ _).
+    simple refine (total2_paths _ _).
     * simpl. rewrite replace_dni_last. apply isinjstntonat. reflexivity.
     * rewrite replace_dni_last. unfold dni_lastelement.  simpl.
       change (λ x0 : stn (S n), X x0) with X.
       rewrite transport_f_b. apply (isaset_transportf X).
   + induction (!K). simpl.
-    unshelve refine (total2_paths _ _).
+    simple refine (total2_paths _ _).
     * simpl. now apply isinjstntonat.
     * simpl. assert (d : idpath n = K).
       { apply isasetnat. }
@@ -591,7 +593,8 @@ Admitted.
 Definition isassoc_concatenate {X} (x y z:Sequence X) :
   concatenate (concatenate x y) z = concatenate x (concatenate y z).
 Proof.
-  unshelve refine (total2_paths _ _).
+  intros.
+  simple refine (total2_paths _ _).
   - simpl. apply natplusassoc.
   - apply sequenceEquality; intros i.
 
