@@ -142,7 +142,16 @@ Module Test_stn.
   Goal ∀ (f : stn 3 -> nat), stnsum f = (f(●0) + f(●1)) +  f(●2). reflexivity. Defined.
 
   Module Test_weqstnsum.
-    (* this module exports nothing *)
+
+    Goal ∀ (f : stn 3 -> nat), stnsum_partial f 0 (idpath _) = 0.
+      reflexivity. Qed.
+    Goal ∀ (f : stn 3 -> nat), stnsum_partial f 1 (idpath _) = f(●0).
+      reflexivity. Qed.
+    Goal ∀ (f : stn 3 -> nat), stnsum_partial f 2 (idpath _) = f(●0)+f(●1).
+      reflexivity. Qed.
+    Goal ∀ (f : stn 3 -> nat), stnsum_partial f 3 (idpath _) = f(●0)+f(●1)+f(●2).
+      reflexivity. Qed.
+
     Let X := stnset 7.
     Let f (x:X) : nat := pr1 x.
 

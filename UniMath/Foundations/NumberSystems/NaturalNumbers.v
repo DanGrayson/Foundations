@@ -556,7 +556,8 @@ Proof. intros n m X . apply ( natgehtogthsn m n X ) .  Defined.
 Lemma natlthsntoleh ( n m : nat ) : n < S m -> n ≤ m .
 Proof. intros n m a . apply ( natlthtolehsn n ( S m ) a ) . Defined. (* PeWa *)
 
-
+Lemma natlthsntolth {m n} : S n < m -> n < m.
+Proof. intros ? ? l. now apply natlehsntolth, natlthtoleh. Defined.
 
 (** *** Comparsion alternatives and [ S ] *)
 

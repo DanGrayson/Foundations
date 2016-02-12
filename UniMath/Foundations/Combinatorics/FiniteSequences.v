@@ -27,7 +27,7 @@ Definition transport_stn'' m n (i:stn m) (p:m=n) :
 Proof. now induction p. Defined.
 
 Definition transport_stn''' m n (i:stn m) (p:m=n) :
-  transportf stn p i = stnpair n (stntonat m i) (transportf (λ k, _ < k) p (stnlt i)).
+  transportf stn p i = stnpair (stntonat m i) (transportf (λ k, _ < k) p (stnlt i)).
 Proof. induction i as [i I]. now induction p. Defined.
 
 Definition sequenceEquality {X m n} (f:stn m->X) (g:stn n->X) (p:m=n) :
@@ -570,20 +570,24 @@ Proof.
   change (pr1 (tpair (λ i, stn(f i)) k p)) with k.
 
   (* perhaps also prove this is by equipping everything in sight with a well-ordering, preserved by all the equivalences involved *)
-Admitted.
+Abort.
 
 Definition flattenStep {X n} (x: stn (S n) -> Sequence X) :
   flatten (S n,,x) = concatenate (flatten (n,,x ∘ dni_lastelement)) (x (lastelement _)).
 Proof.
   rewrite <- replace_dni_last.  (* replace it, because stnsum doesn't use it *)
+  simple refine (total2_paths _ _).
+  { reflexivity. }
+  { rewrite idpath_transportf. apply funextfun; intros i.
+    unfold flatten.
+    rewrite rewrite_pr2_tpair.
+    unfold uncurry.
+    change (stn (stnsum (length ∘ x))) in i.
+    change (pr2 (S n,, x)) with x.
+    change (Sequence_to_function (S n,, x)) with x.
+    change (pr2 (n,, x ∘ dni n (lastelement n))) with (x ∘ dni n (lastelement n)).
+    change (Sequence_to_function (n,, x ∘ dni n (lastelement n))) with (x ∘ dni n (lastelement n)).
 
-  unfold flatten.
-  simpl.
-
-
-  apply pair_path_in2.
-  apply funextfun; intros i.
-  simpl.
 
 
 

@@ -59,7 +59,7 @@ Proof. induction x as [n x]. unfold append. rewrite sequenceProductStep.
        Local Opaque sequenceProduct. simpl. Transparent sequenceProduct.
        induction (natlehchoice4 n n (natgthsnn n)) as [p|p].
        { contradicts (isirreflnatlth n) p. }
-       { change ((n,, natgthsnn n):stn (S n)) with (lastelement n).
+       { change (stnpair n (natgthsnn n)) with (lastelement n).
          rewrite append_fun_compute_2.
          apply (maponpaths (λ a, a * m)).
          apply (maponpaths (λ x, sequenceProduct (n,,x))).
