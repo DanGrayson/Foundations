@@ -181,14 +181,14 @@ Lemma isequiv_setquot_aux {X : abmonoid} (R : hrel X) :
 Proof.
   intros X R H x y.
   split.
-  apply hinhuniv.
-  intros (c).
-  apply (pr2 H).
-  intros H1.
-  apply hinhpr.
-  exists 0%addmonoid.
-  rewrite !runax.
-  exact H1.
+  - apply hinhuniv.
+    intros [z r].
+    exact (pr2 H x y z r).
+  - intros H1.
+    apply hinhpr.
+    exists 0%addmonoid.
+    rewrite !runax.
+    exact H1.
 Qed.
 
 (** ** Archimedean property in a monoid *)
