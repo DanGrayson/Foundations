@@ -132,7 +132,7 @@ if we used "Record", has a known interpretation in the framework of the univalen
 (* two alternatives: *)
 (* total2 as a record with primitive projections: *)
 
-    Set Primitive Projections.
+    (* Set Primitive Projections. *)
 
     Set Nonrecursive Elimination Schemes.
 

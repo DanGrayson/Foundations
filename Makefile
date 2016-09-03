@@ -1,4 +1,7 @@
 # -*- makefile-gmake -*-
+
+bug-report-target: UniMath/CategoryTheory/category_hset_structures.vo
+
 UMAKEFILES += Makefile
 ifneq "$(INCLUDE)" "no"
 ifeq ($(shell test -f build/Makefile-configuration && echo yes),yes)
