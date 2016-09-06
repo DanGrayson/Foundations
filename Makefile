@@ -1,4 +1,7 @@
 # -*- makefile-gmake -*-
+
+bug-target : UniMath/RealNumbers/Reals.vo
+
 UMAKEFILES += Makefile
 ifneq "$(INCLUDE)" "no"
 ifeq ($(shell test -f build/Makefile-configuration && echo yes),yes)
