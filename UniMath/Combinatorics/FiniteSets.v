@@ -244,7 +244,18 @@ Proof.
   - intros i. exact (pr2 (X i)).
 Defined.
 
+Definition coprodFiniteSet : binop FiniteSet.
+Proof.
+  intros X Y.
+  exists (pr1 X ⨿ pr1 Y).
+  apply isfinitecoprod.
+  - exact (pr2 X).
+  - exact (pr2 Y).
+Defined.
+
 Delimit Scope finset with finset.
+
+Notation "X ⨿ Y" := (coprodFiniteSet X Y) (at level 50, left associativity) : finset.
 
 Notation "'∑' x .. y , P" := (FiniteSetSum (fun x =>.. (FiniteSetSum (fun y => P))..))
   (at level 200, x binder, y binder, right associativity) : finset.
@@ -343,3 +354,41 @@ Definition tallyStandardSubsetSegment {n} (P: DecidableSubtype (stn n))
   { apply natlthtolehsn. exact (pr2 i). }
   exact k.
 Defined.
+
+(* univalence *)
+
+(* compare the following lemmas with the corresponding ones for hSet and make a common
+   interface for subtypes of the universe *)
+Definition FiniteSet_univalence_map (X Y : FiniteSet) : (X = Y) -> (pr1 X ≃ pr1 Y).
+Proof. intros ? ? e. exact (eqweqmap (maponpaths pr1 e)). Defined.
+
+Theorem FiniteSet_univalence (X Y : FiniteSet) : (X = Y) ≃ (X ≃ Y).
+Proof.
+  Set Printing Coercions.
+  intros.
+  set (f := FiniteSet_univalence_map X Y).
+  exists f.
+  set (g := @eqweqmap (pr1 X) (pr1 Y)).
+  set (h := λ e : X = Y, maponpaths pr1 e).
+  assert (comp : f = g ∘ h).
+  {
+    apply funextfun; intro e. induction e. reflexivity.
+  }
+  induction (!comp). apply twooutof3c.
+  - apply isweqonpathsincl. apply isinclpr1. intro F. apply propproperty.
+  - apply univalenceAxiom.
+  Unset Printing Coercions.
+Defined.
+
+Theorem FiniteSet_rect (X Y : FiniteSet) (P : X ≃ Y -> UU) :
+  (∏ e : X=Y, P (FiniteSet_univalence _ _ e)) -> ∏ f, P f.
+Proof.
+  intros ? ? ? ih ?.
+  Set Printing Coercions.
+  set (p := ih (invmap (FiniteSet_univalence _ _) f)).
+  set (h := homotweqinvweq (FiniteSet_univalence _ _) f).
+  exact (transportf P h p).
+  Unset Printing Coercions.
+Defined.
+
+Ltac FiniteSet_induction f e := generalize f; apply UU_rect; intro e; clear f.

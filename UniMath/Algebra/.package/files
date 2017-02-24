@@ -8,4 +8,5 @@ ConstructiveStructures.v
 Archimedean.v
 Lattice.v
 IteratedBinaryOperations.v
+FreeMonoids.v
 Tests.v

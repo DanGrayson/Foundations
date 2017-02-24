@@ -446,6 +446,51 @@ Proof.
   - intros ij. exact (x (pr1 ij) (pr2 ij)). (* could also have used (uncurry (unorderedSequenceToFunction x)) here *)
 Defined.
 
+Definition concatenateUnorderedSequence {X} : binop (UnorderedSequence X).
+Proof.
+  intros. intros x y. exists (pr1 x ⨿ pr1 y)%finset. intros c. induction c as [i|j].
+  - exact (x i).
+  - exact (y j).
+Defined.
+
+Lemma weq_transport_fun {I J X:UU} (w : I ≃ J) (f : J -> X)
+      (P := λ K:UU, K -> X) :
+  tpair P I (f ∘ w) = tpair P J f.
+Proof.
+  intros. type_induction w e. induction e. reflexivity.
+Defined.
+
+Lemma weq_transport_fun_FiniteSet {I J:FiniteSet} {X:UU} (w : I ≃ J) (f : J -> X)
+      (P := λ K:FiniteSet, K -> X) :
+  tpair P I (f ∘ w) = tpair P J f.
+Proof.
+  intros.
+  FiniteSet_induction w e.
+  (* induction e. *)
+Abort.
+
+Lemma issoc_concatenateUnorderedSequence {X} (x y z:UnorderedSequence X) :
+  concatenateUnorderedSequence (concatenateUnorderedSequence x y) z =
+  concatenateUnorderedSequence x (concatenateUnorderedSequence y z).
+Proof.
+  intros.
+  induction x as [I x], y as [J y], z as [K z].
+  unfold concatenateUnorderedSequence; simpl.
+  unfold coprodFiniteSet; simpl.
+  assert (w := weqcoprodasstor (pr1 I) (pr1 J) (pr1 K)).
+(*   use weq_transport_fun. *)
+(*   set (e := weqtopaths w). *)
+(*   use total2_paths2_f. *)
+(*   { use total2_paths2_f. *)
+(*     { exact e. } *)
+(*     apply propproperty. } *)
+(*   apply funextfun; intro c. *)
+(*   induction c as [i|jk]. *)
+(*   { unfold coprod_rect. *)
+
+(* Defined. *)
+Abort.
+
 Definition flattenStep' {X n}
            (m : stn (S n) → nat)
            (x : ∏ i : stn (S n), stn (m i) → X)
