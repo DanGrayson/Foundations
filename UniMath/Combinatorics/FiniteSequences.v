@@ -126,6 +126,11 @@ Notation fromstn0 := empty_fun.
 Definition nil {X} : Sequence X.
 Proof. intros. exact (0,, empty_fun). Defined.
 
+Definition nilUnorderedSequence {X} : UnorderedSequence X.
+Proof.
+  intros. exact (emptyFiniteSet,, fromempty).
+Defined.
+
 Definition append_fun {X n} : (stn n -> X) -> X -> stn (S n) -> X.
 Proof.
   intros ? ? x y i.
@@ -460,14 +465,41 @@ Proof.
   intros. type_induction w e. induction e. reflexivity.
 Defined.
 
-Lemma weq_transport_fun_FiniteSet {I J:FiniteSet} {X:UU} (w : I ≃ J) (f : J -> X)
+Lemma weq_transport_fun_FiniteSet {I J:FiniteSet} {X:UU} (w : I ≃ J) (g : J -> X)
       (P := λ K:FiniteSet, K -> X) :
-  tpair P I (f ∘ w) = tpair P J f.
+  tpair P I (g ∘ w) = tpair P J g.
 Proof.
-  intros.
-  FiniteSet_induction w e.
-  (* induction e. *)
-Abort.
+  intros. now FiniteSet_induction w e; induction e.
+Defined.
+
+Lemma weq_transport_fun_FiniteSet' {I J:FiniteSet} {X:UU} (w : I ≃ J) (f : I -> X) (g : J -> X)
+      (P := λ K:FiniteSet, K -> X) :
+  f ~ g ∘ w -> tpair P I f = tpair P J g.
+Proof.
+  intros ? ? ? ? ? ? ? e. intermediate_path (tpair P I (g ∘ w)).
+  - apply maponpaths. now apply funextfun.
+  - apply weq_transport_fun_FiniteSet.
+Defined.
+
+Lemma islunit_concatenateUnorderedSequence {X} (x:UnorderedSequence X) :
+  concatenateUnorderedSequence nilUnorderedSequence x = x.
+Proof.
+  intros. induction x as [I x]. unfold nilUnorderedSequence.
+  use (weq_transport_fun_FiniteSet' (islunit_coprodFiniteSet I)).
+  intros c. induction c as [n|c].
+  - exact (fromempty n).
+  - reflexivity.
+Defined.
+
+Lemma isrunit_concatenateUnorderedSequence {X} (x:UnorderedSequence X) :
+  concatenateUnorderedSequence x nilUnorderedSequence = x.
+Proof.
+  intros. induction x as [I x]. unfold nilUnorderedSequence.
+  use (weq_transport_fun_FiniteSet' (isrunit_coprodFiniteSet I)).
+  intros c. induction c as [c|n].
+  - reflexivity.
+  - exact (fromempty n).
+Defined.
 
 Lemma issoc_concatenateUnorderedSequence {X} (x y z:UnorderedSequence X) :
   concatenateUnorderedSequence (concatenateUnorderedSequence x y) z =
@@ -475,21 +507,11 @@ Lemma issoc_concatenateUnorderedSequence {X} (x y z:UnorderedSequence X) :
 Proof.
   intros.
   induction x as [I x], y as [J y], z as [K z].
-  unfold concatenateUnorderedSequence; simpl.
-  unfold coprodFiniteSet; simpl.
-  assert (w := weqcoprodasstor (pr1 I) (pr1 J) (pr1 K)).
-(*   use weq_transport_fun. *)
-(*   set (e := weqtopaths w). *)
-(*   use total2_paths2_f. *)
-(*   { use total2_paths2_f. *)
-(*     { exact e. } *)
-(*     apply propproperty. } *)
-(*   apply funextfun; intro c. *)
-(*   induction c as [i|jk]. *)
-(*   { unfold coprod_rect. *)
-
-(* Defined. *)
-Abort.
+  use (weq_transport_fun_FiniteSet' (isassoc_coprodFiniteSet I J K)).
+  intros ijk. induction ijk as [ij|k].
+  - induction ij as [i|j]; reflexivity.
+  - reflexivity.
+Defined.
 
 Definition flattenStep' {X n}
            (m : stn (S n) → nat)

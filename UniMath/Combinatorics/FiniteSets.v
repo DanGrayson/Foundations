@@ -21,6 +21,31 @@ Unset Automatic Introduction. (* This line has to be removed for the file to com
 Require Export UniMath.Combinatorics.StandardFiniteSets .
 
 
+Definition islunit_coprod (X:UU) : empty ⨿ X ≃ X. (* upstream *)
+Proof.
+  intros. use tpair.
+  - intro c. induction c as [n|c].
+    + exact (fromempty n).
+    + exact c.
+  - simpl. intro x. use tpair.
+    + exists (ii2 x). reflexivity.
+    + simpl. intro t. induction t as [t e]. induction t as [n|y].
+      * exact (fromempty n).
+      * simpl in e. induction e. reflexivity.
+Defined.
+
+Definition isrunit_coprod (X:UU) :  X ⨿ empty ≃ X. (* upstream *)
+Proof.
+  intros. use tpair.
+  - intro c. induction c as [c|n].
+    + exact c.
+    + exact (fromempty n).
+  - simpl. intro x. use tpair.
+    + exists (ii1 x). reflexivity.
+    + simpl. intro t. induction t as [t e]. induction t as [y|n].
+      * simpl in e. induction e. reflexivity.
+      * exact (fromempty n).
+Defined.
 
 
 (** ** Sets with a given number of elements. *)
@@ -219,6 +244,8 @@ Definition isfiniteweqb { X Y : UU } ( w : weq X Y ) ( sy : isfinite Y ) : isfin
 
 Definition isfiniteempty : isfinite empty := hinhpr finstructonempty .
 
+Definition emptyFiniteSet : FiniteSet := tpair isfinite empty isfiniteempty.
+
 Definition isfiniteempty2 { X : UU } ( is : neg X ) : isfinite X :=  hinhpr ( finstructonempty2 is ) .
 
 Definition isfiniteunit : isfinite unit := hinhpr finstructonunit .
@@ -255,7 +282,23 @@ Defined.
 
 Delimit Scope finset with finset.
 
+Local Open Scope finset.
+
 Notation "X ⨿ Y" := (coprodFiniteSet X Y) (at level 50, left associativity) : finset.
+
+Definition islunit_coprodFiniteSet (X:FiniteSet) : emptyFiniteSet ⨿ X ≃ X := islunit_coprod X.
+
+Definition isrunit_coprodFiniteSet (X:FiniteSet) : X ⨿ emptyFiniteSet ≃ X := isrunit_coprod X.
+
+Definition isassoc_coprodFiniteSet (X Y Z:FiniteSet) : (X ⨿ Y) ⨿ Z ≃ X ⨿ (Y ⨿ Z).
+Proof.
+  intros. apply weqcoprodasstor.
+Defined.
+
+Definition isassoc_coprodFiniteSet' (X Y Z:FiniteSet) : (X ⨿ Y) ⨿ Z = X ⨿ (Y ⨿ Z).
+Proof.
+  intros. apply subtypeEquality_prop. apply weqtopaths. apply weqcoprodasstor.
+Defined.
 
 Notation "'∑' x .. y , P" := (FiniteSetSum (fun x =>.. (FiniteSetSum (fun y => P))..))
   (at level 200, x binder, y binder, right associativity) : finset.
@@ -381,14 +424,9 @@ Proof.
 Defined.
 
 Theorem FiniteSet_rect (X Y : FiniteSet) (P : X ≃ Y -> UU) :
-  (∏ e : X=Y, P (FiniteSet_univalence _ _ e)) -> ∏ f, P f.
+  (∏ e : X=Y, P (FiniteSet_univalence _ _ e)) ≃ ∏ f, P f.
 Proof.
-  intros ? ? ? ih ?.
-  Set Printing Coercions.
-  set (p := ih (invmap (FiniteSet_univalence _ _) f)).
-  set (h := homotweqinvweq (FiniteSet_univalence _ _) f).
-  exact (transportf P h p).
-  Unset Printing Coercions.
+  intros. apply weqinvweq, weqonsecbase.
 Defined.
 
-Ltac FiniteSet_induction f e := generalize f; apply UU_rect; intro e; clear f.
+Ltac FiniteSet_induction f e := generalize f; apply FiniteSet_rect; intro e; clear f.

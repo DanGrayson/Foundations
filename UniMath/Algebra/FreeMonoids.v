@@ -89,6 +89,8 @@ Section AbMonoid.
 
   Definition freeAbMonoid : abmonoid.
   Proof.
+    set (R := pathseqrel (UnorderedSequence X)).
+    assert (lift := issurjsetquotpr R).
     use tpair.
     { exists (π₀ (UnorderedSequence X)). use induced_binop.
       { exact concatenateUnorderedSequence. }
@@ -98,14 +100,21 @@ Section AbMonoid.
     simpl.
     repeat split.
     - intros x y z.
-      set (R := pathseqrel (UnorderedSequence X)).
-      assert (lift := issurjsetquotpr R).
       use isaprop_goal'.
       { apply setproperty. }
       generalize (lift x). apply hinhuniv. intro x'. induction x' as [x' x'']. induction x''.
       generalize (lift y). apply hinhuniv. intro y'. induction y' as [y' y'']. induction y''.
       generalize (lift z). apply hinhuniv. intro z'. induction z' as [z' z'']. induction z''.
       apply iscompsetquotpr, hinhpr; simpl; clear lift R.
+      apply issoc_concatenateUnorderedSequence.
+    - exists (setquotpr R nilUnorderedSequence).
+      split.
+      { intros x.
+        use isaprop_goal'.
+        { apply setproperty. }
+        generalize (lift x). apply hinhuniv. intro x'. induction x' as [x' x'']. induction x''.
+        apply iscompsetquotpr, hinhpr; simpl; clear lift R.
+
 
 
   Abort.
