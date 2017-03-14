@@ -143,7 +143,8 @@ Qed.
 Definition functor (C C' : precategory_data) : UU :=
   total2 ( fun F : functor_data C C' => is_functor F ).
 
-Notation "a ==> b" := (functor a b) (at level 50) : cat.
+Notation "a ⟶ b" := (functor a b) (at level 39) : cat.
+(* to input: type "\-->" with Agda input method *)
 
 (** Note that this makes the second component opaque for efficiency reasons *)
 Definition mk_functor {C C' : precategory_data} (F : functor_data C C') (H : is_functor F) :
@@ -242,7 +243,7 @@ Proof.
 Qed.
 
 Lemma functor_on_iso_is_iso (C C' : precategory) (F : functor C C')
-    (a b : ob C) (f : iso a b) : is_isomorphism (#F f).
+    (a b : ob C) (f : iso a b) : is_iso (#F f).
 Proof.
   apply (is_iso_qinv _ (#F (inv_from_iso f))).
   apply is_inverse_functor_image.
@@ -393,7 +394,6 @@ Qed.
 
 (** *** Fully faithful functors reflect isos *)
 
-
 Lemma inv_of_ff_inv_is_inv (C D : precategory) (F : functor C D)
    (FF : fully_faithful F) (a b : C) (f : iso (F a) (F b)) :
   is_inverse_in_precat ((FF ^-1) f) ((FF ^-1) (inv_from_iso f)).
@@ -424,7 +424,7 @@ Qed.
 Lemma fully_faithful_reflects_iso_proof (C D : precategory)(F : functor C D)
         (FF : fully_faithful F)
     (a b : ob C) (f : iso (F a) (F b)) :
-     is_isomorphism (FF^-1 f).
+     is_iso (FF^-1 f).
 Proof.
   apply (is_iso_qinv _ (FF^-1 (inv_from_iso f))).
   apply inv_of_ff_inv_is_inv.
@@ -493,11 +493,20 @@ Qed.
 
 (** Alternative implementation of [weq_ff_functor_on_iso] *)
 
-Lemma ff_reflects_is_iso (C D : precategory) (F : functor C D)
-  (HF : fully_faithful F) (a b : C) (f : a --> b)
-  : is_iso (# F f) -> is_iso f.
+Definition reflects_isos {C D : precategory} (F : C ⟶ D) :=
+  ∏ c c' (f : C⟦c,c'⟧), is_iso (# F f) → is_iso f.
+
+Lemma isaprop_reflects_isos {C D : precategory} (F : C ⟶ D) : isaprop (reflects_isos F).
 Proof.
-  intro H.
+apply impred; intros c; apply impred; intros c'.
+apply impred; intros f; apply impred; intros f'.
+apply isaprop_is_iso.
+Qed.
+
+Lemma ff_reflects_is_iso (C D : precategory) (F : functor C D)
+  (HF : fully_faithful F) : reflects_isos F.
+Proof.
+  intros a b f H.
   set (X:= fully_faithful_reflects_iso_proof _ _ F HF _ _ (isopair _ H)).
   simpl in X.
   set (T:= homotinvweqweq (weq_from_fully_faithful HF a b ) ).
@@ -764,8 +773,8 @@ Qed.
 Definition nat_trans {C C' : precategory_data} (F F' : functor_data C C') : UU :=
   total2 (fun t : ∏ x : ob C, F x -->  F' x => is_nat_trans F F' t).
 
-Notation "F ⟶ G" := (nat_trans F G) (at level 39) : cat.
-(* to input: type "\r--" or "\r" or "\-->" with Agda input method *)
+Notation "F ⟹ G" := (nat_trans F G) (at level 39) : cat.
+(* to input: type "\==>" with Agda input method *)
 
 (** Note that this makes the second component opaque for efficiency reasons *)
 Definition mk_nat_trans {C C' : precategory_data} (F F' : functor_data C C')
@@ -940,7 +949,7 @@ End nat_trans_eq.
 Lemma is_nat_trans_inv_from_pointwise_inv_ext {C : precategory_data} {D : precategory}
   (hs: has_homsets D)
   {F G : functor_data C D} {A : nat_trans F G}
-  (H : forall a : ob C, is_isomorphism (pr1 A a)) :
+  (H : forall a : ob C, is_iso (pr1 A a)) :
   is_nat_trans _ _
      (fun a : ob C => inv_from_iso (tpair _ _ (H a))).
 Proof.
@@ -960,7 +969,7 @@ Qed.
 Lemma is_nat_trans_inv_from_pointwise_inv (C : precategory_data)(D : precategory)
   (hs: has_homsets D)
   (F G : ob [C,D,hs]) (A : F --> G)
-  (H : forall a : ob C, is_isomorphism (pr1 A a)) :
+  (H : forall a : ob C, is_iso (pr1 A a)) :
   is_nat_trans _ _
      (fun a : ob C => inv_from_iso (tpair _ _ (H a))).
 Proof.
@@ -971,20 +980,20 @@ Qed.
 Definition nat_trans_inv_from_pointwise_inv (C : precategory_data)(D : precategory)
   (hs: has_homsets D)
   (F G : ob [C,D,hs]) (A : F --> G)
-  (H : ∏ a : ob C, is_isomorphism (pr1 A a)) :
+  (H : ∏ a : ob C, is_iso (pr1 A a)) :
     G --> F := tpair _ _ (is_nat_trans_inv_from_pointwise_inv _ _ _ _ _ _ H).
 
 Definition nat_trans_inv_from_pointwise_inv_ext {C : precategory_data}{D : precategory}
   (hs: has_homsets D)
   {F G : functor_data C D} (A : nat_trans F G)
-  (H : forall a : ob C, is_isomorphism (pr1 A a)) :
+  (H : forall a : ob C, is_iso (pr1 A a)) :
     nat_trans G F := tpair _ _ (is_nat_trans_inv_from_pointwise_inv_ext hs H).
 
 Lemma nat_trans_inv_is_iso {C : precategory_data}{D : precategory}
   (hs: has_homsets D)
   {F G : functor_data C D} (A : nat_trans F G)
-  (H : forall a : ob C, is_isomorphism (pr1 A a)) :
-  forall a : ob C, is_isomorphism ((nat_trans_inv_from_pointwise_inv_ext hs A H) a).
+  (H : forall a : ob C, is_iso (pr1 A a)) :
+  forall a : ob C, is_iso ((nat_trans_inv_from_pointwise_inv_ext hs A H) a).
 Proof.
   intros a.
   apply is_iso_inv_from_iso.
@@ -992,7 +1001,7 @@ Defined.
 
 Lemma is_inverse_nat_trans_inv_from_pointwise_inv (C : precategory_data)(C' : precategory) (hs: has_homsets C')
     (F G : [C, C', hs]) (A : F --> G)
-   (H : ∏ a : C, is_isomorphism (pr1 A a)) :
+   (H : ∏ a : C, is_iso (pr1 A a)) :
   is_inverse_in_precat A (nat_trans_inv_from_pointwise_inv C C' _ F G A H).
 Proof.
   simpl; split; simpl.
@@ -1010,8 +1019,8 @@ Qed.
 Lemma functor_iso_if_pointwise_iso (C : precategory_data) (C' : precategory)
   (hs: has_homsets C')
  (F G : ob [C, C', hs]) (A : F --> G) :
-   (∏ a : ob C, is_isomorphism (pr1 A a)) ->
-           is_isomorphism A .
+   (∏ a : ob C, is_iso (pr1 A a)) ->
+           is_iso A .
 Proof.
   intro H.
   apply (is_iso_qinv _ (nat_trans_inv_from_pointwise_inv _ _ _ _ _ _ H)).
@@ -1021,7 +1030,7 @@ Defined.
 Definition functor_iso_from_pointwise_iso (C : precategory_data)(C' : precategory)
   (hs: has_homsets C')
  (F G : ob [C, C', hs]) (A : F --> G)
-   (H : ∏ a : ob C, is_isomorphism (pr1 A a)) :
+   (H : ∏ a : ob C, is_iso (pr1 A a)) :
      iso F G :=
  tpair _ _ (functor_iso_if_pointwise_iso _ _ _ _ _ _ H).
 
@@ -1029,8 +1038,8 @@ Definition functor_iso_from_pointwise_iso (C : precategory_data)(C' : precategor
 Lemma is_functor_iso_pointwise_if_iso (C : precategory_data)(C' : precategory)
   (hs: has_homsets C')
  (F G : ob [C, C', hs]) (A : F --> G) :
-  is_isomorphism A ->
-       ∏ a : ob C, is_isomorphism (pr1 A a).
+  is_iso A ->
+       ∏ a : ob C, is_iso (pr1 A a).
 Proof.
   intros H a.
   set (T:= inv_from_iso (tpair _ A H)).
@@ -1047,7 +1056,7 @@ Defined.
 
 Lemma nat_trans_inv_pointwise_inv_before (C : precategory_data) (C' : precategory)
   (hs: has_homsets C')
- (F G : ob [C, C', hs]) (A : F --> G) (Aiso: is_isomorphism A) :
+ (F G : ob [C, C', hs]) (A : F --> G) (Aiso: is_iso A) :
        ∏ a : C, pr1 (inv_from_iso (isopair A Aiso)) a · pr1 A a = identity _ .
 Proof.
   intro a.
@@ -1059,7 +1068,7 @@ Defined.
 
 Lemma nat_trans_inv_pointwise_inv_after (C : precategory_data) (C' : precategory)
   (hs: has_homsets C')
- (F G : ob [C, C', hs]) (A : F --> G) (Aiso: is_isomorphism A) :
+ (F G : ob [C, C', hs]) (A : F --> G) (Aiso: is_iso A) :
        ∏ a : C, pr1 A a · pr1 (inv_from_iso (isopair A Aiso)) a = identity _ .
 Proof.
   intro a.
@@ -1073,14 +1082,14 @@ Defined.
 Definition functor_iso_pointwise_if_iso (C : precategory_data) (C' : precategory)
   (hs: has_homsets C')
  (F G : ob [C, C',hs]) (A : F --> G)
-  (H : is_isomorphism A) :
+  (H : is_iso A) :
      ∏ a : ob C,
        iso (pr1 F a) (pr1 G a) :=
   fun a => tpair _ _ (is_functor_iso_pointwise_if_iso C C' _ F G A H a).
 
 Lemma nat_trans_inv_pointwise_inv_after_p (C : precategory_data) (C' : precategory)
   (hs: has_homsets C')
- (F G : ob [C, C', hs]) (A : F --> G) (Aiso: is_isomorphism A) a :
+ (F G : ob [C, C', hs]) (A : F --> G) (Aiso: is_iso A) a :
   inv_from_iso (functor_iso_pointwise_if_iso C C' hs F G A Aiso a) =
         pr1 (inv_from_iso (isopair A Aiso)) a.
 Proof.
@@ -1458,8 +1467,8 @@ Notation "[ C , D , hs ]" := (functor_precategory C D hs) : cat.
 
 Notation "[ C , D ]" := (functor_Precategory C D) : cat.
 
-Notation "F ⟶ G" := (nat_trans F G) (at level 39) : cat.
-(* to input: type "\r--" or "\r" or "\-->" with Agda input method *)
+Notation "F ⟹ G" := (nat_trans F G) (at level 39) : cat.
+(* to input: type "\==>" with Agda input method *)
 
 Notation "F ∙ G" := (functor_composite F G) (at level 35) : cat.
 (* to input: type "\." with Agda input method *)
@@ -1471,4 +1480,5 @@ Notation "G □ F" := (functor_composite F G) (at level 35, only parsing) : cat.
 Notation "G □ F" := (functor_composite (F:[_,_]) (G:[_,_]) : [_,_]) (at level 35) : Cat.
 (* to input: type "\Box" or "\square" or "\sqw" or "\sq" with Agda input method *)
 
-Notation "a ==> b" := (functor a b) (at level 50) : cat.
+Notation "a ⟶ b" := (functor a b) (at level 39) : cat.
+(* to input: type "\-->" with Agda input method *)

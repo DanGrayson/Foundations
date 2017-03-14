@@ -10,6 +10,7 @@ endif
 # The packages, listed in order by dependency:
 PACKAGES += EssentialFoundations
 PACKAGES += Foundations
+PACKAGES += MoreFoundations
 PACKAGES += Combinatorics
 PACKAGES += Algebra
 PACKAGES += NumberSystems
@@ -52,7 +53,7 @@ ifneq "$(INCLUDE)" "no"
 include build/CoqMakefile.make
 endif
 everything: TAGS all html install
-check-first: enforce-linear-ordering check-travis
+check-first: enforce-prescribed-ordering check-travis
 OTHERFLAGS += $(MOREFLAGS)
 OTHERFLAGS += -indices-matter -type-in-type -w none
 ifeq ($(VERBOSE),yes)
@@ -218,10 +219,10 @@ show-long-lines:
 
 # here we assume the shell is bash, which it usually is nowadays:
 SHELL = bash
-enforce-linear-ordering: .enforce-linear-ordering.okay
-clean::; rm -f .enforce-linear-ordering.okay
-.enforce-linear-ordering.okay: Makefile $(VFILES:.v=.v.d)
-	: --- enforce linear ordering ---
+enforce-prescribed-ordering: .enforce-prescribed-ordering.okay
+clean::; rm -f .enforce-prescribed-ordering.okay
+.enforce-prescribed-ordering.okay: Makefile $(VFILES:.v=.v.d)
+	: "--- enforce ordering prescribed by the files UniMath/*/.packages/files ---"
 	@set -e ;\
 	if declare -A seqnum 2>/dev/null ;\
 	then n=0 ;\
