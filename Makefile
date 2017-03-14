@@ -9,6 +9,7 @@ endif
 ############################################
 # The packages, listed in order by dependency:
 PACKAGES += Foundations
+PACKAGES += MoreFoundations
 PACKAGES += Combinatorics
 PACKAGES += Algebra
 PACKAGES += NumberSystems
@@ -51,7 +52,7 @@ ifneq "$(INCLUDE)" "no"
 include build/CoqMakefile.make
 endif
 everything: TAGS all html install
-check-first: enforce-linear-ordering check-travis
+check-first: enforce-prescribed-ordering check-travis
 OTHERFLAGS += $(MOREFLAGS)
 OTHERFLAGS += -indices-matter -type-in-type -w none
 ifeq ($(VERBOSE),yes)
@@ -103,7 +104,7 @@ COQDEFS := --language=none																\
 	-r '/^[[:space:]]*Tactic[[:space:]]+Notation.*[[:space:]]"\([[:alnum:]'\''_]+\)"[[:space:]]/\1/'										\
 	-r '/^[[:space:]]*Delimit[[:space:]]+Scope[[:space:]]+[[:alnum:]'\''_]+[[:space:]]+with[[:space:]]+\([[:alnum:]'\''_]+\)[[:space:]]*\./\1/'
 
-$(foreach P,$(PACKAGES),$(eval TAGS-$P: $(filter UniMath/$P/%,$(VFILES)); etags -o $$@ $$^))
+$(foreach P,$(PACKAGES),$(eval TAGS-$P: Makefile $(filter UniMath/$P/%,$(VFILES)); etags $(COQDEFS) -o $$@ $$^))
 $(VFILES:.v=.vo) : $(COQBIN)coqc
 TAGS : Makefile $(PACKAGE_FILES) $(VFILES); etags $(COQDEFS) $(VFILES)
 FILES_FILTER := grep -vE '^[[:space:]]*(\#.*)?$$'
@@ -217,8 +218,10 @@ show-long-lines:
 
 # here we assume the shell is bash, which it usually is nowadays:
 SHELL = bash
-enforce-linear-ordering:
-	: --- $@ ---
+enforce-prescribed-ordering: .enforce-prescribed-ordering.okay
+clean::; rm -f .enforce-prescribed-ordering.okay
+.enforce-prescribed-ordering.okay: Makefile $(VFILES:.v=.v.d)
+	: "--- enforce ordering prescribed by the files UniMath/*/.packages/files ---"
 	@set -e ;\
 	if declare -A seqnum 2>/dev/null ;\
 	then n=0 ;\
@@ -247,14 +250,18 @@ enforce-linear-ordering:
 		 [ ! "$$haderror" ] ) ;\
 	else echo "make: *** skipping enforcement of linear ordering of packages, because 'bash' is too old" ;\
 	fi
+	touch $@
 
 # here we ensure that the travis script checks every package
-check-travis:
-	: --- $@ ---
+check-travis:.check-travis.okay
+clean::; rm -f .check-travis.okay
+.check-travis.okay: Makefile .travis.yml
+	: --- check travis script ---
 	@set -e ;\
 	for p in $(PACKAGES) ;\
 	do grep -q "PACKAGES=.*$$p" .travis.yml || ( echo "package $$p not checked by .travis.yml" >&2 ; exit 1 ) ;\
 	done
+	touch "$@"
 
 #################################
 # targets best used with INCLUDE=no
