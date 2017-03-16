@@ -1331,6 +1331,11 @@ Definition op {X : setwithbinop} : binop X := pr2 X.
 Notation "x + y" := (op x y) : addoperation_scope.
 Notation "x * y" := (op x y) : multoperation_scope.
 
+Lemma isaset_binop (X:hSet) : isaset (binop X).
+Proof.
+  intros X. unfold binop. apply impred_isaset; intro x. apply impred_isaset; intro y.
+  apply setproperty.
+Defined.
 
 (** **** Functions compatible with a binary operation (homomorphisms) and their properties *)
 
@@ -1354,6 +1359,11 @@ Definition pr1binopfun (X Y : setwithbinop) : binopfun X Y -> (X -> Y) := @pr1 _
 Coercion pr1binopfun : binopfun >-> Funclass.
 
 Definition binopfunisbinopfun {X Y : setwithbinop} (f : binopfun X Y) : isbinopfun f := pr2 f.
+
+Lemma isbinopfun_idfun (X:setwithbinop) : isbinopfun (idfun X).
+Proof.
+  intros. intros x y. reflexivity.
+Defined.
 
 Lemma isasetbinopfun  (X Y : setwithbinop) : isaset (binopfun X Y).
 Proof.
@@ -1396,6 +1406,44 @@ Definition binopmonocomp {X Y Z : setwithbinop} (f : binopmono X Y) (g : binopmo
   binopmono X Z := binopmonopair (inclcomp (pr1 f) (pr1 g)) (isbinopfuncomp f g).
 
 Definition binopiso (X Y : setwithbinop) : UU := total2 (fun f : weq X Y => isbinopfun f).
+
+Definition idbinopiso (X:setwithbinop) : binopiso X X.
+Proof.
+  intros. exists (idweq X). intros x y. reflexivity.
+Defined.
+
+Definition binop_univalence_map (X Y:setwithbinop) : X = Y -> binopiso X Y.
+Proof.
+  intros X Y p. induction p. exact (idbinopiso X).
+Defined.
+
+Theorem binop_univalence (X Y:setwithbinop) : X = Y ≃ binopiso X Y.
+Proof.
+  intros.
+  simple refine (@remakeweq _ _ _ _ _).
+  { unfold binopiso. intermediate_weq (X╝Y).
+    { apply total2_paths_equiv. }
+    { simple refine (weqbandf _ _ _ _).
+      { apply hSet_univalence. }
+      { intros e. apply invweq. induction X as [X m], Y as [Y n]; simpl in e.
+        induction e; simpl. apply weqimplimpl.
+        { intros i. unfold isbinopfun in i; simpl in i.
+          change (m = n). apply funextfun; intro x. apply funextfun; intro y. apply i. }
+        { intros e. change (m = n) in e. intros x y; simpl in x, y. unfold op; simpl.
+          induction e. reflexivity. }
+        { apply isapropisbinopfun. }
+        { change (isaprop (m=n)). apply isaset_binop. } } } }
+  { exact (binop_univalence_map X Y). }
+  { intros p. apply subtypeEquality.
+    { intros w. apply isapropisbinopfun. }
+    now induction p. }
+Defined.
+
+Lemma binop_univalence_compute (X Y:setwithbinop) (p : X = Y) :
+  binop_univalence X Y p = binop_univalence_map X Y p.
+Proof.
+  reflexivity.
+Defined.
 
 Definition binopisopair {X Y : setwithbinop} (f : weq X Y) (is : isbinopfun f) :
   binopiso X Y := tpair _  f is.
