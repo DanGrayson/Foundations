@@ -1273,7 +1273,12 @@ Definition WellOrderedSet : UU := (∑ (S:hSet), WellOrdering S)%type.
 
 Definition WellOrderedSet_to_hSet : WellOrderedSet -> hSet := pr1.
 
-Coercion WellOrderedSet_to_hSet : WellOrderedSet >-> hSet.
+Definition WellOrderedSet_to_OrderedSet : WellOrderedSet -> OrderedSet.
+Proof.
+  intros [W [R [[po tot] b]]]. exact ((W,,R,,po),,tot).
+Defined.
+
+Coercion WellOrderedSet_to_OrderedSet : WellOrderedSet >-> OrderedSet.
 
 Delimit Scope woset with woset.
 
@@ -1322,6 +1327,32 @@ Proof.
   - apply isaprop_theSmallest. apply WO_isTotalOrder.
   - exact (WO_theSmallest S ne).
 Defined.
+
+Print Coercions.
+
+Definition is_WellOrderedSet_map {X Y : WellOrderedSet} (f : X -> Y) : hProp :=
+  hProppair
+    (isaposetmorphism (f : (X : Poset) -> (Y : Poset)))
+    (isaprop_isaposetmorphism _).
+
+Definition WellOrderedSet_map (X Y : WellOrderedSet) := (∑ f : X → Y, is_WellOrderedSet_map f)%type.
+
+Definition WellOrderedSet_iso (X Y : WellOrderedSet) := (∑ f : X ≃ Y, is_WellOrderedSet_map f)%type.
+
+Notation "X ≅ Y" := (WellOrderedSet_iso X Y) : woset.
+
+Definition WellOrderedSet_univalence_map (X Y : WellOrderedSet) : (X = Y → X ≅ Y)%type.
+Proof.
+  intros []. exists (idweq X). intros x y le. exact le.
+Defined.
+
+Lemma WellOrderedSet_univalence (X Y : WellOrderedSet) : (X = Y ≃ X ≅ Y)%type.
+Proof.
+  use (remakeweq (g := WellOrderedSet_univalence_map X Y)).
+
+
+
+Abort.
 
 Lemma isaset_WellOrderedSet : isaset WellOrderedSet.
 Proof.
