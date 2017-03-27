@@ -18,5 +18,12 @@ Defined.
 
 Definition decidable_prop (X:hProp) := hProppair (decidable X) (isapropdec X (pr2 X)).
 
+Lemma logeq_contra {P:hProp} : (decidable_prop P ⇒ (( P ⇔ ¬ P ) ⇒ hfalse))%logic.
+Proof.
+  intros [p|np] [a b].
+  - exact (a p p).
+  - exact (np (b np)).
+Defined.
+
 (* override LEM of Foundations/Propositions.v, to make an hProp: *)
 Definition LEM : hProp := ∀ P : hProp, decidable_prop P.

@@ -1165,7 +1165,7 @@ Defined.
 
 (** ** The proof of the well ordering theorem of Zermelo *)
 
-Theorem ZermeloWellOrdering {X:hSet} : AxiomOfChoice ⇒ ∃ R : hrel X, isWellOrder R.
+Theorem ZermeloWellOrdering (X:hSet) : AxiomOfChoice ⇒ ∃ R : hrel X, isWellOrder R.
 (* see http://www.math.illinois.edu/~dan/ShortProofs/WellOrdering.pdf *)
 Proof.
   intros ac. assert (lem := AC_to_LEM ac).
@@ -1353,15 +1353,39 @@ Proof.
 
 Abort.
 
-Lemma bigSet (X:Type) : ∑ Y:hSet, ∏ f : Y -> X, ¬ isincl f.
+Lemma bigSet (X:Type) : LEM -> ∑ Y:hSet, ∏ f : Y -> X, ¬ isincl f.
 Proof.
   (*
      This lemma is useful in arguments by contradiction, where one uses
      transfinite recursion to define an injective function f, after first
      equipping Y with a well ordering.
 
-     To prove it, let Y be the set of subsets of π_0 (X).
+     To prove it, let Y be the set of subtypes of X.  It's Cantor's diagonal
+     argument that the power set of a set is bigger than the set.
    *)
+  intros lem.
+  set (PX := subtype_set X). exists PX. intros f inc.
+  set (S := (λ x, ∃ T, ∥ x = f T ∥ ∧ ¬ T x)%type).
+  set (y := f S).
+  apply (logeq_contra (lem (S y))).
+  split.
+  - intros Sy. apply (squash_to_hProp Sy); intros [T [e' nTy]].
+    apply (squash_to_hProp e'); clear e'; intros e.
+    assert (E : S = T).
+    { apply (isweqonpathsincl f inc _ _ e). }
+    induction E, e.
+    apply fromempty. exact (nTy Sy).
+  - intros nSy. apply hinhpr. exists S. split.
+    + apply hinhpr. reflexivity.
+    + exact nSy.
+Defined.
 
-
-Abort.
+Corollary bigWellOrderedSet (X:Type) : AxiomOfChoice -> ∃ Y:WellOrderedSet, ∏ f : Y -> X, ¬ isincl f.
+Proof.
+  intros ac.
+  induction (bigSet X (AC_to_LEM ac)) as [V n].
+  apply (squash_to_hProp (ZermeloWellOrdering V ac)); intros [R wo].
+  apply hinhpr.
+  exists (V,,R,,wo).
+  exact n.
+Defined.
