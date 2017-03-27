@@ -1261,6 +1261,12 @@ Proof.
   induction e. exact R'.
 Defined.
 
+Corollary multiZermeloWellOrdering (I:hSet) (X:I->hSet) :
+  AxiomOfChoice ⇒ ∥ ∏ i, ∑ R : hrel (X i), isWellOrder R ∥ %type.
+Proof.
+  intros ac. use ac. intros i. apply ZermeloWellOrdering. exact ac.
+Defined.
+
 (** ** Well ordered sets *)
 
 Definition WellOrderedSet : UU := (∑ (S:hSet), WellOrdering S)%type.
