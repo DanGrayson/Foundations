@@ -38,20 +38,20 @@ Proof.
   - apply propproperty.
 Defined.
 
-Lemma decidable_proof_by_contradiction {P:hProp} : decidable P -> ¬ ¬ P -> P.
+Lemma decidable_proof_by_contradiction {P:hProp} : decidable P -> ¬¬ P -> P.
 Proof.
   intros dec nnp. induction dec as [p|np].
   - exact p.
   - apply fromempty. exact (nnp np).
 Defined.
 
-Lemma proof_by_contradiction {P:hProp} : LEM -> ¬ ¬ P -> P.
+Lemma proof_by_contradiction {P:hProp} : LEM -> ¬¬ P -> P.
 Proof.
   intro lem.
   exact (decidable_proof_by_contradiction (lem P)).
 Defined.
 
-Lemma dneg_elim_to_LEM : (∏ P:hProp, ¬ ¬ P -> P) -> LEM.
+Lemma dneg_elim_to_LEM : (∏ P:hProp, ¬¬ P -> P) -> LEM.
 (* a converse for Lemma dneg_LEM *)
 Proof.
   intros dne. intros P. simple refine (dne (_,,_) _).
