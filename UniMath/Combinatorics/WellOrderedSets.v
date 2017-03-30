@@ -1306,6 +1306,10 @@ Defined.
 
 Definition WO_isTotalOrder (X : WellOrderedSet) : isTotalOrder (WOrel X) := pr122 X.
 
+Definition WO_isPartialOrder (X : WellOrderedSet) : isPartialOrder (WOrel X) := pr1 (WO_isTotalOrder X).
+
+Definition WO_istotal (X : WellOrderedSet) : istotal (WOrel X) := pr2 (WO_isTotalOrder X).
+
 Definition WO_hasSmallest (X : WellOrderedSet) : hasSmallest (WOrel X) := pr222 X.
 
 Definition theSmallest {X : WellOrderedSet} (S : hsubtype X) : hProp
@@ -1335,9 +1339,37 @@ Definition is_WellOrderedSet_map {X Y : WellOrderedSet} (f : X -> Y) : hProp :=
 
 Definition WellOrderedSet_map (X Y : WellOrderedSet) := (∑ f : X → Y, is_WellOrderedSet_map f)%type.
 
+Definition WellOrderedSet_map_to_function {X Y : WellOrderedSet} (f : WellOrderedSet_map X Y) : X -> Y := pr1 f.
+
+Coercion WellOrderedSet_map_to_function : WellOrderedSet_map >-> Funclass.
+
+Lemma WellOrderedSet_map_lt_inv {X Y : WellOrderedSet} (f : WellOrderedSet_map X Y) (x x':X) :
+  f x < f x' -> x < x'.
+Proof.
+  intros lt ge. change (neg (f x' ≤ f x)) in lt. apply lt; clear lt. exact (pr2 f x' x ge).
+Defined.
+
 Definition WellOrderedSet_iso (X Y : WellOrderedSet) := (∑ f : X ≃ Y, is_WellOrderedSet_map f)%type.
 
 Notation "X ≅ Y" := (WellOrderedSet_iso X Y) : woset.
+
+Definition WellOrderedSet_iso_to_map {X Y : WellOrderedSet} : X ≅ Y -> WellOrderedSet_map X Y
+  := λ f, pr1weq (pr1 f) ,, pr2 f.
+
+Coercion WellOrderedSet_iso_to_map : WellOrderedSet_iso >-> WellOrderedSet_map.
+
+Definition WellOrderedSet_iso_to_weq {X Y : WellOrderedSet} : X ≅ Y -> X ≃ Y := pr1.
+
+Coercion WellOrderedSet_iso_to_weq : WellOrderedSet_iso >-> weq.
+
+Lemma WellOrderedSet_iso_lt_inv {X Y : WellOrderedSet} (f : X ≅ Y) {y y':Y} :
+  y < y' -> invmap f y < invmap f y'.
+Proof.
+  intros lt ge. change (neg (y' ≤ y)) in lt. apply lt; clear lt.
+  assert (p : f (invmap f y) = y). { apply homotweqinvweq. }
+  assert (p' : f (invmap f y') = y'). { apply homotweqinvweq. }
+  induction p, p'. exact (pr2 f _ _ ge).
+Defined.
 
 Definition WellOrderedSet_univalence_map (X Y : WellOrderedSet) : (X = Y → X ≅ Y)%type.
 Proof.
@@ -1372,18 +1404,58 @@ Proof.
   intros p. now induction p.
 Defined.
 
-Lemma isaset_WellOrderedSet : isaset WellOrderedSet.
+Lemma isaprop_weq_WellOrderedSet (X Y : WellOrderedSet) (lem:LEM) : isaprop (X ≅ Y).
 Proof.
-  (*
-     First show that an order preserving equivalence f : X ≃ Y of well
-     ordered sets has the property that for any x, f x is least element
-     greater than f y for every y < x.  Now given also an order
-     preserving f' : X ≃ Y, take the smallest x where f x ≠ f y.  Since
-     they agree on previous values, they agree at x, too, using the previous
-     statement.
-   *)
+  apply invproofirrelevance. intros [f i] [g j]. apply subtypeEquality_prop. change (paths f g).
+  simple refine (invmap (weqonpathsincl _ (isinclpr1 _ isapropisweq) _ _) _).
+  apply funextfun. change (∀ x, f x = g x). apply (proof_by_contradiction lem).
+  intros ne; change hfalse. assert (Q := negforall_to_existsneg _ lem ne).
+  apply (squash_to_hProp Q); clear Q ne; intros [x' ne].
+  set (S := λ x, ¬ (f x = g x) : hProp). assert (Sne := hinhpr(x',,ne) : ∃ x, S x).
+  induction (WO_theSmallest S Sne) as [x0 [Sx0 x0min]]; change (hProptoType(¬ (f x0 = g x0))) in Sx0.
+  apply (squash_to_hProp (WO_istotal Y (f x0) (g x0))); intros [c|c].
+  { assert (lt : f x0 < g x0).
+    { apply (pr2 (tot_nle_iff_gt _ (WO_isTotalOrder Y) _ _)).
+      split.
+      { exact c. }
+      { exact Sx0. } }
+    clear c.
+    use Sx0; clear Sx0.
+    assert (Q := (WellOrderedSet_iso_lt_inv (g,,j) lt) : invmap g (f x0) < invmap g (g x0)); clear lt.
+    induction (!homotinvweqweq g x0).
+    assert (K := negf (x0min (invmap g (f x0)) : S (invmap g (f x0)) ⇒ x0 ≤ (invmap g (f x0))) Q); clear Q.
+    change (dneg (f (invmap g (f x0)) = g (invmap g (f x0)))) in K.
+    assert (K' := proof_by_contradiction lem K); clear K.
+    assert (e := K' @ homotweqinvweq g (f x0)); clear K'.
+    assert (e' := invmaponpathsweq f _ _ e); clear e.
+    assert (e := maponpaths g e'); clear e'.
+    assert (e' := ! homotweqinvweq g (f x0) @ e); clear e.
+    exact e'. }
+  { assert (lt : g x0 < f x0).
+    { apply (pr2 (tot_nle_iff_gt _ (WO_isTotalOrder Y) _ _)).
+      split.
+      { exact c. }
+      { intros e. use Sx0. exact (!e). } }
+    clear c.
+    use Sx0; clear Sx0.
+    assert (Q := (WellOrderedSet_iso_lt_inv (f,,i) lt) : invmap f (g x0) < invmap f (f x0)); clear lt.
+    induction (!homotinvweqweq f x0).
+    assert (K := negf (x0min (invmap f (g x0)) : S (invmap f (g x0)) ⇒ x0 ≤ (invmap f (g x0))) Q); clear Q.
+    change (dneg (f (invmap f (g x0)) = g (invmap f (g x0)))) in K.
+    assert (K' := proof_by_contradiction lem K); clear K.
+    assert (K := pathsinv0 K'); clear K'.
+    assert (e := K @ homotweqinvweq f (g x0)); clear K.
+    assert (e' := invmaponpathsweq g _ _ e); clear e.
+    assert (e := maponpaths f e'); clear e'.
+    assert (e' := ! homotweqinvweq f (g x0) @ e); clear e.
+    exact (!e'). }
+Defined.
 
-Abort.
+Lemma isaset_WellOrderedSet (lem:LEM) : isaset WellOrderedSet.
+Proof.
+  intros X Y.
+  exact (isofhlevelweqb 1 (WellOrderedSet_univalence X Y) (isaprop_weq_WellOrderedSet X Y lem)).
+Defined.
 
 (* ** Transfinite recursion *)
 
