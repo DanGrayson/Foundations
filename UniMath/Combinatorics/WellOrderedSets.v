@@ -1328,8 +1328,6 @@ Proof.
   - exact (WO_theSmallest S ne).
 Defined.
 
-Print Coercions.
-
 Definition is_WellOrderedSet_map {X Y : WellOrderedSet} (f : X -> Y) : hProp :=
   hProppair
     (isaposetmorphism (f : (X : Poset) -> (Y : Poset)))
@@ -1349,10 +1347,30 @@ Defined.
 Lemma WellOrderedSet_univalence (X Y : WellOrderedSet) : (X = Y ≃ X ≅ Y)%type.
 Proof.
   use (remakeweq (g := WellOrderedSet_univalence_map X Y)).
-
-
-
-Abort.
+  { intermediate_weq (X ╝ Y).
+    { apply total2_paths_equiv. }
+    use weqbandf.
+    { apply hSet_univalence. }
+    induction X as [X v], Y as [Y w]; unfold pr1, pr2. intro p.
+    induction p.
+    change (v = w ≃ @is_WellOrderedSet_map (X,,v) (X,,w) (idfun X))%type.
+    induction v as [R i], w as [S j].
+    intermediate_weq (R = S).
+    { exact (weqonpathsincl _ (@isinclpr1 (hrel_set X) (isWellOrder) (λ R, propproperty _)) (R,,i) (S,,j)). }
+    { apply weqiff.
+      { split.
+        { intros p. intros x y le. induction p. exact le. }
+        { intros k. apply funextfun; intros x; apply funextfun; intros y. apply weqlogeq. split.
+          { intros r. exact (k _ _ r). }
+          { intros s. induction i as [[[[trans refl] anti] tot] min]. apply (squash_to_hProp (tot x y)); intros [c|c].
+            { exact c. }
+            { induction j as [[[[trans' refl'] anti'] tot'] min'].
+              induction (anti' x y s (k y x c)).
+              apply refl. } } } }
+      { apply propproperty. }
+      { apply propproperty. } } }
+  intros p. now induction p.
+Defined.
 
 Lemma isaset_WellOrderedSet : isaset WellOrderedSet.
 Proof.
