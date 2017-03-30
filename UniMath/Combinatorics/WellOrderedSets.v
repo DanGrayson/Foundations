@@ -205,7 +205,7 @@ Proof.
   split.
   { split.
     { split.
-      {                         (* transitivity *)
+      {                         (** transitivity *)
         intros [w Ww] [x Wx] [y Wy] wx xy.
         apply (squash_to_hProp Wy); intros [Sy|ezy].
         - induction (ishinh_irrel (ii1 Sy) Wy).
@@ -240,7 +240,7 @@ Proof.
             induction (ishinh_irrel (ii2 (idpath z)) Ww).
             exact tt.
       }
-      {                         (* reflexivity *)
+      {                         (** reflexivity *)
         intros [x Wx].
         apply (squash_to_hProp Wx); intros [Sx|ezx].
         - induction (ishinh_irrel (ii1 Sx) Wx).
@@ -249,7 +249,7 @@ Proof.
         - induction ezx.
           induction (ishinh_irrel (ii2 (idpath z)) Wx); change unit.
           exact tt. } }
-    {                           (* antisymmetry *)
+    {                           (** antisymmetry *)
       intros [x Wx] [y Wy] xy yx.
       apply eqset_to_path.
       apply (squash_to_hProp Wx); intros [Sx|ezx].
@@ -277,7 +277,7 @@ Proof.
         + induction ezy.
           apply subtypeEquality_prop; change (z=z).
           reflexivity. } }
-  {                             (* totality *)
+  {                             (** totality *)
     intros [x Wx] [y Wy].
     apply (squash_to_hProp Wx); intros [Sx|ezx].
     - induction (ishinh_irrel (ii1 Sx) Wx).
@@ -407,16 +407,16 @@ Definition hasSmallest_WOSubset_plus_point {X:hSet} (S:WOSubset X) (z:X) (nSz : 
   LEM ⇒ hasSmallest (TOSrel (TOSubset_plus_point S z nSz)).
 Proof.
   intros lem T ne.
-  (* T is a nonempty set.  We need to find the smallest element of it *)
+  (** T is a nonempty set.  We need to find the smallest element of it *)
   set (S' := TOSubset_plus_point S z nSz).
   assert (S'z := subtype_plus_has_point S z : S' z).
   set (z' := (z,,S'z) : carrier S').
   set (j := TOSubset_plus_point_incl S z nSz). fold S' in j.
   set (jmap := subtype_inc j).
   set (SiT := λ s:S, T (subtype_inc j s)).
-  (* Decide whether [S ∩ T] is nonempty: *)
+  (** Decide whether [S ∩ T] is nonempty: *)
   induction (lem (∃ s, SiT s)) as [q|q].
-  - (* ... use the smallest element of SiT *)
+  - (** ... use the smallest element of SiT *)
     assert (SiTmin := WOS_hasSmallest _ _ q).
     apply (squash_to_hProp SiTmin); clear SiTmin; intros [m [SiTm min]].
     apply hinhpr. set (m' := jmap m). exists m'. split.
@@ -426,13 +426,13 @@ Proof.
       * induction (ishinh_irrel (ii1 St) S't); change (m ≤ (t,,St)). exact (min (t,,St) Tt).
       * induction etz; induction (ishinh_irrel (ii2 (idpath z)) S't); change unit.
         exact tt.
-  - (* ... use z *)
+  - (** ... use z *)
     apply hinhpr. exists z'. split.
-    + (* T doesn't meet S, so it must contain z *)
+    + (** T doesn't meet S, so it must contain z *)
       apply (squash_to_hProp ne); clear ne; intros [[t SiTt] Tt].
       apply (squash_to_hProp SiTt); intros [St|ezt].
       * apply fromempty.
-        (* S also meets T, so get a contradiction *)
+        (** S also meets T, so get a contradiction *)
         apply q. apply hinhpr. exists (t,,St).
         change (T (t,, j t St)).
         induction (proofirrelevance_hProp _ SiTt (j t St)).
@@ -440,18 +440,18 @@ Proof.
       * induction ezt. unfold z'.
         induction (proofirrelevance_hProp _ SiTt S'z).
         exact Tt.
-    + (* now show z' is the smallest element of T *)
+    + (** now show z' is the smallest element of T *)
       intros [t S't] Tt.
       apply (squash_to_hProp S't); intros [St|ezt].
       * apply fromempty.
-        (* t is in S ∩ T, but that's empty *)
+        (** t is in S ∩ T, but that's empty *)
         apply q; clear q. apply hinhpr.
         exists (t,,St).
         change (T (t,, j t St)).
         induction (proofirrelevance_hProp _ S't (j t St)).
         exact Tt.
       * induction ezt.
-        (* now show [z ≤ z], by reflexivity *)
+        (** now show [z ≤ z], by reflexivity *)
         change (TOSrel S' (z,,S'z) (z,,S't)).
         induction (proofirrelevance_hProp _ S'z S't).
         exact (TOrefl S' _).
@@ -535,7 +535,7 @@ Defined.
 
 Lemma wosub_fidelity {X:hSet} {S T:WOSubset X} (le : S ≼ T)
       (s s' : S) : s ≤ s' ⇔ wosub_inc le s ≤ wosub_inc le s'.
-(* we want this lemma available after showing the union of a chain is totally ordered
+(** we want this lemma available after showing the union of a chain is totally ordered
    but before showing it has the smallest element condition *)
 Proof.
   set (Srel := WOSrel S).
@@ -555,7 +555,7 @@ Proof.
       assert (k' := Tanti _ _ l k); clear k.
       assert (p : s = s').
       { apply subtypeEquality_prop. exact (maponpaths pr1 k'). }
-      induction p. apply (pr2 S). (* refl *) }
+      induction p. apply (pr2 S). (** refl *) }
 Defined.
 
 Local Lemma h1 {X} {S:WOSubset X} {s t u:S} : s = t -> t ≤ u -> s ≤ u.
@@ -594,7 +594,7 @@ Definition wosub_le_smaller {X:hSet} (S T:WOSubset X) : hProp := (S ≼ T) ∧ (
 
 Notation "S ≺ T" := (wosub_le_smaller S T) (at level 70) : wosubset.
 
-(* [upto s x] means x is in S and, as an element of S, it is strictly less than s *)
+(** [upto s x] means x is in S and, as an element of S, it is strictly less than s *)
 Definition upto {X:hSet} {S:WOSubset X} (s:S) : hsubtype X
   := (λ x, ∑ h:S x, (x,,h) < s)%prop.
 
@@ -631,18 +631,18 @@ Proof.
   intros lem ini ne.
   set (R := WOSrel T).
   assert (min := WOS_hasSmallest T).
-  set (U := (λ t:T, t ∉ S) : hsubtype (carrier T)). (* complement of S in T *)
+  set (U := (λ t:T, t ∉ S) : hsubtype (carrier T)). (** complement of S in T *)
   assert (neU : nonempty (carrier U)).
   { apply (squash_to_hProp ne); intros [x [Tx nSx]]. apply hinhpr. exact ((x,,Tx),,nSx). }
   clear ne. assert (minU := min U neU); clear min neU.
   apply (squash_to_hProp minU); clear minU; intros [u [Uu minu]].
-  (* minu says that u is the smallest element of T not in S *)
+  (** minu says that u is the smallest element of T not in S *)
   apply hinhpr. exists u. intro y. split.
   - intro Sy. change (∑ Ty : T y, neg (u ≤ y,, Ty)).
     exists (le y Sy). intro ules. use Uu. exact (ini _ _ _ _ ules).
   - intro yltu. induction yltu as [yinT yltu].
-    (* Goal : [S y].  We know y is smaller than the smallest element of T not in S, *)
-(*        so at best, constructively, we know [¬ ¬ (S y)].  So prove it by contradiction. *)
+    (** Goal : [S y].  We know y is smaller than the smallest element of T not in S,
+       so at best, constructively, we know [¬ ¬ (S y)].  So prove it by contradiction. *)
     apply (proof_by_contradiction lem).
     intro bc. use yltu. now use minu.
 Defined.
@@ -873,18 +873,18 @@ Proof.
   apply (squash_to_hProp t'); clear t'; intros [[x i] xinT].
   apply (squash_to_hProp i); intros [j xinSj].
   induction (ishinh_irrel ( j ,, xinSj ) i).
-  (* T' is the intersection of T with S j *)
+  (** T' is the intersection of T with S j *)
   set (T' := (λ s, T (subtype_inc (subtype_union_containedIn S j) s))).
   assert (t' := hinhpr ((x,,xinSj),,xinT) : ∥ carrier T' ∥); clear x xinSj xinT.
   assert (min := WOS_hasSmallest (S j) T' t'); clear t'.
   apply (squash_to_hProp min); clear min; intros [t0 [t0inT' t0min]].
-  (* t0 is the minimal element of T' *)
+  (** t0 is the minimal element of T' *)
   set (t0' := subtype_inc (subtype_union_containedIn S j) t0).
   apply hinhpr. exists t0'. split.
   - exact t0inT'.
   - intros t tinT.
-    (* now show any other element t of T is at least as big as t0' *)
-    (* for that purpose, we may assume t ≤ t0' *)
+    (** Now show any other element t of T is at least as big as t0'.
+        For that purpose, we may assume t ≤ t0'. *)
     apply (hdisj_impl_2 (chain_union_rel_istotal chain _ _)); intro tle.
     set (q := chain_union_rel_initial chain j t0 t tle).
     set (t' := (pr1 t,,q) : S j).
@@ -920,7 +920,7 @@ Defined.
 
 Definition proper_subtypes_set (X:UU) : hSet := ∑ S : subtype_set X, ∃ x, ¬ (S x).
 
-(* the interval up to c, as a proper subset of X *)
+(** the interval up to c, as a proper subset of X *)
 Definition upto' {X:hSet} {C:WOSubset X} (c:C) : proper_subtypes_set X.
 Proof.
   exists (upto c). apply hinhpr. exists (pr1 c). intro n.
@@ -1166,16 +1166,16 @@ Defined.
 (** ** The proof of the well ordering theorem of Zermelo *)
 
 Theorem ZermeloWellOrdering (X:hSet) : AxiomOfChoice ⇒ ∃ R : hrel X, isWellOrder R.
-(* see http://www.math.illinois.edu/~dan/ShortProofs/WellOrdering.pdf *)
+(** see http://www.math.illinois.edu/~dan/ShortProofs/WellOrdering.pdf *)
 Proof.
   intros ac. assert (lem := AC_to_LEM ac).
-  (* a choice function g allows us to single out the "guided" well ordered subsets of X *)
+  (** a choice function g allows us to single out the "guided" well ordered subsets of X *)
   apply (squash_to_hProp (AC_to_choice_fun X ac)); intro g.
   set (S := guidedFamily g).
   set (Schain := guided_WOSubset_total g lem).
-  (* we form the union, W, of all the guided (well ordered) subsets of X *)
+  (** we form the union, W, of all the guided (well ordered) subsets of X *)
   set (W := ⋃ Schain).
-  (* we show W itself is guided, so W is the biggest guided subset of X *)
+  (** we show W itself is guided, so W is the biggest guided subset of X *)
   assert (Wguided : is_guided_WOSubset g W).
   { intros [w Ww]. apply (squash_to_hProp Ww); intros [C Cw].
     change (hProptoType (C w)) in Cw. simpl.
@@ -1185,18 +1185,18 @@ Proof.
     use upto'_eqn.
     - exact CW.
     - reflexivity. }
-  (* now we prove W is all of X *)
+  (** now we prove W is all of X *)
   assert (all : ∀ x, W x).
-  { (* ... for if not, we can add a guided element and get a bigger guided subset *)
+  { (** ... for if not, we can add a guided element and get a bigger guided subset *)
     apply (proof_by_contradiction lem); intro n.
-    (* it's not constructive to get an element not in W: *)
+    (** it's not constructive to get an element not in W: *)
     assert (Q := negforall_to_existsneg _ lem n); clear n.
     change hfalse.
-    (* zn is the guided element not in W: *)
+    (** zn is the guided element not in W: *)
     set (znW := g (pr1 W,,Q) : ∑ z : X, ¬ pr1 W z).
     set (z := pr1 znW).
     set (nWz := pr2 znW : ¬ pr1 W z).
-    (* make a larger well ordered subset of X by appending z to the top of W *)
+    (** make a larger well ordered subset of X by appending z to the top of W *)
     set (W' := WOSubset_plus_point W z nWz lem).
     assert (W'z := subtype_plus_has_point W z : W' z).
     set (j := TOSubset_plus_point_incl W z nWz : W ⊆ W').
@@ -1210,7 +1210,7 @@ Proof.
         change (x = pr1 (g (@upto' X W (x,, Wx))))%type in x_guided.
         simple refine (x_guided @ _); clear x_guided.
         use upto'_eqn.
-        + (* show W ≼ W'; abstract later *)
+        + (** show W ≼ W'; abstract later *)
           assert (WW' := TOSubset_plus_point_le W z nWz).
           induction WW' as [WW' comp].
           exists WW'.
@@ -1228,16 +1228,16 @@ Proof.
           change (W y ⇔ @upto X W' (z,, W'x) y).
           split.
           - intros Wy.
-            (* show that the element y in W is less than z *)
+            (** show that the element y in W is less than z *)
             exists (j y Wy). unfold lt. intros le.
             induction (ishinh_irrel (ii2 (idpath z)) W'x).
             change empty in le.
             exact le.
           - intros [W'y yz].
-            (* show that if y in W' is less than z, then it's in W *)
+            (** show that if y in W' is less than z, then it's in W *)
             apply (squash_to_hProp W'y); intros [Wy|ezy].
-            + exact Wy.         (* it was in W, anyway *)
-            + induction ezy.    (* y = x, and we know z<z *)
+            + exact Wy.         (** it was in W, anyway *)
+            + induction ezy.    (** y = x, and we know z<z *)
               apply fromempty. unfold lt,hneg in yz. apply yz.
               induction (proofirrelevance_hProp _ W'y W'x).
               exact (TOrefl W' (z,, W'y)). }
@@ -1459,30 +1459,62 @@ Defined.
 
 (* ** Transfinite recursion *)
 
-(*
-   We should be able to prove Zorn's lemma from transfinite recursion, or,
-   better yet, make it unneeded.
- *)
+Definition WO_isInitial (X:WellOrderedSet) (Y:hsubtype X) : hProp := ∀ (x y : X), Y y ⇒ (x ≤ y ⇒ Y x).
 
-Theorem transfiniteRecursion {X:WellOrderedSet} (P : X -> Type) :
+Theorem WellOrderedSet_recursion {X:WellOrderedSet} (P : X -> hSet) :
   LEM -> (∏ x:X, (∏ y, y<x -> P y) -> P x) -> (∏ x, P x).
 Proof.
-  intros g.
-  (*
-     Consider subsets C of X that are initial segments for the ordering,
-     each of which is equipped with a section f of P and a proof of
-     ∏ x ∈ C, g x = f x (λ y, g y).  One may say that f is guided by g.
-     Then two pairs (C,f), (C',f') agree on their common intersection, which
-     is C or C', and thus the union U of all their graphs is a maximal guided
-     function.  If U were a proper subset, then its upper bound
-     could be added to U, contradiction, so U = X.
-   *)
+  intros lem g.
+  (** The elements of G will be subsets C of X that are initial segments for the ordering, equipped
+     with a section f of P and a proof of ∏ x ∈ C, f x = g x (λ y, f y).  One may say that f is
+     guided by g.  Then two pairs (C,f), (C',f') agree on their common intersection, which is C or
+     C', and thus the union of all their graphs is a maximal guided function with domain U, say.  If
+     U were a proper subset, then its minimal upper bound could be added to U, contradiction, so U =
+     X.  *)
+  set (G := (∑ (C:subtype_set X)
+               (f : (∏ (c:X) (Cc : C c), P c)%set)
+               (ini : hProp_to_hSet (WO_isInitial X C)),
+             ∀ (x:X) (i:C x),
+             f x i =
+             g x (λ y lt, f y (ini y x i (tot_nge_to_le (WOrel X) (WO_istotal X) x y lt))))).
+  assert (K : ∀ (C D:G) (x:X) (Cx : pr1 C x) (Dx : pr1 D x), pr12 C x Cx = pr12 D x Dx).
+  { intros C D. apply (proof_by_contradiction lem). intros n; change hfalse.
+    apply (squash_to_hProp (negforall_to_existsneg _ lem n)); clear n. intros [x' n].
+    apply (squash_to_hProp (negforall_to_existsneg _ lem n)); clear n. intros [Cx' n].
+    apply (squash_to_hProp (negforall_to_existsneg _ lem n)); clear n. intros [Dx' ne].
+    set (S := λ x:X, (∑ (Cx : pr1 C x) (Dx : pr1 D x), ¬ (pr12 C x Cx = pr12 D x Dx))%prop).
+    assert (Sne : ∃ s, S s).
+    { exact (hinhpr (x',,Cx',,Dx',,ne)). }
+    clear x' Cx' Dx' ne. induction (WO_theSmallest S Sne) as [x0 [Sx0 x0min]]; clear Sne.
+    induction Sx0 as [Cx0 [Dx0 ne0]].
+    induction C as [C [f [ini guided]]], D as [D [f' [ini' guided']]];
+      change (hProptoType(¬(f x0 Cx0 = f' x0 Dx0))) in ne0;
+      change (hProptoType(C x0)) in Cx0;
+      change (hProptoType(D x0)) in Dx0.
+    assert (agree : ∀ x (Cx : C x) (Dx : D x), x < x0 ⇒ f x Cx = f' x Dx).
+    { intros x Cx Dx lt. apply (proof_by_contradiction lem); intros ne. use lt.
+      use x0min.
+      use tpair.
+      - change (C x). exact Cx.
+      - use tpair.
+        + change (D x). exact Dx.
+        + change (neg (f x Cx = f' x Dx)%type). exact ne. }
+    use ne0; clear ne0.
+    assert (guide := guided x0 Cx0); simpl in guide.
+    assert (guide' := guided' x0 Dx0); simpl in guide'.
+    simple refine (guide @ _ @ !guide'); clear guide guide'.
+    apply maponpaths.
+    apply funextsec; intro x; apply funextsec; intro lt.
+    now use agree. }
+
+
+
 
 Abort.
 
 Lemma bigSet (X:Type) : LEM -> ∑ Y:hSet, ∏ f : Y -> X, ¬ isincl f.
 Proof.
-  (*
+  (**
      This lemma is useful in arguments by contradiction, where one uses
      transfinite recursion to define an injective function f, after first
      equipping Y with a well ordering.
