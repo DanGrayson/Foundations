@@ -1395,7 +1395,12 @@ Proof.
      guided by g.  Then two pairs (C,f), (C',f') agree on their common intersection, which is C or
      C', and thus the union of all their graphs is a maximal guided function with domain U, say.  If
      U were a proper subset, then its minimal upper bound could be added to U, contradiction, so U =
-     X.  *)
+     X.
+
+     The reason we need each [P x] to be a set is that the proof is nonconstructive, and at a
+     certain point we need to use proof by contradiction to show that two elements of [P x] are
+     equal.
+   *)
   set (isGuided := (λ (C:subtype_set X)
                       (f : (∏ (c:X) (Cc : C c), P c)%set)
                       (ini : hProp_to_hSet (WO_isInitial X C)),
@@ -1457,6 +1462,8 @@ Proof.
     { intros y lt. apply (proof_by_contradiction lem); intros n. exact (lt (min0 y n)). }
     (** now x0 is the smallest element of X not in C': we will adjoin it to C' *)
     set (C'' := subtype_plus C' x0 nC'x0).
+    (** record the statement that x0 is in C'' *)
+    assert (x0inC'' := subtype_plus_has_point C' x0 nC'x0 : C'' x0).
     (** now we show C'' for membership in G so it is contained in C', leading to a contradiction *)
     transparent assert (f'' : (∏ x : X, C'' x -> P x)%type).
     { intros x [C'x|e].
@@ -1471,7 +1478,7 @@ Proof.
           assert (lt := pr2 (tot_nle_iff_gt _ (WO_isTotalOrder X) x0 x) (le,,ne) : x < x0).
           clear le ne.
           exact (sm x lt). }
-    assert (isGuided C'' f'' ini'').
+    assert (C''guided : isGuided C'' f'' ini'').
     { intros x [C'x|ex0x].
       - change (f'' x (ii1 C'x)) with (f' x C'x).
         simple refine (C'guided x C'x @ _).
@@ -1491,9 +1498,14 @@ Proof.
         match goal with |- _ = match ?D with | ii1 C'x => _ | ii2 e => _ end => induction D as [C'y|b] end.
         + apply maponpaths. apply propproperty.
         + apply fromempty. use lt; clear lt. induction b. apply (WO_isTotalOrder X). }
-
-
-Abort.
+    set (C''inG := C'',,f'',,ini'',,C''guided : G).
+    assert (C''inC' := subtype_union_containedIn S C''inG : C'' ⊆ C').
+    assert (x0inC' := C''inC' x0 x0inC'').
+    exact (nC'x0 x0inC'). }
+  intros x.
+  use (f' x).
+  exact (e x).
+Defined.
 
 Lemma bigSet (X:Type) : LEM -> ∑ Y:hSet, ∏ f : Y -> X, ¬ isincl f.
 Proof.
