@@ -1312,16 +1312,15 @@ Definition WO_istotal (X : WellOrderedSet) : istotal (WOrel X) := pr2 (WO_isTota
 
 Definition WO_hasSmallest (X : WellOrderedSet) : hasSmallest (WOrel X) := pr222 X.
 
-Definition theSmallest {X : WellOrderedSet} (S : hsubtype X) : hProp
-  := (∃ s, S s) ⇒ hProppair
-                (∑ s:X, S s ∧ ∀ t:X, S t ⇒ WOrel X s t)
-                (isaprop_theSmallest _ (WO_isTotalOrder X) S).
+Definition theSmallest {X : WellOrderedSet} {S : hsubtype X} (ne : ∃ s, S s)
+  := hProppair
+       (∑ s:X, S s ∧ ∀ t:X, S t ⇒ WOrel X s t)
+       (isaprop_theSmallest _ (WO_isTotalOrder X) S).
 
 (** actually get the smallest element: *)
-Lemma WO_theSmallest {X : WellOrderedSet} (S : hsubtype X) : theSmallest S.
+Lemma WO_theSmallest {X : WellOrderedSet} {S : hsubtype X} (ne : ∃ s, S s) : theSmallest ne.
 Proof.
-  intros ne. apply (squash_to_hProp (WO_hasSmallest X S ne)).
-  intro c. exact c.
+  apply (squash_to_hProp (WO_hasSmallest X S ne)). intro c. exact c.
 Defined.
 
 Lemma WO_theUniqueSmallest {X : WellOrderedSet} (S : hsubtype X) :
@@ -1329,7 +1328,7 @@ Lemma WO_theUniqueSmallest {X : WellOrderedSet} (S : hsubtype X) :
 Proof.
   intros ne. apply iscontraprop1.
   - apply isaprop_theSmallest. apply WO_isTotalOrder.
-  - exact (WO_theSmallest S ne).
+  - exact (WO_theSmallest ne).
 Defined.
 
 Definition is_WellOrderedSet_map {X Y : WellOrderedSet} (f : X -> Y) : hProp :=
@@ -1412,7 +1411,7 @@ Proof.
   intros ne; change hfalse. assert (Q := negforall_to_existsneg _ lem ne).
   apply (squash_to_hProp Q); clear Q ne; intros [x' ne].
   set (S := λ x, ¬ (f x = g x) : hProp). assert (Sne := hinhpr(x',,ne) : ∃ x, S x).
-  induction (WO_theSmallest S Sne) as [x0 [Sx0 x0min]]; change (hProptoType(¬ (f x0 = g x0))) in Sx0.
+  induction (WO_theSmallest Sne) as [x0 [Sx0 x0min]]; change (hProptoType(¬ (f x0 = g x0))) in Sx0.
   apply (squash_to_hProp (WO_istotal Y (f x0) (g x0))); intros [c|c].
   { assert (lt : f x0 < g x0).
     { apply (pr2 (tot_nle_iff_gt _ (WO_isTotalOrder Y) _ _)).
@@ -1471,12 +1470,13 @@ Proof.
      C', and thus the union of all their graphs is a maximal guided function with domain U, say.  If
      U were a proper subset, then its minimal upper bound could be added to U, contradiction, so U =
      X.  *)
-  set (G := (∑ (C:subtype_set X)
-               (f : (∏ (c:X) (Cc : C c), P c)%set)
-               (ini : hProp_to_hSet (WO_isInitial X C)),
-             ∀ (x:X) (i:C x),
-             f x i =
-             g x (λ y lt, f y (ini y x i (tot_nge_to_le (WOrel X) (WO_istotal X) x y lt))))).
+  set (isGuided := (λ (C:subtype_set X)
+                      (f : (∏ (c:X) (Cc : C c), P c)%set)
+                      (ini : hProp_to_hSet (WO_isInitial X C)),
+                    ∀ (x:X) (Cx:C x),
+                      f x Cx =
+                      g x (λ y lt, f y (ini y x Cx (tot_nge_to_le (WOrel X) (WO_istotal X) x y lt))))).
+  set (G := (∑ C f ini, isGuided C f ini)).
   assert (K : ∀ (C D:G) (x:X) (Cx : pr1 C x) (Dx : pr1 D x), pr12 C x Cx = pr12 D x Dx).
   { intros C D. apply (proof_by_contradiction lem). intros n; change hfalse.
     apply (squash_to_hProp (negforall_to_existsneg _ lem n)); clear n. intros [x' n].
@@ -1485,7 +1485,7 @@ Proof.
     set (S := λ x:X, (∑ (Cx : pr1 C x) (Dx : pr1 D x), ¬ (pr12 C x Cx = pr12 D x Dx))%prop).
     assert (Sne : ∃ s, S s).
     { exact (hinhpr (x',,Cx',,Dx',,ne)). }
-    clear x' Cx' Dx' ne. induction (WO_theSmallest S Sne) as [x0 [Sx0 x0min]]; clear Sne.
+    clear x' Cx' Dx' ne. induction (WO_theSmallest Sne) as [x0 [Sx0 x0min]]; clear Sne.
     induction Sx0 as [Cx0 [Dx0 ne0]].
     induction C as [C [f [ini guided]]], D as [D [f' [ini' guided']]];
       change (hProptoType(¬(f x0 Cx0 = f' x0 Dx0))) in ne0;
@@ -1506,7 +1506,29 @@ Proof.
     apply maponpaths.
     apply funextsec; intro x; apply funextsec; intro lt.
     now use agree. }
-
+  set (S := pr1 : G -> subtype_set X).
+  set (C' := subtype_union S).
+  transparent assert (f' : (∏ x : X, C' x -> P x)%type).
+  { intros x e. use (squash_to_hSet _ _ e).
+    { intros C. exact (pr12 (pr1 C) x (pr2 C)). }
+    intros C D. now use K. }
+  transparent assert ( ini' : (WO_isInitial X C') ).
+  { intros x y C'y le. apply (squash_to_hProp C'y); clear C'y; intros [C SCy].
+    apply hinhpr. exists C. exact (pr122 C x y SCy le). }
+  assert (C'guided : isGuided C' f' ini').
+  { intros x C'x.
+    apply (squash_to_hProp C'x); intros [C Cx]. change (hProptoType(pr1 C x)) in Cx.
+    induction (ishinh_irrel (C,,Cx) C'x).
+    change (f' x (hinhpr (C,, Cx))) with (pr12 C x Cx).
+    simple refine (pr222 C x Cx @ _).
+    apply maponpaths. apply funextsec; intros y; apply funextsec; intros lt.
+    reflexivity. }
+  assert (e : ∀ x, C' x).
+  { apply (proof_by_contradiction lem); intros n; change hfalse.
+    assert (n' := negforall_to_existsneg _ lem n); clear n.
+    induction (WO_theSmallest n') as [x0 [nC'x0 min0]]; clear n'.
+    (** now x0 is the smallest element of X not in C': we will adjoin it to C' *)
+    set (C'' := subtype_plus C' x0).
 
 
 
