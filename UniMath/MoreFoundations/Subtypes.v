@@ -148,22 +148,31 @@ Defined.
 
 Definition isDecidablePredicate {X} (S:X->hProp) := ∏ x, decidable (S x).
 
-Definition subtype_plus {X} (S:hsubtype X) (z:X) : hsubtype X := λ x, S x ∨ z = x.
-
-Definition subtype_plus_incl {X} (S:hsubtype X) (z:X) : S ⊆ subtype_plus S z.
+Definition subtype_plus {X:hSet} (S:hsubtype X) (z:X) (nSz : ¬ (S z)) : hsubtype X.
 Proof.
-  intros s Ss. now apply hinhpr,ii1.
+  intros x. exists (S x ⨿ (z = x))%set.
+  apply isapropcoprod.
+  - apply propproperty.
+  - apply setproperty.
+  - intros Sx e. exact (nSz (transportb S e Sx)).
 Defined.
 
-Definition subtype_plus_has_point {X} (S:hsubtype X) (z:X) : subtype_plus S z z.
+Definition subtype_plus_incl {X:hSet} (S:hsubtype X) (z:X) (nSz : ¬ (S z)) :
+  S ⊆ subtype_plus S z nSz.
 Proof.
-  now apply hinhpr, ii2.
+  intros s Ss. now apply ii1.
 Defined.
 
-Definition subtype_plus_in {X} {S:hsubtype X} {z:X} {T:hsubtype X} :
-  S ⊆ T -> T z -> subtype_plus S z ⊆ T.
+Definition subtype_plus_has_point {X:hSet} (S:hsubtype X) (z:X) (nSz : ¬ (S z)) :
+  subtype_plus S z nSz z.
 Proof.
-  intros le Tz x S'x. apply (squash_to_hProp S'x). intros [Sx|e].
+  now apply ii2.
+Defined.
+
+Definition subtype_plus_in {X:hSet} {S:hsubtype X} {z:X} (nSz : ¬ (S z)) {T:hsubtype X} :
+  S ⊆ T -> T z -> subtype_plus S z nSz ⊆ T.
+Proof.
+  intros le Tz x S'x. induction S'x as [Sx|e].
   - exact (le x Sx).
   - induction e. exact Tz.
 Defined.
