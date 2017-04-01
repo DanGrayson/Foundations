@@ -1491,26 +1491,40 @@ Definition isRecursivelyOrdered (X:OrderedSet) :=
 
 Theorem WellOrderedSet_recursion (X:WellOrderedSet) : LEM -> isRecursivelyOrdered X.
 Proof.
-  (* Could we use this theorem earlier, to prove the well ordering theorem? *)
-  intros lem P g.
-  (** The elements of G will be subsets C of X that are initial segments for the ordering, equipped
-     with a section f of P and a proof of ∏ x ∈ C, f x = g x (λ y, f y).  One may say that f is
-     guided by g.  Then two pairs (C,f), (C',f') agree on their common intersection, which is C or
+  (**
+    To prove that a well ordered set satisfies this well founded recursion principle:
+
+        ∏ (P : X -> hSet) (rec : ∏ x:X, (∏ y, y < x -> P y) -> P x), (∏ x, P x)
+
+    one introduces P and rec and studies partially defined sections of P that are
+    "guided" by rec, in the sense that every value is equal to that obtained by applying
+    rec to the collection of previous values.
+
+    Then one wants to show that any two guided partial sections take equal values on points
+    where both are defined. This can be done with well founded induction, but only because
+    the equations are propositions.
+
+    Then one gets a unique largest guided partial section, defined on the union of all of them.
+    If its domain is not all of X, one takes the smallest element of X not in the domain
+    and adds it to the domain, use rec to extend the definition of the section. achieving a
+    contradiction.
+   *)
+  intros lem P rec.
+  assert (ind := WellOrderedSet_induction X lem).
+  (**
+     The elements of G will be subsets C of X that are initial segments for the ordering, equipped
+     with a section f of P and a proof of ∏ x ∈ C, f x = rec x (λ y, f y).  One may say that f is
+     guided by rec.  Then two pairs (C,f), (C',f') agree on their common intersection, which is C or
      C', and thus the union of all their graphs is a maximal guided function with domain U, say.  If
      U were a proper subset, then its minimal upper bound could be added to U, contradiction, so U =
      X.
-
-     The reason we need each [P x] to be a set is that the proof is nonconstructive, and at a
-     certain point we need to use proof by contradiction to show that two elements of [P x] are
-     equal.
    *)
-  assert (ind := WellOrderedSet_induction X lem).
   set (isGuidedPartialSection := (λ (C:subtype_set X)
                       (f : (∏ (c:X) (Cc : C c), P c))
                       (ini : hProp_to_hSet (WO_isInitial C)),
                     ∀ (x:X) (Cx:C x),
                       f x Cx =
-                      g x (λ y lt, f y (ini y x Cx (Poset_lt_to_le _ _ lt))))%set).
+                      rec x (λ y lt, f y (ini y x Cx (Poset_lt_to_le _ _ lt))))%set).
   set (GuidedPartialSection := (∑ C f ini, isGuidedPartialSection C f ini)%type).
   assert (K : (∀ (C D:GuidedPartialSection) (x:X) (Cx : pr1 C x) (Dx : pr1 D x), pr12 C x Cx = pr12 D x Dx)%set).
   { intros [C [f [ini gui]]] [C' [f' [ini' gui']]].
@@ -1519,7 +1533,9 @@ Proof.
     simple refine (gui x Cx @ _ @ ! gui' x C'x).
     apply maponpaths. apply funextsec; intros y; apply funextsec; intros lt.
     use hyp. exact lt. }
+  (** Set up the family S of subsets that are domains of partial guided sections *)
   set (S := pr1 : GuidedPartialSection -> subtype_set X).
+  (** Form the union C' of their domains *)
   set (C' := subtype_union S).
   transparent assert (f' : (∏ (x : X) (C'x : C' x), P x)%type).
   { intros x e. use (squash_to_hSet _ _ e).
@@ -1530,12 +1546,9 @@ Proof.
     apply hinhpr. exists C. exact (pr122 C x y SCy le). }
   assert (C'guided : isGuidedPartialSection C' f' ini').
   { intros x C'x.
-    apply (squash_to_hProp C'x); intros [C Cx]. change (hProptoType(pr1 C x)) in Cx.
-    induction (ishinh_irrel (C,,Cx) C'x).
-    change (f' x (hinhpr (C,, Cx))) with (pr12 C x Cx).
-    simple refine (pr222 C x Cx @ _).
-    apply maponpaths. apply funextsec; intros y; apply funextsec; intros lt.
-    reflexivity. }
+    apply (squash_to_hProp C'x); intros [C Cx];
+      change (hProptoType(pr1 C x)) in Cx.
+    induction (ishinh_irrel (C,,Cx) C'x). exact (pr222 C x Cx). }
   assert (e : ∀ x, C' x).
   { apply (proof_by_contradiction lem); intros n; change hfalse.
     assert (n' := negforall_to_existsneg _ lem n); clear n.
@@ -1550,7 +1563,7 @@ Proof.
     transparent assert (f'' : (∏ x : X, C'' x -> P x)%type).
     { intros x [C'x|e].
       - exact (f' x C'x).
-      - simple refine (g x _). intros y lt. induction e. exact (f' y (sm y lt)). }
+      - simple refine (rec x _). intros y lt. induction e. exact (f' y (sm y lt)). }
     assert (ini'' : (WO_isInitial C'')).
     { intros x y C''y le. change (C' x ⨿ (x0 = x)). induction C''y as [C'y|ex0y].
       - exact (ii1 (ini' x y C'y le : C' x)).
