@@ -1416,7 +1416,7 @@ Definition isInductivelyOrdered (X:OrderedSet) : hProp :=
     ∀ (P : X -> hProp) (rec : ∀ x:X, (∀ y, y < x ⇒ P y) ⇒ P x), (∀ x, P x)
   )%oset.
 
-Lemma WellOrderedSet_induction (X:OrderedSet) :
+Lemma WellFounded_induction (X:OrderedSet) :
   LEM -> isWellFounded (posetRelation X) -> isInductivelyOrdered X.
 Proof.
   intros lem wf P g.
@@ -1431,7 +1431,14 @@ Proof.
   exact (gt_to_nle _ _ lt ge).
 Defined.
 
-Lemma WellOrderedSet_induction_converse (X:OrderedSet) :
+Corollary WellOrderedSet_induction (X:WellOrderedSet) : LEM -> isInductivelyOrdered X.
+Proof.
+  intros lem.
+  apply (WellFounded_induction X lem).
+  apply WO_isWellFounded.
+Defined.
+
+Lemma WellFounded_induction_converse (X:OrderedSet) :
   LEM -> isInductivelyOrdered X -> isWellFounded (posetRelation X).
 Proof.
   Open Scope poset.
@@ -1475,7 +1482,7 @@ Defined.
 
 (** ** Transfinite recursion *)
 
-Definition WO_isInitial (X:WellOrderedSet) (Y:hsubtype X) : hProp := ∀ (x y : X), Y y ⇒ (x ≤ y ⇒ Y x).
+Definition WO_isInitial {X:WellOrderedSet} (Y:hsubtype X) : hProp := ∀ (x y : X), Y y ⇒ (x ≤ y ⇒ Y x).
 
 Definition isRecursivelyOrdered (X:OrderedSet) :=
   (
@@ -1497,51 +1504,28 @@ Proof.
      certain point we need to use proof by contradiction to show that two elements of [P x] are
      equal.
    *)
+  assert (ind := WellOrderedSet_induction X lem).
   set (isGuidedPartialSection := (λ (C:subtype_set X)
                       (f : (∏ (c:X) (Cc : C c), P c))
-                      (ini : hProp_to_hSet (WO_isInitial X C)),
+                      (ini : hProp_to_hSet (WO_isInitial C)),
                     ∀ (x:X) (Cx:C x),
                       f x Cx =
                       g x (λ y lt, f y (ini y x Cx (Poset_lt_to_le _ _ lt))))%set).
   set (GuidedPartialSection := (∑ C f ini, isGuidedPartialSection C f ini)%type).
   assert (K : (∀ (C D:GuidedPartialSection) (x:X) (Cx : pr1 C x) (Dx : pr1 D x), pr12 C x Cx = pr12 D x Dx)%set).
-  { intros C D.
-    apply (proof_by_contradiction lem). intros n; change hfalse.
-    apply (squash_to_hProp (negforall_to_existsneg _ lem n)); clear n. intros [x' n].
-    apply (squash_to_hProp (negforall_to_existsneg _ lem n)); clear n. intros [Cx' n].
-    apply (squash_to_hProp (negforall_to_existsneg _ lem n)); clear n. intros [Dx' ne].
-    set (S := λ x:X, (∑ (Cx : pr1 C x) (Dx : pr1 D x), ¬ (pr12 C x Cx = pr12 D x Dx))%prop).
-    assert (Sne : ∃ s, S s).
-    { exact (hinhpr (x',,Cx',,Dx',,ne)). }
-    clear x' Cx' Dx' ne. induction (WO_theSmallest Sne) as [x0 [Sx0 x0min]]; clear Sne.
-    induction Sx0 as [Cx0 [Dx0 ne0]].
-    induction C as [C [f [ini guided]]], D as [D [f' [ini' guided']]];
-      change (hProptoType(¬(f x0 Cx0 = f' x0 Dx0))) in ne0;
-      change (hProptoType(C x0)) in Cx0;
-      change (hProptoType(D x0)) in Dx0.
-    assert (agree : ∀ x (Cx : C x) (Dx : D x), x < x0 ⇒ f x Cx = f' x Dx).
-    { intros x Cx Dx lt. apply (proof_by_contradiction lem); intros ne.
-      use (Poset_lt_to_nle lt).
-      use x0min.
-      use tpair.
-      - change (C x). exact Cx.
-      - use tpair.
-        + change (D x). exact Dx.
-        + change (neg (f x Cx = f' x Dx)%type). exact ne. }
-    use ne0; clear ne0.
-    assert (guide := guided x0 Cx0); simpl in guide.
-    assert (guide' := guided' x0 Dx0); simpl in guide'.
-    simple refine (guide @ _ @ !guide'); clear guide guide'.
-    apply maponpaths.
-    apply funextsec; intro x; apply funextsec; intro lt.
-    now use agree. }
+  { intros [C [f [ini gui]]] [C' [f' [ini' gui']]].
+    change (∀ (x : X) (Cx : C x) (C'x : C' x), f x Cx = f' x C'x).
+    use ind. intros x hyp Cx C'x.
+    simple refine (gui x Cx @ _ @ ! gui' x C'x).
+    apply maponpaths. apply funextsec; intros y; apply funextsec; intros lt.
+    use hyp. exact lt. }
   set (S := pr1 : GuidedPartialSection -> subtype_set X).
   set (C' := subtype_union S).
   transparent assert (f' : (∏ (x : X) (C'x : C' x), P x)%type).
   { intros x e. use (squash_to_hSet _ _ e).
     { intros C. exact (pr12 (pr1 C) x (pr2 C)). }
     intros C D. now use K. }
-  transparent assert ( ini' : (WO_isInitial X C') ).
+  transparent assert ( ini' : (WO_isInitial C') ).
   { intros x y C'y le. apply (squash_to_hProp C'y); clear C'y; intros [C SCy].
     apply hinhpr. exists C. exact (pr122 C x y SCy le). }
   assert (C'guided : isGuidedPartialSection C' f' ini').
@@ -1567,7 +1551,7 @@ Proof.
     { intros x [C'x|e].
       - exact (f' x C'x).
       - simple refine (g x _). intros y lt. induction e. exact (f' y (sm y lt)). }
-    assert (ini'' : (WO_isInitial X C'')).
+    assert (ini'' : (WO_isInitial C'')).
     { intros x y C''y le. change (C' x ⨿ (x0 = x)). induction C''y as [C'y|ex0y].
       - exact (ii1 (ini' x y C'y le : C' x)).
       - induction ex0y. induction (lem (x = x0)) as [e|ne].
@@ -1638,3 +1622,35 @@ Proof.
   exists (V,,R,,wo).
   exact n.
 Defined.
+
+Theorem OrderedSet_recursion (X:OrderedSet) : isInductivelyOrdered X -> isRecursivelyOrdered X.
+Proof.
+  (* Could we use this theorem earlier, to prove the well ordering theorem? *)
+  intros ind P g.
+  (** The elements of G will be subsets C of X that are initial segments for the ordering, equipped
+     with a section f of P and a proof of ∏ x ∈ C, f x = g x (λ y, f y).  One may say that f is
+     guided by g.  Then two pairs (C,f), (C',f') agree on their common intersection, which is C or
+     C', and thus the union of all their graphs is a maximal guided function with domain U, say.  If
+     U were a proper subset, then its minimal upper bound could be added to U, contradiction, so U =
+     X.
+   *)
+  set (isGuidedPartialSection := (λ (C:subtype_set X)
+                      (f : (∏ (c:X) (Cc : C c), P c))
+                      (ini : hProp_to_hSet (OrderedSet_isInitial C)),
+                    ∀ (x:X) (Cx:C x),
+                      f x Cx =
+                      g x (λ y lt, f y (ini y x Cx (Poset_lt_to_le _ _ lt))))%set).
+  set (GuidedPartialSection := (∑ C f ini, isGuidedPartialSection C f ini)%type).
+  assert (K : (∀ (C D:GuidedPartialSection) (x:X) (Cx : pr1 C x) (Dx : pr1 D x), pr12 C x Cx = pr12 D x Dx)%set).
+  { intros [C [f [ini gui]]] [C' [f' [ini' gui']]]. use ind. intros x hyp Cx C'x.
+    simpl in hyp, Cx, C'x.
+    simpl.
+    simple refine (gui x Cx @ _ @ ! gui' x C'x).
+    apply maponpaths.
+    apply funextsec; intros y.
+    apply funextsec; intros lt.
+    apply hyp.
+    exact lt. }
+
+
+Abort.

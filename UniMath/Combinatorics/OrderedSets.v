@@ -237,6 +237,8 @@ Proof.
     + apply ii2. intro le. apply j. now apply OrderedSet_isantisymm.
 Defined.
 
+Definition OrderedSet_isInitial {X:OrderedSet} (Y:hsubtype X) : hProp := ∀ (x y : X), Y y ⇒ (x ≤ y ⇒ Y x).
+
 Corollary isfinite_isdec_ordering (X:OrderedSet) : isfinite X -> isdec_ordering X.
 Proof. intros ? i ? ?. apply isdeceq_isdec_ordering. now apply isfinite_isdeceq.
 Defined.
