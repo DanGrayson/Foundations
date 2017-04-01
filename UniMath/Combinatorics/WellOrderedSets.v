@@ -1654,3 +1654,38 @@ Proof.
 
 
 Abort.
+
+Definition HLevel_to_type n : HLevel n -> UU := pr1.
+
+Coercion HLevel_to_type : HLevel >-> UU.
+
+Definition HLevelPair n (X:UU) : isofhlevel n X -> HLevel n
+  := λ i, X,,i.
+
+Close Scope set.
+
+Theorem WellOrderedSet_recursion_3 (X:WellOrderedSet) :
+  LEM -> ∏ (P : X -> HLevel 3) (rec : ∏ x:X, (∏ y, y < x -> P y) -> P x), (∏ x, P x).
+Proof.
+  intros lem P g.
+  assert (ind := WellOrderedSet_induction X lem).
+  assert (rec := WellOrderedSet_recursion X lem).
+  set (isGuidedPartialSection := (λ (C:subtype_set X)
+                      (f : (∏ (c:X) (Cc : C c), P c))
+                      (ini : hProp_to_hSet (WO_isInitial C)),
+                    ∏ (x:X) (Cx:C x),
+                      f x Cx =
+                      g x (λ y lt, f y (ini y x Cx (Poset_lt_to_le _ _ lt))))%type).
+  set (GuidedPartialSection := (∑ C f ini, isGuidedPartialSection C f ini)%type).
+  assert (K : (∏ (C D:GuidedPartialSection) (x:X) (Cx : pr1 C x) (Dx : pr1 D x), pr12 C x Cx = pr12 D x Dx)).
+  { intros [C [f [ini gui]]] [C' [f' [ini' gui']]].
+    change (∏ (x : X) (Cx : C x) (C'x : C' x), f x Cx = f' x C'x).
+    assert (level2 : ∏ x, isofhlevel 2 (∏ (Cx : C x) (C'x : C' x), f x Cx = f' x C'x)).
+    { intros x. apply impred; intros Cx; apply impred; intros C'x. use (pr2 (P x)). }
+    change (∏ (x : X), hSetpair _ (level2 x)).
+    use rec. intros x hyp Cx C'x.
+    simple refine (gui x Cx @ _ @ ! gui' x C'x).
+    apply maponpaths. apply funextsec; intros y; apply funextsec; intros lt.
+    use hyp. exact lt. }
+
+Abort.
