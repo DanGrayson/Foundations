@@ -167,6 +167,16 @@ Definition Poset_lt_to_le {X:Poset} (x y:X) : x < y ⇒ x ≤ y
 Definition Poset_lt_to_ne {X:Poset} (x y:X) : x < y ⇒ ¬ (x = y)
   := pr2.
 
+Lemma Poset_lt_to_nle {X:Poset} {x y:X} : x < y ⇒ ¬ (y ≤ x).
+Proof.
+  intros ? ? ? [le ne]. intros ge. use ne; clear ne. now apply isantisymm_posetRelation.
+Defined.
+
+Lemma Poset_nlt_self {X:Poset} {x:X} : ¬ (x < x).
+Proof.
+  intros ? ? [_ ne]. now apply ne.
+Defined.
+
 Notation "X ≅ Y" := (PosetEquivalence X Y) (at level 60, no associativity) : oset.
 Notation "m ≤ n" := (posetRelation _ m n) (no associativity, at level 70) : oset.
 Notation "m <= n" := (posetRelation _ m n) (no associativity, at level 70) : oset.

@@ -300,10 +300,7 @@ Definition WOrel (X:WellOrderedSet) : hrel X := pr12 X.
 
 Notation "x ≤ y" := (posetRelation (OrderedSet_to_Poset (WellOrderedSet_to_OrderedSet _)) x y) : woset.
 
-(* eliminate this *)
-Definition WOlt {X:WellOrderedSet} (x y : X) := ¬ (y ≤ x) % woset.
-
-Notation "x < y" := (WOlt x y) : woset.
+Notation "x < y" := (@Poset_lessthan (OrderedSet_to_Poset (WellOrderedSet_to_OrderedSet _)) x y) : woset.
 
 (** ** Well ordered subsets of a set *)
 
@@ -337,8 +334,6 @@ Defined.
 Coercion WOSubset_to_WellOrderedSet : WOSubset >-> WellOrderedSet.
 
 Notation "s ≤ s'" := (posetRelation (OrderedSet_to_Poset (TOSubset_to_OrderedSet (WOSubset_to_TOSubset _))) s s') : wosubset.
-
-Local Definition lt {X:hSet} {S : WOSubset X} (s s' : S) := ¬ (s' ≤ s)%wosubset.
 
 Notation "s < s'" := (@Poset_lessthan (OrderedSet_to_Poset (TOSubset_to_OrderedSet (WOSubset_to_TOSubset _))) s s') : wosubset.
 
@@ -1281,9 +1276,13 @@ Definition WellOrderedSet_map_to_function {X Y : WellOrderedSet} (f : WellOrdere
 Coercion WellOrderedSet_map_to_function : WellOrderedSet_map >-> Funclass.
 
 Lemma WellOrderedSet_map_lt_inv {X Y : WellOrderedSet} (f : WellOrderedSet_map X Y) (x x':X) :
-  f x < f x' -> x < x'.
+  (f x < f x' -> x < x')%woset.
 Proof.
-  intros lt ge. change (neg (f x' ≤ f x)) in lt. apply lt; clear lt. exact (pr2 f x' x ge).
+  intros lt.
+  use (pr1 (nle_iff_gt _ _)).
+  intros le.
+  use (Poset_lt_to_nle lt _).
+  now use (pr2 f).
 Defined.
 
 Definition WellOrderedSet_iso (X Y : WellOrderedSet) := (∑ f : X ≃ Y, is_WellOrderedSet_map f)%type.
@@ -1300,12 +1299,18 @@ Definition WellOrderedSet_iso_to_weq {X Y : WellOrderedSet} : X ≅ Y -> X ≃ Y
 Coercion WellOrderedSet_iso_to_weq : WellOrderedSet_iso >-> weq.
 
 Lemma WellOrderedSet_iso_lt_inv {X Y : WellOrderedSet} (f : X ≅ Y) {y y':Y} :
-  y < y' -> invmap f y < invmap f y'.
+  (y < y' -> invmap f y < invmap f y')%woset.
 Proof.
-  intros lt ge. change (neg (y' ≤ y)) in lt. apply lt; clear lt.
-  assert (p : f (invmap f y) = y). { apply homotweqinvweq. }
-  assert (p' : f (invmap f y') = y'). { apply homotweqinvweq. }
-  induction p, p'. exact (pr2 f _ _ ge).
+  intros lt.
+  apply (pr1 (nle_iff_gt _ _)).
+  intros le.
+  assert (le' := pr2 f _ _ le : f (invmap f y') ≤ f (invmap f y)); clear le.
+  assert (p : f (invmap f y) = y).
+  { apply homotweqinvweq. }
+  assert (p' : f (invmap f y') = y').
+  { apply homotweqinvweq. }
+  induction (!p), (!p'); clear p p'.
+  exact (Poset_lt_to_nle lt le').
 Defined.
 
 Definition WellOrderedSet_univalence_map (X Y : WellOrderedSet) : (X = Y → X ≅ Y)%type.
@@ -1351,16 +1356,13 @@ Proof.
   set (S := λ x, ¬ (f x = g x) : hProp). assert (Sne := hinhpr(x',,ne) : ∃ x, S x).
   induction (WO_theSmallest Sne) as [x0 [Sx0 x0min]]; change (hProptoType(¬ (f x0 = g x0))) in Sx0.
   apply (squash_to_hProp (WO_istotal Y (f x0) (g x0))); intros [c|c].
-  { assert (lt : f x0 < g x0).
-    { apply (pr2 (@nle_iff_gt Y _ _)).
-      split.
-      { exact c. }
-      { exact Sx0. } }
+  { assert (lt := (c,,Sx0) : (f x0 < g x0)%woset).
     clear c.
     use Sx0; clear Sx0.
     assert (Q := (WellOrderedSet_iso_lt_inv (g,,j) lt) : invmap g (f x0) < invmap g (g x0)); clear lt.
+    assert (Q' := Poset_lt_to_nle Q); clear Q.
     induction (!homotinvweqweq g x0).
-    assert (K := negf (x0min (invmap g (f x0)) : S (invmap g (f x0)) ⇒ x0 ≤ (invmap g (f x0))) Q); clear Q.
+    assert (K := negf (x0min (invmap g (f x0)) : S (invmap g (f x0)) ⇒ x0 ≤ (invmap g (f x0))) Q'); clear Q'.
     change (dneg (f (invmap g (f x0)) = g (invmap g (f x0)))) in K.
     assert (K' := proof_by_contradiction lem K); clear K.
     assert (e := K' @ homotweqinvweq g (f x0)); clear K'.
@@ -1369,15 +1371,15 @@ Proof.
     assert (e' := ! homotweqinvweq g (f x0) @ e); clear e.
     exact e'. }
   { assert (lt : g x0 < f x0).
-    { apply (pr2 (@nle_iff_gt Y _ _)).
-      split.
+    { split.
       { exact c. }
       { intros e. use Sx0. exact (!e). } }
     clear c.
     use Sx0; clear Sx0.
     assert (Q := (WellOrderedSet_iso_lt_inv (f,,i) lt) : invmap f (g x0) < invmap f (f x0)); clear lt.
+    assert (Q' := Poset_lt_to_nle Q); clear Q.
     induction (!homotinvweqweq f x0).
-    assert (K := negf (x0min (invmap f (g x0)) : S (invmap f (g x0)) ⇒ x0 ≤ (invmap f (g x0))) Q); clear Q.
+    assert (K := negf (x0min (invmap f (g x0)) : S (invmap f (g x0)) ⇒ x0 ≤ (invmap f (g x0))) Q'); clear Q'.
     change (dneg (f (invmap f (g x0)) = g (invmap f (g x0)))) in K.
     assert (K' := proof_by_contradiction lem K); clear K.
     assert (K := pathsinv0 K'); clear K'.
@@ -1400,18 +1402,8 @@ Definition WO_isInitial (X:WellOrderedSet) (Y:hsubtype X) : hProp := ∀ (x y : 
 
 Definition isRecursivelyOrdered (X:OrderedSet) :=
   (
-    ∏ (P : X -> hSet) (rec : ∏ x:X, (∏ y, ¬ (x ≤ y) -> P y) -> P x), (∏ x, P x)
+    ∏ (P : X -> hSet) (rec : ∏ x:X, (∏ y, y < x -> P y) -> P x), (∏ x, P x)
   )%oset.
-(*
-   We write [¬ (x ≤ y)] above instead of [y < x], because the definition in OrderedSets.v
-   of [y < x] is different from the one in this file.  So:
-
-   Fix the definition of x<y in this file to agree with that in OrderedSets.v.
-   Change the definition there from
-          ∥ x ≤ y  ×  x != y ∥
-   to
-          x ≤ y  ∧  x ≠ y
- *)
 
 Theorem WellOrderedSet_recursion (X:WellOrderedSet) : LEM -> isRecursivelyOrdered X.
 Proof.
@@ -1433,7 +1425,7 @@ Proof.
                       (ini : hProp_to_hSet (WO_isInitial X C)),
                     ∀ (x:X) (Cx:C x),
                       f x Cx =
-                      g x (λ y lt, f y (ini y x Cx (nge_to_le x y lt))))).
+                      g x (λ y lt, f y (ini y x Cx (Poset_lt_to_le _ _ lt))))).
   set (G := (∑ C f ini, isGuided C f ini)).
   assert (K : ∀ (C D:G) (x:X) (Cx : pr1 C x) (Dx : pr1 D x), pr12 C x Cx = pr12 D x Dx).
   { intros C D. apply (proof_by_contradiction lem). intros n; change hfalse.
@@ -1450,7 +1442,8 @@ Proof.
       change (hProptoType(C x0)) in Cx0;
       change (hProptoType(D x0)) in Dx0.
     assert (agree : ∀ x (Cx : C x) (Dx : D x), x < x0 ⇒ f x Cx = f' x Dx).
-    { intros x Cx Dx lt. apply (proof_by_contradiction lem); intros ne. use lt.
+    { intros x Cx Dx lt. apply (proof_by_contradiction lem); intros ne.
+      use (Poset_lt_to_nle lt).
       use x0min.
       use tpair.
       - change (C x). exact Cx.
@@ -1486,7 +1479,7 @@ Proof.
     assert (n' := negforall_to_existsneg _ lem n); clear n.
     induction (WO_theSmallest n') as [x0 [nC'x0 min0]]; clear n'.
     assert (sm : ∀ y, y < x0 ⇒ C' y).
-    { intros y lt. apply (proof_by_contradiction lem); intros n. exact (lt (min0 y n)). }
+    { intros y lt. apply (proof_by_contradiction lem); intros n. exact (Poset_lt_to_nle lt (min0 y n)). }
     (** now x0 is the smallest element of X not in C': we will adjoin it to C' *)
     set (C'' := subtype_plus C' x0 nC'x0).
     (** record the statement that x0 is in C'' *)
@@ -1501,10 +1494,7 @@ Proof.
       - exact (ii1 (ini' x y C'y le : C' x)).
       - induction ex0y. induction (lem (x = x0)) as [e|ne].
         + exact (ii2 (!e)).
-        + apply ii1.
-          assert (lt := pr2 (nle_iff_gt x0 x) (le,,ne) : x < x0).
-          clear le ne.
-          exact (sm x lt). }
+        + apply ii1. use (sm x). exact (le,,ne). }
     assert (C''guided : isGuided C'' f'' ini'').
     { intros x [C'x|ex0x].
       - change (f'' x (ii1 C'x)) with (f' x C'x).
@@ -1512,7 +1502,7 @@ Proof.
         apply maponpaths.
         apply funextsec; intro y.
         apply funextsec; intro lt.
-        generalize (nge_to_le x y lt); intro le.
+        generalize (Poset_lt_to_le y x lt); intro le.
         induction (proofirrelevance (C'' y) (propproperty _)
                                     (ii1 (ini' y x C'x le) : C'' y)
                                     (ini'' y x (ii1 C'x) le)).
@@ -1524,7 +1514,7 @@ Proof.
         simpl.
         match goal with |- _ = match ?D with | ii1 C'x => _ | ii2 e => _ end => induction D as [C'y|b] end.
         + apply maponpaths. apply propproperty.
-        + apply fromempty. use lt; clear lt. induction b. apply (WO_isTotalOrder X). }
+        + apply fromempty. induction b. exact (Poset_nlt_self lt). }
     set (C''inG := C'',,f'',,ini'',,C''guided : G).
     assert (C''inC' := subtype_union_containedIn S C''inG : C'' ⊆ C').
     assert (x0inC' := C''inC' x0 x0inC'').
