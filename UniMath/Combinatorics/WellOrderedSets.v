@@ -34,31 +34,38 @@ Definition TOSubset_to_subtype {X:hSet} : TOSubset X -> hsubtype X
 
 Coercion TOSubset_to_subtype : TOSubset >-> hsubtype.
 
-Local Definition TOSrel {X:hSet} (S : TOSubset X) : hrel (carrier_set S) := pr12 S.
+Definition TOSrel {X:hSet} (S : TOSubset X) : hrel (carrier_set S) := pr12 S.
 
-Notation "s ≤ s'" := (TOSrel _ s s') : tosubset.
+Definition TOpartial {X:hSet} (S : TOSubset X) : isPartialOrder (TOSrel S) := pr122 S.
 
 Definition TOtotal {X:hSet} (S : TOSubset X) : isTotalOrder (TOSrel S) := pr22 S.
 
 Definition TOtot {X:hSet} (S : TOSubset X) : istotal (TOSrel S) := pr222 S.
 
+Definition TOSubset_to_OrderedSet {X:hSet} : TOSubset X -> OrderedSet
+  := λ S, (carrier_set (pr1 S),,TOSrel S,,TOpartial S),,TOtot S.
+
+Coercion TOSubset_to_OrderedSet : TOSubset >-> OrderedSet.
+
+Notation "s ≤ s'" := (posetRelation (OrderedSet_to_Poset (TOSubset_to_OrderedSet _)) s s') : tosubset.
+
 Definition TOanti {X:hSet} (S : TOSubset X) : isantisymm (TOSrel S) := pr2 (pr122 S).
 
 Definition TOrefl {X:hSet} (S : TOSubset X) : isrefl (TOSrel S) := pr211 (pr22 S).
 
-Definition TOeq_to_refl {X:hSet} (S : TOSubset X) : ∀ s t : carrier_set S, s = t ⇒ s ≤ t.
+Definition TOtrans {X:hSet} (S : TOSubset X) : istrans (TOSrel S).
 Proof.
-  intros s t e. induction e. apply TOrefl.
+  apply (pr2 S).
+Defined.
+
+Definition TOeq_to_refl {X:hSet} (S : TOSubset X) : ∀ s t : carrier_set S, s = t ⇒ posetRelation S s t.
+Proof.
+  intros s t e. induction e. use TOrefl.
 Defined.
 
 Definition TOeq_to_refl_1 {X:hSet} (S : TOSubset X) : ∀ s t : carrier_set S, pr1 s = pr1 t ⇒ s ≤ t.
 Proof.
-  intros s t e. induction (subtypeEquality_prop e). apply TOrefl.
-Defined.
-
-Definition TOtrans {X:hSet} (S : TOSubset X) : istrans (TOSrel S).
-Proof.
-  apply (pr2 S).
+  intros s t e. induction (subtypeEquality_prop e). use TOrefl.
 Defined.
 
 Local Lemma h1'' {X:hSet} {S:TOSubset X} {r s t u:S} : (r ≤ t -> pr1 r = pr1 s -> pr1 t = pr1 u -> s ≤ u)%tosubset.
@@ -257,14 +264,38 @@ Proof.
   - induction ezt. change empty in le. exact (fromempty le).
 Defined.
 
-(** ** Well ordered subsets of a set *)
+(** ** Well ordered sets *)
 
-Definition hasSmallest {X : UU} (R : hrel X) : hProp
+Definition isWellFounded {X : UU} (R : hrel X) : hProp
   := ∀ S : hsubtype X, (∃ x, S x) ⇒ ∃ x:X, S x ∧ ∀ y:X, S y ⇒ R x y.
 
-Definition isWellOrder {X : hSet} (R : hrel X) : hProp := isTotalOrder R ∧ hasSmallest R.
+Definition isWellOrder {X : hSet} (R : hrel X) : hProp := isTotalOrder R ∧ isWellFounded R.
 
 Definition WellOrdering (S:hSet) : hSet := ∑ (R : hrel_set S), isWellOrder R.
+
+Definition WellOrderedSet : UU := (∑ (S:hSet), WellOrdering S)%type.
+
+Definition WellOrderedSet_to_hSet : WellOrderedSet -> hSet := pr1.
+
+Definition WellOrderedSet_to_OrderedSet : WellOrderedSet -> OrderedSet.
+Proof.
+  intros [W [R [[po tot] b]]]. exact ((W,,R,,po),,tot).
+Defined.
+
+Coercion WellOrderedSet_to_OrderedSet : WellOrderedSet >-> OrderedSet.
+
+Delimit Scope woset with woset.
+
+Definition WOrel (X:WellOrderedSet) : hrel X := pr12 X.
+
+Notation "x ≤ y" := (posetRelation (OrderedSet_to_Poset (WellOrderedSet_to_OrderedSet _)) x y) : woset.
+
+(* eliminate this *)
+Definition WOlt {X:WellOrderedSet} (x y : X) := ¬ (y ≤ x) % woset.
+
+Notation "x < y" := (WOlt x y) : woset.
+
+(** ** Well ordered subsets of a set *)
 
 Definition WOSubset_set (X:hSet) : hSet := ∑ (S:subtype_set X), WellOrdering (carrier_set S).
 
@@ -286,7 +317,16 @@ Coercion WOSubset_to_TOSubset : WOSubset >-> TOSubset.
 
 Definition WOSwo {X:hSet} (S : WOSubset X) : WellOrdering (carrier_set S) := pr2 S.
 
-Notation "s ≤ s'" := (WOSrel _ s s') : wosubset.
+Definition WOSubset_to_WellOrderedSet {X:hSet} : WOSubset X -> WellOrderedSet.
+Proof.
+  intros S.
+  exists (carrier_set (pr1 S)).
+  exact (WOSwo S).
+Defined.
+
+Coercion WOSubset_to_WellOrderedSet : WOSubset >-> WellOrderedSet.
+
+Notation "s ≤ s'" := (posetRelation (OrderedSet_to_Poset (TOSubset_to_OrderedSet (WOSubset_to_TOSubset _))) s s') : wosubset.
 
 Local Definition lt {X:hSet} {S : WOSubset X} (s s' : S) := ¬ (s' ≤ s)%wosubset.
 
@@ -297,7 +337,7 @@ Proof.
   intros n. use n; clear n. exact (TOrefl _ s).
 Defined.
 
-Definition WOS_hasSmallest {X:hSet} (S : WOSubset X) : hasSmallest (WOSrel S)
+Definition WOS_isWellFounded {X:hSet} (S : WOSubset X) : isWellFounded (WOSrel S)
   := pr222 S.
 
 Lemma wo_lt_to_le {X:hSet} {S : WOSubset X} (s s' : S) : s < s' -> s ≤ s'.
@@ -338,8 +378,8 @@ Notation "S ≣ T" := (wosub_equal S T) (at level 70) : wosubset.
 
 Definition wosub_comparable {X:hSet} : hrel (WOSubset X) := λ S T, S ≼ T ∨ T ≼ S.
 
-Definition hasSmallest_WOSubset_plus_point {X:hSet} (S:WOSubset X) (z:X) (nSz : ¬ S z) :
-  LEM ⇒ hasSmallest (TOSrel (TOSubset_plus_point S z nSz)).
+Definition isWellFounded_WOSubset_plus_point {X:hSet} (S:WOSubset X) (z:X) (nSz : ¬ S z) :
+  LEM ⇒ isWellFounded (TOSrel (TOSubset_plus_point S z nSz)).
 Proof.
   intros lem T ne.
   (** T is a nonempty set.  We need to find the smallest element of it *)
@@ -352,7 +392,7 @@ Proof.
   (** Decide whether [S ∩ T] is nonempty: *)
   induction (lem (∃ s, SiT s)) as [q|q].
   - (** ... use the smallest element of SiT *)
-    assert (SiTmin := WOS_hasSmallest _ _ q).
+    assert (SiTmin := WOS_isWellFounded _ _ q).
     apply (squash_to_hProp SiTmin); clear SiTmin; intros [m [SiTm min]].
     apply hinhpr. set (m' := jmap m). exists m'. split.
     + exact SiTm.
@@ -390,7 +430,7 @@ Definition WOSubset_plus_point {X:hSet}
   := λ lem, subtype_plus S z nSz,,
             TOSrel (TOSubset_plus_point S z nSz),,
             TOtotal (TOSubset_plus_point S z nSz),,
-            hasSmallest_WOSubset_plus_point S z nSz lem.
+            isWellFounded_WOSubset_plus_point S z nSz lem.
 
 Definition wosub_univalence_map {X:hSet} (S T : WOSubset X) : (S = T) -> (S ≣ T).
 Proof.
@@ -564,7 +604,7 @@ Definition isInterval {X:hSet} (S:hsubtype X) (T:WOSubset X) (le : S ⊆ T) :
 Proof.
   intros lem ini ne.
   set (R := WOSrel T).
-  assert (min := WOS_hasSmallest T).
+  assert (min := WOS_isWellFounded T).
   set (U := (λ t:T, t ∉ S) : hsubtype (carrier T)). (** complement of S in T *)
   assert (neU : nonempty (carrier U)).
   { apply (squash_to_hProp ne); intros [x [Tx nSx]]. apply hinhpr. exact ((x,,Tx),,nSx). }
@@ -799,9 +839,9 @@ Proof.
   exact le.
 Defined.
 
-Lemma chain_union_rel_hasSmallest {X : hSet} {I : UU} {S : I → WOSubset X}
+Lemma chain_union_rel_isWellFounded {X : hSet} {I : UU} {S : I → WOSubset X}
            (chain : is_wosubset_chain S) :
-  hasSmallest (chain_union_rel chain).
+  isWellFounded (chain_union_rel chain).
 Proof.
   intros T t'.
   apply (squash_to_hProp t'); clear t'; intros [[x i] xinT].
@@ -810,7 +850,7 @@ Proof.
   (** T' is the intersection of T with S j *)
   set (T' := (λ s, T (subtype_inc (subtype_union_containedIn S j) s))).
   assert (t' := hinhpr ((x,,xinSj),,xinT) : ∥ carrier T' ∥); clear x xinSj xinT.
-  assert (min := WOS_hasSmallest (S j) T' t'); clear t'.
+  assert (min := WOS_isWellFounded (S j) T' t'); clear t'.
   apply (squash_to_hProp min); clear min; intros [t0 [t0inT' t0min]].
   (** t0 is the minimal element of T' *)
   set (t0' := subtype_inc (subtype_union_containedIn S j) t0).
@@ -838,7 +878,7 @@ Proof.
   - apply chain_union_rel_isrefl.
   - apply chain_union_rel_isantisymm.
   - apply chain_union_rel_istotal.
-  - apply chain_union_rel_hasSmallest.
+  - apply chain_union_rel_isWellFounded.
 Defined.
 
 Notation "⋃ chain" := (chain_union_WOSubset chain) (at level 100, no associativity) : wosubset.
@@ -959,7 +999,8 @@ Proof.
         { now apply subtypeEquality_prop. }
         induction e. clear W'c'. induction v as [v [Wv|k]].
         - assert (L := pr1 (cE v) Wv). unfold upto,lt in L.
-          assert (Q := @tot_nge_to_le (carrier_set C) (TOSrel C) (TOtot C) _ _ (pr2 L)).
+          assert (Q := @tot_nge_to_le C _ _ (pr2 L) : v,, pr1 L ≤ c).
+          unfold subtype_inc; cbn.
           now apply(h1'' Q).
         - use (TOeq_to_refl C). now apply subtypeEquality_prop. }
       assert (cmax' : ∏ (w : carrier W) (W'c : W' (pr1 c)),
@@ -968,8 +1009,8 @@ Proof.
         { now apply subtypeEquality_prop. }
         induction e. clear W'c'. induction w as [v Wv].
         assert (L := pr1 (cE v) Wv). unfold upto,lt in L.
-        assert (Q := @tot_nge_to_le (carrier_set C) (TOSrel C) (TOtot C) _ _ (pr2 L)).
-        apply (@tot_nle_iff_gt (carrier_set C) (TOSrel C) (pr122 C)).
+        assert (Q := @tot_nge_to_le C _ _ (pr2 L)).
+        apply (@tot_nle_iff_gt C).
         split.
         - now apply (h1'' Q).
         - intros e. assert (e' := maponpaths pr1 e); clear e. change (v = pr1 c)%type in e'.
@@ -981,7 +1022,7 @@ Proof.
         { now apply subtypeEquality_prop. }
         induction e. clear W'd'. induction v as [v [Wv|k]].
         - assert (L := pr1 (dE v) Wv). unfold upto,lt in L.
-          assert (Q := @tot_nge_to_le (carrier_set D) (TOSrel D) (TOtot D) _ _ (pr2 L)).
+          assert (Q := @tot_nge_to_le D _ _ (pr2 L)).
           now apply(h1'' Q).
         - use (TOeq_to_refl D). apply subtypeEquality_prop. simpl. exact (!k @ cd1). }
       assert (dmax' : ∏ (w : carrier W) (W'd : W' (pr1 d)),
@@ -990,8 +1031,8 @@ Proof.
         { now apply subtypeEquality_prop. }
         induction e. clear W'd'. induction w as [v Wv].
         assert (L := pr1 (dE v) Wv). unfold upto,lt in L.
-        assert (Q := @tot_nge_to_le (carrier_set D) (TOSrel D) (TOtot D) _ _ (pr2 L)).
-        apply (@tot_nle_iff_gt (carrier_set D) (TOSrel D) (pr122 D)).
+        assert (Q := @tot_nge_to_le D _ _ (pr2 L)).
+        apply (@tot_nle_iff_gt D).
         split.
         - now apply (h1'' Q).
         - intros e. assert (e' := maponpaths pr1 e); clear e. change (v = pr1 d)%type in e'.
@@ -1195,28 +1236,7 @@ Defined.
 
 (** ** Well ordered sets *)
 
-Definition WellOrderedSet : UU := (∑ (S:hSet), WellOrdering S)%type.
-
-Definition WellOrderedSet_to_hSet : WellOrderedSet -> hSet := pr1.
-
-Definition WellOrderedSet_to_OrderedSet : WellOrderedSet -> OrderedSet.
-Proof.
-  intros [W [R [[po tot] b]]]. exact ((W,,R,,po),,tot).
-Defined.
-
-Coercion WellOrderedSet_to_OrderedSet : WellOrderedSet >-> OrderedSet.
-
-Delimit Scope woset with woset.
-
 Open Scope woset.
-
-Definition WOrel (X:WellOrderedSet) : hrel X := pr12 X.
-
-Notation "x ≤ y" := (WOrel _ x y) : woset.
-
-Definition WOlt {X:WellOrderedSet} (x y : X) := ¬ (y ≤ x).
-
-Notation "x < y" := (WOlt x y) : wosubset.
 
 Lemma isaprop_theSmallest {X : hSet}
       (R : hrel X) (total : isTotalOrder R) (S : hsubtype X) :
@@ -1236,7 +1256,7 @@ Definition WO_isPartialOrder (X : WellOrderedSet) : isPartialOrder (WOrel X) := 
 
 Definition WO_istotal (X : WellOrderedSet) : istotal (WOrel X) := pr2 (WO_isTotalOrder X).
 
-Definition WO_hasSmallest (X : WellOrderedSet) : hasSmallest (WOrel X) := pr222 X.
+Definition WO_isWellFounded (X : WellOrderedSet) : isWellFounded (WOrel X) := pr222 X.
 
 Definition theSmallest {X : WellOrderedSet} {S : hsubtype X} (ne : ∃ s, S s)
   := hProppair
@@ -1246,7 +1266,7 @@ Definition theSmallest {X : WellOrderedSet} {S : hsubtype X} (ne : ∃ s, S s)
 (** actually get the smallest element: *)
 Lemma WO_theSmallest {X : WellOrderedSet} {S : hsubtype X} (ne : ∃ s, S s) : theSmallest ne.
 Proof.
-  apply (squash_to_hProp (WO_hasSmallest X S ne)). intro c. exact c.
+  apply (squash_to_hProp (WO_isWellFounded X S ne)). intro c. exact c.
 Defined.
 
 Lemma WO_theUniqueSmallest {X : WellOrderedSet} (S : hsubtype X) :
@@ -1340,7 +1360,7 @@ Proof.
   induction (WO_theSmallest Sne) as [x0 [Sx0 x0min]]; change (hProptoType(¬ (f x0 = g x0))) in Sx0.
   apply (squash_to_hProp (WO_istotal Y (f x0) (g x0))); intros [c|c].
   { assert (lt : f x0 < g x0).
-    { apply (pr2 (tot_nle_iff_gt _ (WO_isTotalOrder Y) _ _)).
+    { apply (pr2 (@tot_nle_iff_gt Y _ _)).
       split.
       { exact c. }
       { exact Sx0. } }
@@ -1357,7 +1377,7 @@ Proof.
     assert (e' := ! homotweqinvweq g (f x0) @ e); clear e.
     exact e'. }
   { assert (lt : g x0 < f x0).
-    { apply (pr2 (tot_nle_iff_gt _ (WO_isTotalOrder Y) _ _)).
+    { apply (pr2 (@tot_nle_iff_gt Y _ _)).
       split.
       { exact c. }
       { intros e. use Sx0. exact (!e). } }
@@ -1386,10 +1406,25 @@ Defined.
 
 Definition WO_isInitial (X:WellOrderedSet) (Y:hsubtype X) : hProp := ∀ (x y : X), Y y ⇒ (x ≤ y ⇒ Y x).
 
-Theorem WellOrderedSet_recursion {X:WellOrderedSet} (P : X -> hSet) :
-  LEM -> (∏ x:X, (∏ y, y<x -> P y) -> P x) -> (∏ x, P x).
+Definition isRecursivelyOrdered (X:OrderedSet) :=
+  (
+    ∏ (P : X -> hSet) (rec : ∏ x:X, (∏ y, ¬ (x ≤ y) -> P y) -> P x), (∏ x, P x)
+  )%oset.
+(*
+   We write [¬ (x ≤ y)] above instead of [y < x], because the definition in OrderedSets.v
+   of [y < x] is different from the one in this file.  So:
+
+   Fix the definition of x<y in this file to agree with that in OrderedSets.v.
+   Change the definition there from
+          ∥ x ≤ y  ×  x != y ∥
+   to
+          x ≤ y  ∧  x ≠ y
+ *)
+
+Theorem WellOrderedSet_recursion (X:WellOrderedSet) : LEM -> isRecursivelyOrdered X.
 Proof.
-  intros lem g.
+  (* Could we use this theorem earlier, to prove the well ordering theorem? *)
+  intros lem P g.
   (** The elements of G will be subsets C of X that are initial segments for the ordering, equipped
      with a section f of P and a proof of ∏ x ∈ C, f x = g x (λ y, f y).  One may say that f is
      guided by g.  Then two pairs (C,f), (C',f') agree on their common intersection, which is C or
@@ -1406,7 +1441,7 @@ Proof.
                       (ini : hProp_to_hSet (WO_isInitial X C)),
                     ∀ (x:X) (Cx:C x),
                       f x Cx =
-                      g x (λ y lt, f y (ini y x Cx (tot_nge_to_le (WOrel X) (WO_istotal X) x y lt))))).
+                      g x (λ y lt, f y (ini y x Cx (tot_nge_to_le x y lt))))).
   set (G := (∑ C f ini, isGuided C f ini)).
   assert (K : ∀ (C D:G) (x:X) (Cx : pr1 C x) (Dx : pr1 D x), pr12 C x Cx = pr12 D x Dx).
   { intros C D. apply (proof_by_contradiction lem). intros n; change hfalse.
@@ -1475,7 +1510,7 @@ Proof.
       - induction ex0y. induction (lem (x = x0)) as [e|ne].
         + exact (ii2 (!e)).
         + apply ii1.
-          assert (lt := pr2 (tot_nle_iff_gt _ (WO_isTotalOrder X) x0 x) (le,,ne) : x < x0).
+          assert (lt := pr2 (tot_nle_iff_gt x0 x) (le,,ne) : x < x0).
           clear le ne.
           exact (sm x lt). }
     assert (C''guided : isGuided C'' f'' ini'').
@@ -1485,7 +1520,7 @@ Proof.
         apply maponpaths.
         apply funextsec; intro y.
         apply funextsec; intro lt.
-        generalize (tot_nge_to_le (WOrel X) (WO_istotal X) x y lt); intro le.
+        generalize (tot_nge_to_le x y lt); intro le.
         induction (proofirrelevance (C'' y) (propproperty _)
                                     (ii1 (ini' y x C'x le) : C'' y)
                                     (ini'' y x (ii1 C'x) le)).
@@ -1534,7 +1569,7 @@ Proof.
     + exact nSy.
 Defined.
 
-Corollary bigWellOrderedSet (X:Type) : AxiomOfChoice -> ∃ Y:WellOrderedSet, ∏ f : Y -> X, ¬ isincl f.
+Corollary bigWellOrderedSet (X:Type) : AxiomOfChoice ⇒ ∃ Y:WellOrderedSet, ∏ f : Y -> X, ¬ isincl f.
 Proof.
   intros ac.
   induction (bigSet X (AC_to_LEM ac)) as [V n].

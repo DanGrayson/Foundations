@@ -1,43 +1,17 @@
 (* -*- coding: utf-8 -*- *)
 
-Require Import UniMath.Combinatorics.FiniteSets.
 Unset Automatic Introduction.
-Require Import UniMath.Foundations.UnivalenceAxiom.
-Require Import UniMath.MoreFoundations.Tactics.
+Require Import UniMath.MoreFoundations.All.
+Require Import UniMath.Combinatorics.FiniteSets.
+
 Local Open Scope poset.
+Local Open Scope logic.
 
 (** partially ordered sets and ordered sets *)
 
 Definition isTotalOrder {X : hSet} (R : hrel X) : hProp
   := hProppair (isPartialOrder R × istotal R)
                (isapropdirprod _ _ (isaprop_isPartialOrder R) (isaprop_istotal R)).
-
-Section A.
-
-  Open Scope logic.
-
-  Lemma tot_nge_to_le {X:hSet} (R:hrel X) : istotal R -> ∏ x y, ¬ (R x y) ->  R y x.
-  Proof.
-    intros ? ? tot ? ? nle.
-    now apply (hdisjtoimpl (tot x y)).
-  Defined.
-
-  Lemma tot_nle_iff_gt {X:hSet} (R:hrel X) :
-    isTotalOrder R -> ∏ x y, ¬ (R x y)  <->  R y x ∧ ¬ (y = x).
-  (** if [R x y] is [x ≤ y], then this shows the equivalence of two definitions for [y < x] *)
-  Proof.
-    intros X R i.
-    assert (tot := pr2 i); simpl in tot.
-    assert (refl := pr2 (pr1 (pr1 i))); simpl in refl.
-    assert (anti := pr2 (pr1 i)); simpl in anti.
-    split.
-    { intros nle. split.
-      - now apply tot_nge_to_le.
-      - intros ne. induction ne. exact (nle (refl y)). }
-    { intros yltx xley. induction yltx as [ylex neq]. exact (neq (anti _ _ ylex xley)). }
-  Defined.
-
-End A.
 
 Definition isSmallest {X : Poset} (x : X) : UU := ∏ y, x ≤ y.
 
@@ -179,12 +153,19 @@ Ltac unwrap_OrderedSet X :=
   unfold posetRelation in total;
   simpl in total.
 
-Local Definition underlyingPoset (X:OrderedSet) : Poset := pr1 X.
-Coercion underlyingPoset : OrderedSet >-> Poset.
+Definition OrderedSet_to_Poset (X:OrderedSet) : Poset := pr1 X.
+
+Coercion OrderedSet_to_Poset : OrderedSet >-> Poset.
 
 Delimit Scope oset with oset.
 
-Definition Poset_lessthan {X:Poset} (x y:X) := ∥ x ≤ y  ×  x != y ∥.
+Definition Poset_lessthan {X:Poset} (x y:X) := (x ≤ y  ∧  ¬ (x = y))%logic.
+
+Definition Poset_lt_to_le {X:Poset} (x y:X) : x < y ⇒ x ≤ y
+  := pr1.
+
+Definition Poset_lt_to_ne {X:Poset} (x y:X) : x < y ⇒ ¬ (x = y)
+  := pr2.
 
 Notation "X ≅ Y" := (PosetEquivalence X Y) (at level 60, no associativity) : oset.
 Notation "m ≤ n" := (posetRelation _ m n) (no associativity, at level 70) : oset.
@@ -195,16 +176,31 @@ Notation "n >= m" := (posetRelation _ m n) (no associativity, at level 70) : ose
 Notation "n > m" := (Poset_lessthan m n) :oset.
 
 Close Scope poset.
+
 Local Open Scope oset.
 
-Definition OrderedSet_isrefl {X:OrderedSet} (x:X) : x ≤ x.
-Proof. intros. unwrap_OrderedSet X; simpl in x. apply refl. Defined.
+Definition OrderedSet_isrefl {X:OrderedSet} (x:X) : x ≤ x
+  := isrefl_posetRelation X x.
 
-Definition OrderedSet_isantisymm {X:OrderedSet} (x y:X) : x ≤ y -> y ≤ x -> x = y.
-Proof. intros ? ? ? r s. unwrap_OrderedSet X; simpl in x, y. now apply antisymm. Defined.
+Definition OrderedSet_isantisymm {X:OrderedSet} (x y:X) : x ≤ y -> y ≤ x -> x = y
+  := isantisymm_posetRelation X x y.
 
-Definition OrderedSet_istotal {X:OrderedSet} (x y:X): x ≤ y ∨ y ≤ x :=
-  pr2 X x y.
+Definition OrderedSet_istotal {X:OrderedSet} (x y:X): x ≤ y ∨ y ≤ x
+  := pr2 X x y.
+
+Lemma tot_nge_to_le {X:OrderedSet} : ∀ x y : X, ¬ (x ≤ y) ⇒ y ≤ x.
+Proof.
+  intros X x y nle. now apply (hdisjtoimpl (OrderedSet_istotal x y)).
+Defined.
+
+Lemma tot_nle_iff_gt {X:OrderedSet} : ∀ x y : X, ¬ (x ≤ y)  ⇔  y < x.
+Proof.
+  intros X x y. split.
+  { intros nle. split.
+    - now use tot_nge_to_le.
+    - intros ne. induction ne. use nle. use OrderedSet_isrefl. }
+  { intros yltx xley. induction yltx as [ylex neq]. use neq. now use OrderedSet_isantisymm. }
+Defined.
 
 Lemma isdeceq_isdec_ordering (X:OrderedSet) : isdeceq X -> isdec_ordering X.
 Proof.
@@ -234,7 +230,7 @@ Defined.
 Corollary isdeceq_isdec_lessthan (X:OrderedSet) :
   isdeceq X -> ∏ (x y:X), decidable (x < y).
 Proof.
-  intros ? i ? ?. unfold Poset_lessthan. apply decidable_ishinh. apply decidable_dirprod.
+  intros ? i ? ?. unfold Poset_lessthan. apply decidable_dirprod.
   - now apply isdeceq_isdec_ordering.
   - apply neg_isdecprop.
     apply isdecpropif.
@@ -246,16 +242,16 @@ Corollary isfinite_isdec_lessthan (X:OrderedSet) : isfinite X -> ∏ (x y:X), de
 Proof. intros ? i ? ?. apply isdeceq_isdec_lessthan. now apply isfinite_isdeceq.
 Defined.
 
-Lemma isincl_underlyingPoset : isincl underlyingPoset.
+Lemma isincl_OrderedSet_to_Poset : isincl OrderedSet_to_Poset.
 Proof. apply isinclpr1. intros X. apply isaprop_istotal. Defined.
 
-Definition underlyingPoset_weq (X Y:OrderedSet) :
-  X=Y ≃ (underlyingPoset X)=(underlyingPoset Y).
+Definition OrderedSet_to_Poset_weq (X Y:OrderedSet) :
+  X=Y ≃ (OrderedSet_to_Poset X)=(OrderedSet_to_Poset Y).
 Proof.
   Set Printing Coercions.
   intros. simple refine (weqpair _ _).
   { apply maponpaths. }
-  apply isweqonpathsincl. apply isincl_underlyingPoset.
+  apply isweqonpathsincl. apply isincl_OrderedSet_to_Poset.
   Unset Printing Coercions.
 Defined.
 
@@ -286,7 +282,7 @@ Proof.
 Defined.
 
 Theorem OrderedSet_univalence (X Y:OrderedSet) : X=Y ≃ X≅Y.
-Proof. intros. exact ((Poset_univalence _ _) ∘ (underlyingPoset_weq _ _))%weq.
+Proof. intros. exact ((Poset_univalence _ _) ∘ (OrderedSet_to_Poset_weq _ _))%weq.
 Defined.
 
 Theorem OrderedSetEquivalence_rect (X Y : OrderedSet) (P : X ≅ Y -> UU) :
