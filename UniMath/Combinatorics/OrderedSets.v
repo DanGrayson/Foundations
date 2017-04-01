@@ -203,13 +203,17 @@ Proof.
   intros X x y nle. now apply (hdisjtoimpl (OrderedSet_istotal x y)).
 Defined.
 
-Lemma nle_iff_gt {X:OrderedSet} : ∀ x y : X, ¬ (x ≤ y)  ⇔  y < x.
+Lemma nle_to_gt {X:OrderedSet} : ∀ x y : X, ¬ (x ≤ y)  ⇒  y < x.
 Proof.
-  intros X x y. split.
-  { intros nle. split.
-    - now use nge_to_le.
-    - intros ne. induction ne. use nle. use OrderedSet_isrefl. }
-  { intros yltx xley. induction yltx as [ylex neq]. use neq. now use OrderedSet_isantisymm. }
+  intros X x y nle. split.
+  - now use nge_to_le.
+  - intros ne. induction ne. use nle. use OrderedSet_isrefl.
+Defined.
+
+Lemma gt_to_nle {X:OrderedSet} : ∀ x y : X, y < x  ⇒  ¬ (x ≤ y).
+Proof.
+  intros X x y yltx xley. induction yltx as [ylex neq].
+  use neq. now use OrderedSet_isantisymm.
 Defined.
 
 Lemma isdeceq_isdec_ordering (X:OrderedSet) : isdeceq X -> isdec_ordering X.

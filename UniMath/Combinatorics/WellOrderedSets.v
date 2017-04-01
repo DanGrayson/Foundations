@@ -616,13 +616,13 @@ Proof.
   (** minu says that u is the smallest element of T not in S *)
   apply hinhpr. exists u. intro y. split.
   - intro Sy. change (∑ Ty : T y, y,,Ty < u).
-    exists (le y Sy). apply (pr1 (@nle_iff_gt T _ _)).
+    exists (le y Sy). apply (@nle_to_gt T _ _).
     intro ules. use Uu. exact (ini _ _ _ _ ules).
   - intro yltu. induction yltu as [yinT yltu].
     (** Goal : [S y].  We know y is smaller than the smallest element of T not in S,
        so at best, constructively, we know [¬ ¬ (S y)].  So prove it by contradiction. *)
     apply (proof_by_contradiction lem).
-    intro bc. use (pr2 (@nle_iff_gt T _ _) yltu). now use minu.
+    intro bc. use ((@gt_to_nle T _ _) yltu). now use minu.
 Defined.
 
 (** ** The union of a chain of totally ordered subsets *)
@@ -1074,10 +1074,10 @@ Proof.
           + induction (!cd1). apply dmax.
         - induction Ev. apply logeq_if_both_false.
           + assert (Q := cmax' (w,,Ww) W'c).
-            apply (pr2 (@nle_iff_gt C _ _)).
+            apply (@gt_to_nle C _ _).
             now apply (lt_to_lt Q).
           + assert (Q := dmax' (w,,Ww) W'd). unfold lt in Q.
-            apply (pr2 (@nle_iff_gt D _ _)).
+            apply (@gt_to_nle D _ _).
             now apply (lt_to_lt Q).
         - induction Ew. apply logeq_if_both_true ; now use TOeq_to_refl_1. } }
     assert (K := max_common_initial_is_max C D W' ci); fold W in K.
@@ -1279,9 +1279,9 @@ Lemma WellOrderedSet_map_lt_inv {X Y : WellOrderedSet} (f : WellOrderedSet_map X
   (f x < f x' -> x < x')%woset.
 Proof.
   intros lt.
-  use (pr1 (nle_iff_gt _ _)).
+  use nle_to_gt.
   intros le.
-  use (Poset_lt_to_nle lt _).
+  use (Poset_lt_to_nle lt).
   now use (pr2 f).
 Defined.
 
@@ -1302,7 +1302,7 @@ Lemma WellOrderedSet_iso_lt_inv {X Y : WellOrderedSet} (f : X ≅ Y) {y y':Y} :
   (y < y' -> invmap f y < invmap f y')%woset.
 Proof.
   intros lt.
-  apply (pr1 (nle_iff_gt _ _)).
+  use nle_to_gt.
   intros le.
   assert (le' := pr2 f _ _ le : f (invmap f y') ≤ f (invmap f y)); clear le.
   assert (p : f (invmap f y) = y).
