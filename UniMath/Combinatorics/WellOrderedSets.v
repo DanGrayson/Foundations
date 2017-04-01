@@ -285,6 +285,19 @@ Definition WellOrdering (S:hSet) : hSet := ∑ (R : hrel_set S), isWellOrder R.
 
 Definition WellOrderedSet : UU := (∑ (S:hSet), WellOrdering S)%type.
 
+Definition OrderedSet_to_WellOrderedSet (X : OrderedSet) :
+  isWellFounded (posetRelation X) -> WellOrderedSet.
+Proof.
+  intros wf.
+  exists (carrierofposet X).
+  exists (posetRelation X).
+  split.
+  - split.
+    + exact (pr221 X).
+    + exact (pr2 X).
+  - exact wf.
+Defined.
+
 Definition WellOrderedSet_to_hSet : WellOrderedSet -> hSet := pr1.
 
 Definition WellOrderedSet_to_OrderedSet : WellOrderedSet -> OrderedSet.
@@ -1396,7 +1409,71 @@ Proof.
   exact (isofhlevelweqb 1 (WellOrderedSet_univalence X Y) (isaprop_weq_WellOrderedSet X Y lem)).
 Defined.
 
-(* ** Transfinite recursion *)
+(** ** An ordered set is well founded iff it is inductively ordered *)
+
+Definition isInductivelyOrdered (X:OrderedSet) : hProp :=
+  (
+    ∀ (P : X -> hProp) (rec : ∀ x:X, (∀ y, y < x ⇒ P y) ⇒ P x), (∀ x, P x)
+  )%oset.
+
+Lemma WellOrderedSet_induction (X:OrderedSet) :
+  LEM -> isWellFounded (posetRelation X) -> isInductivelyOrdered X.
+Proof.
+  intros lem wf P g.
+  apply (proof_by_contradiction lem); intro n.
+  assert (ne := negforall_to_existsneg _ lem n); clear n.
+  induction (@WO_theSmallest (OrderedSet_to_WellOrderedSet X wf) _ ne) as [x0 [nPx0 x0min]];
+    change (hProptoType (∀ t : X, ¬ P t ⇒ x0 ≤ t)) in x0min.
+  use nPx0; clear nPx0. use g. intros t lt.
+  apply (proof_by_contradiction lem); intros nPt;
+    change (hProptoType (¬ (P t))) in nPt.
+  assert (ge := x0min t nPt); clear nPt.
+  exact (gt_to_nle _ _ lt ge).
+Defined.
+
+Lemma WellOrderedSet_induction_converse (X:OrderedSet) :
+  LEM -> isInductivelyOrdered X -> isWellFounded (posetRelation X).
+Proof.
+  Open Scope poset.
+  Open Scope oset.
+  intros lem ind S ne.
+  apply (proof_by_contradiction lem); intro n.
+  assert (Q := neghexisttoforallneg _ n : ∀ x : X, ¬ (S x ∧ (∀ y : X, S y ⇒ (x ≤ y)%poset))); clear n.
+  (** now show that any element of S is bigger that some other element of S *)
+  assert (Q' : ∀ x, S x ⇒ ∃ y, S y ∧ y < x).
+  { intros x Sx. assert (K := Q x : ¬ (S x ∧ (∀ y : X, S y ⇒ x ≤ y))); clear Q.
+    assert (D : ¬ ∀ y : X, S y ⇒ x ≤ y).
+    { intros a. use K. exact (Sx,,a). }
+    clear K.
+    assert (L := negforall_to_existsneg _ lem D); clear D.
+    apply (squash_to_hProp L); clear L; intros [t nt].
+    assert (M := negimpl_to_conj _ _ lem nt); clear nt.
+    induction M as [St nxt].
+    apply hinhpr.
+    exists t.
+    split.
+    - exact St.
+    - exact (nle_to_gt _ _ nxt). }
+  clear Q.
+  (** now prove by induction that no element is in S *)
+  change hfalse.
+  assert (K : ∀ x, ¬ (S x)).
+  { apply (ind (λ x, ¬ S x) :
+                   (
+                     (∀ x:X, (∀ y:X, y < x ⇒ ¬ S y) ⇒ ¬ S x) ⇒ (∀ x, ¬ S x)
+                   )).
+    intros x hyp.
+    intros Sx.
+    assert (Q'' := Q' x Sx); clear Q'.
+    change hfalse.
+    apply (squash_to_hProp Q''); clear Q''; intros [y [Sy lt]].
+    exact (hyp y lt Sy). }
+  clear Q'.
+  apply (squash_to_hProp ne); clear ne; intros [x Sx].
+  exact (K x Sx).
+Defined.
+
+(** ** Transfinite recursion *)
 
 Definition WO_isInitial (X:WellOrderedSet) (Y:hsubtype X) : hProp := ∀ (x y : X), Y y ⇒ (x ≤ y ⇒ Y x).
 
@@ -1420,15 +1497,16 @@ Proof.
      certain point we need to use proof by contradiction to show that two elements of [P x] are
      equal.
    *)
-  set (isGuided := (λ (C:subtype_set X)
-                      (f : (∏ (c:X) (Cc : C c), P c)%set)
+  set (isGuidedPartialSection := (λ (C:subtype_set X)
+                      (f : (∏ (c:X) (Cc : C c), P c))
                       (ini : hProp_to_hSet (WO_isInitial X C)),
                     ∀ (x:X) (Cx:C x),
                       f x Cx =
-                      g x (λ y lt, f y (ini y x Cx (Poset_lt_to_le _ _ lt))))).
-  set (G := (∑ C f ini, isGuided C f ini)).
-  assert (K : ∀ (C D:G) (x:X) (Cx : pr1 C x) (Dx : pr1 D x), pr12 C x Cx = pr12 D x Dx).
-  { intros C D. apply (proof_by_contradiction lem). intros n; change hfalse.
+                      g x (λ y lt, f y (ini y x Cx (Poset_lt_to_le _ _ lt))))%set).
+  set (GuidedPartialSection := (∑ C f ini, isGuidedPartialSection C f ini)%type).
+  assert (K : (∀ (C D:GuidedPartialSection) (x:X) (Cx : pr1 C x) (Dx : pr1 D x), pr12 C x Cx = pr12 D x Dx)%set).
+  { intros C D.
+    apply (proof_by_contradiction lem). intros n; change hfalse.
     apply (squash_to_hProp (negforall_to_existsneg _ lem n)); clear n. intros [x' n].
     apply (squash_to_hProp (negforall_to_existsneg _ lem n)); clear n. intros [Cx' n].
     apply (squash_to_hProp (negforall_to_existsneg _ lem n)); clear n. intros [Dx' ne].
@@ -1457,7 +1535,7 @@ Proof.
     apply maponpaths.
     apply funextsec; intro x; apply funextsec; intro lt.
     now use agree. }
-  set (S := pr1 : G -> subtype_set X).
+  set (S := pr1 : GuidedPartialSection -> subtype_set X).
   set (C' := subtype_union S).
   transparent assert (f' : (∏ (x : X) (C'x : C' x), P x)%type).
   { intros x e. use (squash_to_hSet _ _ e).
@@ -1466,7 +1544,7 @@ Proof.
   transparent assert ( ini' : (WO_isInitial X C') ).
   { intros x y C'y le. apply (squash_to_hProp C'y); clear C'y; intros [C SCy].
     apply hinhpr. exists C. exact (pr122 C x y SCy le). }
-  assert (C'guided : isGuided C' f' ini').
+  assert (C'guided : isGuidedPartialSection C' f' ini').
   { intros x C'x.
     apply (squash_to_hProp C'x); intros [C Cx]. change (hProptoType(pr1 C x)) in Cx.
     induction (ishinh_irrel (C,,Cx) C'x).
@@ -1484,7 +1562,7 @@ Proof.
     set (C'' := subtype_plus C' x0 nC'x0).
     (** record the statement that x0 is in C'' *)
     assert (x0inC'' := subtype_plus_has_point C' x0 nC'x0 : C'' x0).
-    (** now we show C'' for membership in G so it is contained in C', leading to a contradiction *)
+    (** now we show C'' for membership in GuidedPartialSection so it is contained in C', leading to a contradiction *)
     transparent assert (f'' : (∏ x : X, C'' x -> P x)%type).
     { intros x [C'x|e].
       - exact (f' x C'x).
@@ -1495,7 +1573,7 @@ Proof.
       - induction ex0y. induction (lem (x = x0)) as [e|ne].
         + exact (ii2 (!e)).
         + apply ii1. use (sm x). exact (le,,ne). }
-    assert (C''guided : isGuided C'' f'' ini'').
+    assert (C''guided : isGuidedPartialSection C'' f'' ini'').
     { intros x [C'x|ex0x].
       - change (f'' x (ii1 C'x)) with (f' x C'x).
         simple refine (C'guided x C'x @ _).
@@ -1515,7 +1593,7 @@ Proof.
         match goal with |- _ = match ?D with | ii1 C'x => _ | ii2 e => _ end => induction D as [C'y|b] end.
         + apply maponpaths. apply propproperty.
         + apply fromempty. induction b. exact (Poset_nlt_self lt). }
-    set (C''inG := C'',,f'',,ini'',,C''guided : G).
+    set (C''inG := C'',,f'',,ini'',,C''guided : GuidedPartialSection).
     assert (C''inC' := subtype_union_containedIn S C''inG : C'' ⊆ C').
     assert (x0inC' := C''inC' x0 x0inC'').
     exact (nC'x0 x0inC'). }

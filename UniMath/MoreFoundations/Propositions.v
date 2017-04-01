@@ -45,7 +45,7 @@ Proof.
   - apply fromempty. exact (nnp np).
 Defined.
 
-Lemma proof_by_contradiction {P:hProp} : LEM -> ¬¬ P -> P.
+Lemma proof_by_contradiction {P:hProp} : LEM -> ¬ ¬ P -> P.
 Proof.
   intro lem.
   exact (decidable_proof_by_contradiction (lem P)).

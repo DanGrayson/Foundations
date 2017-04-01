@@ -36,3 +36,6 @@ Notation "'pr211' x" := (pr2 (pr1 (pr1 x))) (at level 8).
 Notation "'pr212' x" := (pr2 (pr1 (pr2 x))) (at level 8).
 Notation "'pr221' x" := (pr2 (pr2 (pr1 x))) (at level 8).
 Notation "'pr222' x" := (pr2 (pr2 (pr2 x))) (at level 8).
+
+(* improve the notation defined in Foundations/Sets.v *)
+Notation "m < n" := ((m ≤ n ∧ ¬ (m = n))%poset%logic) (only parsing) : poset.

@@ -174,7 +174,7 @@ Defined.
 
 Lemma Poset_nlt_self {X:Poset} {x:X} : ¬ (x < x).
 Proof.
-  intros ? ? [_ ne]. now apply ne.
+  intros ? ? [_ ne]. now use ne.
 Defined.
 
 Notation "X ≅ Y" := (PosetEquivalence X Y) (at level 60, no associativity) : oset.
