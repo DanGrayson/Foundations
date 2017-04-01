@@ -188,16 +188,16 @@ Definition OrderedSet_isantisymm {X:OrderedSet} (x y:X) : x ≤ y -> y ≤ x -> 
 Definition OrderedSet_istotal {X:OrderedSet} (x y:X): x ≤ y ∨ y ≤ x
   := pr2 X x y.
 
-Lemma tot_nge_to_le {X:OrderedSet} : ∀ x y : X, ¬ (x ≤ y) ⇒ y ≤ x.
+Lemma nge_to_le {X:OrderedSet} : ∀ x y : X, ¬ (x ≤ y) ⇒ y ≤ x.
 Proof.
   intros X x y nle. now apply (hdisjtoimpl (OrderedSet_istotal x y)).
 Defined.
 
-Lemma tot_nle_iff_gt {X:OrderedSet} : ∀ x y : X, ¬ (x ≤ y)  ⇔  y < x.
+Lemma nle_iff_gt {X:OrderedSet} : ∀ x y : X, ¬ (x ≤ y)  ⇔  y < x.
 Proof.
   intros X x y. split.
   { intros nle. split.
-    - now use tot_nge_to_le.
+    - now use nge_to_le.
     - intros ne. induction ne. use nle. use OrderedSet_isrefl. }
   { intros yltx xley. induction yltx as [ylex neq]. use neq. now use OrderedSet_isantisymm. }
 Defined.

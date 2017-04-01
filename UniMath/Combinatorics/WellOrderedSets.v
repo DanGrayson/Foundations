@@ -40,6 +40,7 @@ Definition TOpartial {X:hSet} (S : TOSubset X) : isPartialOrder (TOSrel S) := pr
 
 Definition TOtotal {X:hSet} (S : TOSubset X) : isTotalOrder (TOSrel S) := pr22 S.
 
+(* phase this out in favor of OrderedSet_istotal *)
 Definition TOtot {X:hSet} (S : TOSubset X) : istotal (TOSrel S) := pr222 S.
 
 Definition TOSubset_to_OrderedSet {X:hSet} : TOSubset X -> OrderedSet
@@ -48,6 +49,8 @@ Definition TOSubset_to_OrderedSet {X:hSet} : TOSubset X -> OrderedSet
 Coercion TOSubset_to_OrderedSet : TOSubset >-> OrderedSet.
 
 Notation "s ≤ s'" := (posetRelation (OrderedSet_to_Poset (TOSubset_to_OrderedSet _)) s s') : tosubset.
+
+Notation "s < s'" := (@Poset_lessthan (OrderedSet_to_Poset (TOSubset_to_OrderedSet _)) s s') : tosubset.
 
 Definition TOanti {X:hSet} (S : TOSubset X) : isantisymm (TOSrel S) := pr2 (pr122 S).
 
@@ -68,7 +71,14 @@ Proof.
   intros s t e. induction (subtypeEquality_prop e). use TOrefl.
 Defined.
 
-Local Lemma h1'' {X:hSet} {S:TOSubset X} {r s t u:S} : (r ≤ t -> pr1 r = pr1 s -> pr1 t = pr1 u -> s ≤ u)%tosubset.
+Local Lemma le_to_le {X:hSet} {S:TOSubset X} {r s t u:S} :
+  (r ≤ t -> pr1 r = pr1 s -> pr1 t = pr1 u -> s ≤ u)%tosubset.
+Proof.
+  intros le p q. induction (subtypeEquality_prop p). induction (subtypeEquality_prop q). exact le.
+Defined.
+
+Local Lemma lt_to_lt {X:hSet} {S:TOSubset X} {r s t u:S} :
+  (r < t -> pr1 r = pr1 s -> pr1 t = pr1 u -> s < u)%tosubset.
 Proof.
   intros le p q. induction (subtypeEquality_prop p). induction (subtypeEquality_prop q). exact le.
 Defined.
@@ -125,7 +135,7 @@ Proof.
     apply hinhpr.
     exists B.
     split.
-    + apply (BSi x s Bx Ss). now apply (h1'' le).
+    + apply (BSi x s Bx Ss). now apply (le_to_le le).
     + exact (BS,,BT,,BSi,,BTi,,BST). }
   split.
   { intros x t M Tt le.
@@ -134,7 +144,7 @@ Proof.
     apply hinhpr.
     exists B.
     split.
-    + apply (BTi x t Bx Tt). now apply (h1'' le).
+    + apply (BTi x t Bx Tt). now apply (le_to_le le).
     + exact (BS,,BT,,BSi,,BTi,,BST). }
   intros x y.
   split.
@@ -142,20 +152,20 @@ Proof.
     apply (squash_to_hProp xm); intros [B [Bx [BS [BT [BSi [BTi BST]]]]]].
     apply (squash_to_hProp ym); intros [C [Cy [CS [CT [CSi [CTi CST]]]]]].
     assert (Cx : C x).
-    { apply (CSi y x Cy (BS x Bx)). now apply (h1'' le). }
+    { apply (CSi y x Cy (BS x Bx)). now apply (le_to_le le). }
     assert (Q := pr1 (CST (x,,Cx) (y,,Cy))); simpl in Q.
     assert (E : subtype_inc CS (x,, Cx) ≤ subtype_inc CS (y,, Cy)).
-    { now apply (h1'' le). }
-    clear le. now apply (h1'' (Q E)). }
+    { now apply (le_to_le le). }
+    clear le. now apply (le_to_le (Q E)). }
   { intros le. induction x as [x xm], y as [y ym].
     apply (squash_to_hProp xm); intros [B [Bx [BS [BT [BSi [BTi BST]]]]]].
     apply (squash_to_hProp ym); intros [C [Cy [CS [CT [CSi [CTi CST]]]]]].
     assert (Cx : C x).
-    { apply (CTi y x Cy (BT x Bx)). now apply (h1'' le). }
+    { apply (CTi y x Cy (BT x Bx)). now apply (le_to_le le). }
     assert (Q := pr2 (CST (x,,Cx) (y,,Cy))); simpl in Q.
     assert (E : subtype_inc CT (x,, Cx) ≤ subtype_inc CT (y,, Cy)).
-    { now apply (h1'' le). }
-    clear le. now apply (h1'' (Q E)). }
+    { now apply (le_to_le le). }
+    clear le. now apply (le_to_le (Q E)). }
 Defined.
 
 Lemma tosub_fidelity {X:hSet} {S T:TOSubset X} (le : S ≼ T)
@@ -330,11 +340,11 @@ Notation "s ≤ s'" := (posetRelation (OrderedSet_to_Poset (TOSubset_to_OrderedS
 
 Local Definition lt {X:hSet} {S : WOSubset X} (s s' : S) := ¬ (s' ≤ s)%wosubset.
 
-Notation "s < s'" := (lt s s') : wosubset.
+Notation "s < s'" := (@Poset_lessthan (OrderedSet_to_Poset (TOSubset_to_OrderedSet (WOSubset_to_TOSubset _))) s s') : wosubset.
 
 Lemma WO_lt_anti {X:hSet} (S : WOSubset X) (s : S) : ¬ (s < s).
 Proof.
-  intros n. use n; clear n. exact (TOrefl _ s).
+  intros [_ ne]. now use ne.
 Defined.
 
 Definition WOS_isWellFounded {X:hSet} (S : WOSubset X) : isWellFounded (WOSrel S)
@@ -342,11 +352,10 @@ Definition WOS_isWellFounded {X:hSet} (S : WOSubset X) : isWellFounded (WOSrel S
 
 Lemma wo_lt_to_le {X:hSet} {S : WOSubset X} (s s' : S) : s < s' -> s ≤ s'.
 Proof.
-  unfold lt.
   intros lt.
-  apply (squash_to_hProp (TOtot S s s')); intros [c|c].
+  apply (squash_to_hProp (@OrderedSet_istotal S s s')); intros [c|c].
   - exact c.
-  - exact (fromempty (lt c)).
+  - now apply Poset_lt_to_le.
 Defined.
 
 Definition wosub_le (X:hSet) : hrel (WOSubset X)
@@ -568,8 +577,7 @@ Definition upto {X:hSet} {S:WOSubset X} (s:S) : hsubtype X
 
 Lemma upto_anti {X:hSet} {S:WOSubset X} (s:S) : ¬ (upto s (pr1 s)).
 Proof.
-  intros [Ss n]. use n; clear n. induction (proofirrelevance_hProp _ (pr2 s) Ss).
-  exact (TOrefl S s).
+  intros [Ss [_ ne]]. use ne; clear ne. now apply subtypeEquality_prop.
 Defined.
 
 Lemma upto_eqn {X:hSet} {S T:WOSubset X} (x:X) (Sx : S x) (Tx : T x) :
@@ -579,24 +587,24 @@ Proof.
   apply (invmap (hsubtype_univalence _ _)).
   intros y.
   split.
-  - intros [Sy lt].
+  - intros [Sy [le ne]].
     exists (pr1 ST y Sy).
-    generalize lt; clear lt.
-    apply negf.
-    intros le'.
-    apply (pr2 (wosub_fidelity ST (x,, Sx) (y,, Sy))).
-    now apply (h1'' (S := T) le').
-  - intros [Ty lt].
+    split.
+    + now apply (le_to_le (pr12 ST _ _ le)).
+    + intros eq. use ne; clear ne. apply subtypeEquality_prop; change (y=x).
+      exact (maponpaths pr1 eq).
+  - intros [Ty [le ne]].
     assert (Q := wosub_le_subi ST x y Sx Ty); simpl in Q.
     assert (e : pr1 ST x Sx = Tx).
     { apply propproperty. }
     induction e.
-    assert (Sy := Q (wo_lt_to_le _ _ lt) : S y); clear Q.
+    assert (Sy := Q le : S y); clear Q.
     exists Sy.
-    generalize lt; clear lt.
-    apply negf.
-    intros le'.
-    now apply (h1'' (wosub_le_comp ST _ _ le')).
+    split.
+    + apply (pr2 (wosub_fidelity ST (y,, Sy) (x,, Sx))).
+      now apply (le_to_le le).
+    + intros eq. use ne. apply subtypeEquality_prop; change (y=x).
+      exact (maponpaths pr1 eq).
 Defined.
 
 Definition isInterval {X:hSet} (S:hsubtype X) (T:WOSubset X) (le : S ⊆ T) :
@@ -612,13 +620,14 @@ Proof.
   apply (squash_to_hProp minU); clear minU; intros [u [Uu minu]].
   (** minu says that u is the smallest element of T not in S *)
   apply hinhpr. exists u. intro y. split.
-  - intro Sy. change (∑ Ty : T y, neg (u ≤ y,, Ty)).
-    exists (le y Sy). intro ules. use Uu. exact (ini _ _ _ _ ules).
+  - intro Sy. change (∑ Ty : T y, y,,Ty < u).
+    exists (le y Sy). apply (pr1 (@nle_iff_gt T _ _)).
+    intro ules. use Uu. exact (ini _ _ _ _ ules).
   - intro yltu. induction yltu as [yinT yltu].
     (** Goal : [S y].  We know y is smaller than the smallest element of T not in S,
        so at best, constructively, we know [¬ ¬ (S y)].  So prove it by contradiction. *)
     apply (proof_by_contradiction lem).
-    intro bc. use yltu. now use minu.
+    intro bc. use (pr2 (@nle_iff_gt T _ _) yltu). now use minu.
 Defined.
 
 (** ** The union of a chain of totally ordered subsets *)
@@ -694,13 +703,13 @@ Proof.
   apply weqlogeq.
   apply (squash_to_hProp (chain i j)). intros [c|c].
   - split.
-    + intro l. assert (q := wosub_le_comp c _ _ l); clear l. now apply (h1'' q).
+    + intro l. assert (q := wosub_le_comp c _ _ l); clear l. now apply (le_to_le q).
     + intro l. apply (pr2 ((wosub_fidelity c) (x,,xi) (y,,yi))).
-      now apply (@h1'' X (S j) _ _ _ _ l).
+      now apply (@le_to_le X (S j) _ _ _ _ l).
   - split.
     + intro l. apply (pr2 ((wosub_fidelity c) (x,,xj) (y,,yj))).
-      now apply (@h1'' X (S i) _ _ _ _ l).
-    + intro l. assert (q := wosub_le_comp c _ _ l); clear l. now apply (h1'' q).
+      now apply (@le_to_le X (S i) _ _ _ _ l).
+    + intro l. assert (q := wosub_le_comp c _ _ l); clear l. now apply (le_to_le q).
 Defined.
 
 Definition chain_union_rel {X : hSet} {I : UU} {S : I → WOSubset X}
@@ -899,7 +908,7 @@ Definition upto' {X:hSet} {C:WOSubset X} (c:C) : proper_subtypes_set X.
 Proof.
   exists (upto c). apply hinhpr. exists (pr1 c). intro n.
   simpl in n. induction n as [n o]. apply o; clear o.
-  apply (TOeq_to_refl C _ _). now apply subtypeEquality_prop.
+  now apply subtypeEquality_prop.
 Defined.
 
 (** ** Choice functions *)
@@ -998,10 +1007,9 @@ Proof.
       { intros v W'c'. assert (e : c = subtype_inc W'C (pr1 c,, W'c')).
         { now apply subtypeEquality_prop. }
         induction e. clear W'c'. induction v as [v [Wv|k]].
-        - assert (L := pr1 (cE v) Wv). unfold upto,lt in L.
-          assert (Q := @tot_nge_to_le C _ _ (pr2 L) : v,, pr1 L ≤ c).
-          unfold subtype_inc; cbn.
-          now apply(h1'' Q).
+        - assert (L := pr1 (cE v) Wv).
+          induction L as [Cv lt].
+          now apply (le_to_le (pr1 lt)).
         - use (TOeq_to_refl C). now apply subtypeEquality_prop. }
       assert (cmax' : ∏ (w : carrier W) (W'c : W' (pr1 c)),
                      subtype_inc W'C (subtype_inc j w) < subtype_inc W'C (pr1 c,,W'c)).
@@ -1009,21 +1017,14 @@ Proof.
         { now apply subtypeEquality_prop. }
         induction e. clear W'c'. induction w as [v Wv].
         assert (L := pr1 (cE v) Wv). unfold upto,lt in L.
-        assert (Q := @tot_nge_to_le C _ _ (pr2 L)).
-        apply (@tot_nle_iff_gt C).
-        split.
-        - now apply (h1'' Q).
-        - intros e. assert (e' := maponpaths pr1 e); clear e. change (v = pr1 c)%type in e'.
-          assert ( L' := pr2 L ). simpl in L'. apply L'; clear L'.
-          exact (TOeq_to_refl_1 C c (v,, pr1 L) (!e')). }
+        now apply (lt_to_lt (pr2 L)). }
       assert (dmax : ∏ (v : carrier W') (W'd : W' (pr1 d)),
                      subtype_inc W'D v ≤ subtype_inc W'D (pr1 d,,W'd)).
       { intros v W'd'. assert (e : d = subtype_inc W'D (pr1 d,, W'd')).
         { now apply subtypeEquality_prop. }
         induction e. clear W'd'. induction v as [v [Wv|k]].
         - assert (L := pr1 (dE v) Wv). unfold upto,lt in L.
-          assert (Q := @tot_nge_to_le D _ _ (pr2 L)).
-          now apply(h1'' Q).
+          apply wo_lt_to_le. now apply (lt_to_lt (pr2 L)).
         - use (TOeq_to_refl D). apply subtypeEquality_prop. simpl. exact (!k @ cd1). }
       assert (dmax' : ∏ (w : carrier W) (W'd : W' (pr1 d)),
                      subtype_inc W'D (subtype_inc j w) < subtype_inc W'D (pr1 d,,W'd)).
@@ -1031,37 +1032,27 @@ Proof.
         { now apply subtypeEquality_prop. }
         induction e. clear W'd'. induction w as [v Wv].
         assert (L := pr1 (dE v) Wv). unfold upto,lt in L.
-        assert (Q := @tot_nge_to_le D _ _ (pr2 L)).
-        apply (@tot_nle_iff_gt D).
-        split.
-        - now apply (h1'' Q).
-        - intros e. assert (e' := maponpaths pr1 e); clear e. change (v = pr1 d)%type in e'.
-          assert ( L' := pr2 L ). simpl in L'. apply L'; clear L'.
-          exact (TOeq_to_refl_1 D d (v,, pr1 L) (!e')). }
+        now apply (lt_to_lt (pr2 L)). }
       split.
       { intros w' c' [Ww'|e] Cc' le.
-        - apply ii1. apply (WCi w' c' Ww' Cc'). now apply (h1'' le).
+        - apply ii1. apply (WCi w' c' Ww' Cc'). now apply (le_to_le le).
         - induction e.
           induction (lem (pr1 c = c')) as [e|ne].
           + induction e. exact W'c.
-          + use j. rewrite ce. exists Cc'. unfold lt. intro le'. apply ne.
-            assert (e : c = (c',,Cc')).
-            { apply (TOanti C).
-              - exact le'.
-              - now apply (h1'' le). }
-            exact (maponpaths pr1 e). }
+          + use j. rewrite ce. exists Cc'. unfold lt.
+            split.
+            * now apply (le_to_le le).
+            * intros eq. use ne. apply pathsinv0. exact (maponpaths pr1 eq). }
       split.
       { intros w' d' [Ww'|e] Dd' le.
-        - apply ii1. apply (WDi w' d' Ww' Dd'). now apply (h1'' le).
+        - apply ii1. apply (WDi w' d' Ww' Dd'). now apply (le_to_le le).
         - induction e.
           induction (lem (pr1 d = d')) as [e|ne].
           + induction e. exact W'd.
-          + use j. rewrite de. exists Dd'. unfold lt. intro le'. apply ne.
-            assert (e : d = (d',,Dd')).
-            { apply (TOanti D).
-              - exact le'.
-              - now apply (h1'' le). }
-            exact (maponpaths pr1 e). }
+          + use j. rewrite de. exists Dd'. unfold lt.
+            split.
+            * now apply (le_to_le le).
+            * intros eq. use ne. apply pathsinv0. exact (maponpaths pr1 eq). }
       {
         intros [v [Wv|Ev]] [w [Ww|Ew]].
         - assert (Q := WCD (v,,Wv) (w,,Ww)).
@@ -1087,29 +1078,22 @@ Proof.
           + apply cmax.
           + induction (!cd1). apply dmax.
         - induction Ev. apply logeq_if_both_false.
-          + assert (Q := cmax' (w,,Ww) W'c). unfold lt in Q.
-            assert (e : (w,, ii1 Ww) = (subtype_inc j (w,, Ww))).
-            { now apply subtypeEquality_prop. }
-            induction e.
-            assert (e : W'c = ii2 (idpath (pr1 c))).
-            { now apply propproperty. }
-            induction e.
-            exact Q.
+          + assert (Q := cmax' (w,,Ww) W'c).
+            apply (pr2 (@nle_iff_gt C _ _)).
+            now apply (lt_to_lt Q).
           + assert (Q := dmax' (w,,Ww) W'd). unfold lt in Q.
-            assert (e : (w,, ii1 Ww) = (subtype_inc j (w,, Ww))).
-            { now apply subtypeEquality_prop. }
-            induction e. induction cd1.
-            assert (e : W'd = ii2 (idpath (pr1 c))).
-            { apply propproperty. }
-            induction e. exact Q.
+            apply (pr2 (@nle_iff_gt D _ _)).
+            now apply (lt_to_lt Q).
         - induction Ew. apply logeq_if_both_true ; now use TOeq_to_refl_1. } }
     assert (K := max_common_initial_is_max C D W' ci); fold W in K.
     assert (Wc : W (pr1 c)).
     { exact (K (pr1 c) W'c). }
-    assert (L := pr1 (cE (pr1 c)) Wc). induction L as [Cc Q]. change (neg (c ≤ pr1 c,, Cc)) in Q.
-    apply Q; clear Q.
-    simple refine (transportf (λ c', c ≤ c') _ (TOrefl C c)).
-    now apply subtypeEquality_prop. }
+    assert (L := pr1 (cE (pr1 c)) Wc). induction L as [Cc Q].
+    assert (M : c < c).
+    { now apply (lt_to_lt Q). }
+    clear Q.
+    use (Poset_lt_to_ne _ _ M); clear M.
+    reflexivity. }
   change (wosub_comparable C D). unfold wosub_comparable.
   apply (squash_to_hProp E); clear E; intros E. apply hinhpr.
   Set Printing Coercions.
@@ -1122,7 +1106,7 @@ Proof.
     use tpair.
     { exact WD. }
     split.
-    { intros x y le. apply (pr1 (WCD x y)). now apply (h1'' le). }
+    { intros x y le. apply (pr1 (WCD x y)). now apply (le_to_le le). }
     exact WDi.
   - apply ii2.
     assert (e : W = D).
@@ -1132,7 +1116,7 @@ Proof.
     use tpair.
     { exact WC. }
     split.
-    { intros x y le. apply (pr2 (WCD x y)). now apply (h1'' le). }
+    { intros x y le. apply (pr2 (WCD x y)). now apply (le_to_le le). }
     exact WCi.
   Unset Printing Coercions.
 Defined.
@@ -1191,7 +1175,7 @@ Proof.
           { exact comp. }
           { intros w w' Ww W'w' le.
             simple refine (TOSubset_plus_point_initial W z nWz w w' Ww W'w' _).
-            now apply (h1'' le). }
+            now apply (le_to_le le). }
         + reflexivity.
       - induction ezx.
         assert (e : (pr1 W,, Q) = @upto' X W' (z,, ii2 (idpath z))).
@@ -1201,13 +1185,21 @@ Proof.
           split.
           - intros Wy.
             (** show that the element y in W is less than z *)
-            exists (j y Wy); change (¬ empty). intros le. exact le.
+            exists (j y Wy).
+            split.
+            + reflexivity.
+            + intros ne. use nWz.
+              assert (ne' := maponpaths pr1 ne : y = z); clear ne.
+              induction ne'.
+              exact Wy.
           - (** show that if y in W' is less than z, then it's in W *)
             intros [[Wy|ezy] yz].
             + exact Wy.         (** it was in W, anyway *)
             + induction ezy.    (** y = x, and we know z<z *)
-              apply fromempty. unfold lt,hneg in yz. apply yz.
-              exact (TOrefl W' (z,, ii2 (idpath z))). }
+              apply fromempty. unfold lt,hneg in yz.
+              assert (K := Poset_lt_to_ne _ _ yz); clear yz.
+              use K; clear K.
+              now apply subtypeEquality_prop. }
         now induction e. }
     assert (W'W := chain_union_le S Schain (W',,W'guided) : W' ≼ W).
     assert (K := pr2 (subtype_inc (pr1 W'W) (z,,W'z)) : W z).
@@ -1360,7 +1352,7 @@ Proof.
   induction (WO_theSmallest Sne) as [x0 [Sx0 x0min]]; change (hProptoType(¬ (f x0 = g x0))) in Sx0.
   apply (squash_to_hProp (WO_istotal Y (f x0) (g x0))); intros [c|c].
   { assert (lt : f x0 < g x0).
-    { apply (pr2 (@tot_nle_iff_gt Y _ _)).
+    { apply (pr2 (@nle_iff_gt Y _ _)).
       split.
       { exact c. }
       { exact Sx0. } }
@@ -1377,7 +1369,7 @@ Proof.
     assert (e' := ! homotweqinvweq g (f x0) @ e); clear e.
     exact e'. }
   { assert (lt : g x0 < f x0).
-    { apply (pr2 (@tot_nle_iff_gt Y _ _)).
+    { apply (pr2 (@nle_iff_gt Y _ _)).
       split.
       { exact c. }
       { intros e. use Sx0. exact (!e). } }
@@ -1441,7 +1433,7 @@ Proof.
                       (ini : hProp_to_hSet (WO_isInitial X C)),
                     ∀ (x:X) (Cx:C x),
                       f x Cx =
-                      g x (λ y lt, f y (ini y x Cx (tot_nge_to_le x y lt))))).
+                      g x (λ y lt, f y (ini y x Cx (nge_to_le x y lt))))).
   set (G := (∑ C f ini, isGuided C f ini)).
   assert (K : ∀ (C D:G) (x:X) (Cx : pr1 C x) (Dx : pr1 D x), pr12 C x Cx = pr12 D x Dx).
   { intros C D. apply (proof_by_contradiction lem). intros n; change hfalse.
@@ -1510,7 +1502,7 @@ Proof.
       - induction ex0y. induction (lem (x = x0)) as [e|ne].
         + exact (ii2 (!e)).
         + apply ii1.
-          assert (lt := pr2 (tot_nle_iff_gt x0 x) (le,,ne) : x < x0).
+          assert (lt := pr2 (nle_iff_gt x0 x) (le,,ne) : x < x0).
           clear le ne.
           exact (sm x lt). }
     assert (C''guided : isGuided C'' f'' ini'').
@@ -1520,7 +1512,7 @@ Proof.
         apply maponpaths.
         apply funextsec; intro y.
         apply funextsec; intro lt.
-        generalize (tot_nge_to_le x y lt); intro le.
+        generalize (nge_to_le x y lt); intro le.
         induction (proofirrelevance (C'' y) (propproperty _)
                                     (ii1 (ini' y x C'x le) : C'' y)
                                     (ini'' y x (ii1 C'x) le)).
