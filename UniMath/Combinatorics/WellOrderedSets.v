@@ -1659,12 +1659,12 @@ Section Recursion.
     { intros x y C'y le. apply (squash_to_hProp C'y); clear C'y; intros C.
       apply hinhpr. exact (pr1 C,,to_initial (pr1 C) x y (pr2 C) le). }
     fold G US in ini'.
-    assert (C'guided : isGuidedPartialSection rec C' f' ini').
+    assert (C'guided : (isGuidedPartialSection rec C' f' ini')).
     { intros x C'x.
       apply (squash_to_hProp C'x); intros [C Cx];
         change (hProptoType(to_subset C x)) in Cx.
       induction (ishinh_irrel (C,,Cx) C'x). exact (to_guided C x Cx). }
-    assert (e : ∀ x, C' x).
+    assert (C'total : ∀ x, C' x).
     { use ind. intros x0 hyp.
       set (C'' := (λ x:X, lessthan_choice x x0)).
       (** Now we add enough structure to show C'' qualifies for membership
@@ -1681,21 +1681,19 @@ Section Recursion.
       { intros x [xlt|xeq].
         - change (f'' x (ii1 xlt)) with (f' x (hyp x xlt)).
           simple refine (C'guided x _ @ _).
-          apply maponpaths. apply funextsec; intro y. apply funextsec; intro lt.
-          induction (ini'' y x (ii1 xlt) (Poset_lt_to_le y x lt)) as [ylt|yeq].
-          + change (f'' y (ii1 ylt)) with (f' y (hyp y ylt)).
-            apply maponpaths. apply propproperty.
-          + induction yeq. apply fromempty. exact (gt_to_nle _ _ lt (pr1 xlt)).
+          apply maponpaths; apply funextsec; intro y; apply funextsec; intro lt.
+          match goal with |- _ = _ _ ?D => induction D as [ylt|yeq] end.
+          + change (f'' _ _) with (f' y (hyp y ylt)). apply maponpaths, propproperty.
+          + apply fromempty. induction yeq. exact (gt_to_nle _ _ lt (pr1 xlt)).
         - induction xeq. simpl.
-          apply maponpaths. apply funextsec; intro y. apply funextsec; intro lt.
+          apply (maponpaths (rec x)); apply funextsec; intro y; apply funextsec; intro lt.
           match goal with |- _ = f'' y ?D => induction D as [ylt|yeq] end.
-          + change (f' y (hyp y lt) = f' y (hyp y ylt)).
-            apply maponpaths. apply propproperty.
+          + change (f'' _ _) with (f' y (hyp y ylt)). apply maponpaths; apply propproperty.
           + induction yeq; apply fromempty. exact (Poset_nlt_self lt). }
       set (C''inG := C'',,f'',,ini'',,C''guided : G).
-      simple refine (subtype_union_containedIn S C''inG x0 _).
-      change (lessthan_choice x0 x0). apply lessthan_choice_isrefl. }
-    intros x. use (f' x). exact (e x).
+      simple refine (subtype_union_containedIn S C''inG x0 (_:lessthan_choice x0 x0)).
+      apply lessthan_choice_isrefl. }
+    intros x. use (f' x). exact (C'total x).
   Defined.
 
 End Recursion.
