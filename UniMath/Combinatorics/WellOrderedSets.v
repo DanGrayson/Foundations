@@ -1661,13 +1661,16 @@ Section Recursion.
     { intros x C'x.
       apply (squash_to_hProp C'x); intros [C Cx]; change (hProptoType(to_subset C x)) in Cx.
       induction (ishinh_irrel (C,,Cx) C'x). exact (to_guided C x Cx). }
+    (** Now we prove everything is in C'. *)
     assert (C'total : ∀ x, C' x).
-    { use ind. intros x0 hyp.
+    { (** We prove it by induction. *)
+      use ind. intros x0 hyp.
+      (** This is the inductive step, where we prove x0 is in C', using the inductive
+          hypothesis [hyp], which says that all smaller elements are in C'. *)
       set (C'' := (λ x:X, x << x0)).
       (** Now we add enough structure to show C'' qualifies for membership
           in [G], so it is contained in C', leading
-          to a contradiction. *)
-      (** First we define a section on C''. *)
+          to a contradiction. First we define a section f'' on C''. *)
       transparent assert (f'' : (∏ x : X, C'' x -> P x)%type).
       { intros x le. induction le as [lt|eq].
         - use (f' x). now use hyp.
@@ -1678,8 +1681,7 @@ Section Recursion.
       { intros y e' [ylt|yeq] lt.
         - change (f'' _ _) with (f' _ (hyp _ ylt)). apply maponpaths; apply propproperty.
         - apply fromempty. induction yeq. exact (Poset_nlt_self lt). }
-      assert (f''_x0 : ∏ C''x0, f'' x0 C''x0 =
-                         rec x0 (λ y lt, f' y (hyp y lt))).
+      assert (f''_x0 : ∏ C''x0, f'' x0 C''x0 = rec x0 (λ y lt, f' y (hyp y lt))).
       { induction C''x0 as [lt|eq].
         - apply fromempty. exact (Poset_nlt_self lt).
         - now induction (uip (setproperty _) (idpath x0) eq). }
@@ -1696,8 +1698,7 @@ Section Recursion.
       clear f'_f'' f''_x0.
       set (C''inG := C'',,f'',,ini'',,C''guided : G).
       exact (subtype_union_containedIn S C''inG x0 (lessthan_choice_isrefl x0)). }
-    (** We have shown the domain of f' is all of X, so now we may define the desired section
-        of P. *)
+    (** We have shown the domain of f' is all of X, so now f' yields the desired section of P. *)
     exact (λ x, f' x (C'total x)).
   Defined.
 
@@ -1776,33 +1777,3 @@ Delimit Scope hlevel with hlevel.
 Definition heq n {X:HLevel(S n)} (x y:X) := HLevelPair n (x=y) (pr2 X x y).
 
 Notation "a = b" := (heq _ a b) : hlevel.
-
-Theorem WellOrderedSet_recursion_3 (X:WellOrderedSet) :
-  LEM ->
-  ∏ (P : X -> HLevel 3)
-    (rec : ∏ x:X, (∏ y, y < x -> P y) -> P x), (∏ x, P x).
-Proof.
-  intros lem P g.
-  assert (rec := WellOrderedSet_recursion X lem).
-  set (isGuidedPartialSection := (λ (C:subtype_set X)
-                      (f : (∏ (c:X) (Cc : C c), P c))
-                      (ini : hProp_to_hSet (isInitial C)),
-                    ∏ (x:X) (Cx:C x),
-                      f x Cx =
-                      g x (λ y lt, f y (ini y x Cx (Poset_lt_to_le _ _ lt))))%type).
-  set (GuidedPartialSection := (∑ C f ini, isGuidedPartialSection C f ini)%type).
-  set (to_subset := (λ C : GuidedPartialSection, pr1 C)).
-  set (to_section := (λ C : GuidedPartialSection, pr12 C)).
-  set (to_initial := (λ C : GuidedPartialSection, pr122 C)).
-  set (to_guided := (λ C : GuidedPartialSection, pr222 C)).
-  assert (K : (∏ (C D:GuidedPartialSection)
-                 (x:X) (Cx : to_subset C x) (Dx : to_subset D x),
-                  to_section C x Cx = to_section D x Dx)).
-  { intros C C'. use (rec (λ x, hSetpair _ _)).
-    { apply impred_isaset; intros Cx; apply impred_isaset; intros Dx.
-      exact (pr2 (P x) _ _). }
-    intros x hyp Cx C'x.
-    simple refine (to_guided C x Cx @ _ @ ! to_guided C' x C'x).
-    apply maponpaths. apply funextsec; intros y; apply funextsec; intros lt.
-    use hyp. exact lt. }
-Abort.
