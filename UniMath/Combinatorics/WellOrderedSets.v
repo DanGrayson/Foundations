@@ -1617,8 +1617,7 @@ Proof.
     set (C'' := (λ x:X, lessthan_choice x x0)).
     (** now we show C'' for membership in GuidedPartialSection so it is contained in C', leading to a contradiction *)
     transparent assert (f'' : (∏ x : X, C'' x -> P x)%type).
-    { intros x le. unfold C'' in le.
-      induction le as [lt|eq].
+    { intros x le. induction le as [lt|eq].
       - use (f' x). now use hyp.
       - induction eq. simple refine (rec x _). intros y lt. use (f' y).
         now use hyp. }
@@ -1638,7 +1637,7 @@ Proof.
       - induction xeq. simpl.
         apply maponpaths. apply funextsec; intro y. apply funextsec; intro lt.
         match goal with |- _ = f'' y ?D => induction D as [ylt|yeq] end.
-        + unfold f''; simpl; change (f' y (hyp y lt) = f' y (hyp y ylt)).
+        + change (f' y (hyp y lt) = f' y (hyp y ylt)).
           apply maponpaths. apply propproperty.
         + induction yeq; apply fromempty. exact (Poset_nlt_self lt). }
     set (C''inG := C'',,f'',,ini'',,C''guided : GuidedPartialSection).
@@ -1716,8 +1715,22 @@ Definition HLevelPair n (X:UU) : isofhlevel n X -> HLevel n
 
 Close Scope set.
 
+Delimit Scope hlevel with hlevel.
+
+Definition heq n {X:HLevel(S n)} (x y:X) := HLevelPair n (x=y) (pr2 X x y).
+
+Notation "a = b" := (heq _ a b) : hlevel.
+
+Definition forall_hLevel n {X : UU} (Y : X -> HLevel n)
+  := HLevelPair n (∏ x, Y x) (impred n Y (λ x, pr2 (Y x))).
+
+(* Notation "'∏h' n ( x .. y ) , P" := (forall_hLevel n (fun x =>.. (forall_hLevel n (fun y => P))..)) *)
+(*   (at level 200, x binder, y binder, right associativity) : hlevel. *)
+
 Theorem WellOrderedSet_recursion_3 (X:WellOrderedSet) :
-  LEM -> ∏ (P : X -> HLevel 3) (rec : ∏ x:X, (∏ y, y < x -> P y) -> P x), (∏ x, P x).
+  LEM ->
+  ∏ (P : X -> HLevel 3)
+    (rec : ∏ x:X, (∏ y, y < x -> P y) -> P x), (∏ x, P x).
 Proof.
   intros lem P g.
   assert (rec := WellOrderedSet_recursion X lem).
@@ -1728,14 +1741,18 @@ Proof.
                       f x Cx =
                       g x (λ y lt, f y (ini y x Cx (Poset_lt_to_le _ _ lt))))%type).
   set (GuidedPartialSection := (∑ C f ini, isGuidedPartialSection C f ini)%type).
-  assert (K : (∏ (C D:GuidedPartialSection) (x:X) (Cx : pr1 C x) (Dx : pr1 D x), pr12 C x Cx = pr12 D x Dx)).
-  { intros [C [f [ini gui]]] [C' [f' [ini' gui']]].
-    change (∏ (x : X) (Cx : C x) (C'x : C' x), f x Cx = f' x C'x).
-    assert (level2 : ∏ x, isofhlevel 2 (∏ (Cx : C x) (C'x : C' x), f x Cx = f' x C'x)).
-    { intros x. apply impred; intros Cx; apply impred; intros C'x. use (pr2 (P x)). }
-    change (∏ (x : X), hSetpair _ (level2 x)).
-    use rec. intros x hyp Cx C'x.
-    simple refine (gui x Cx @ _ @ ! gui' x C'x).
+  set (to_subset := (λ C : GuidedPartialSection, pr1 C)).
+  set (to_section := (λ C : GuidedPartialSection, pr12 C)).
+  set (to_initial := (λ C : GuidedPartialSection, pr122 C)).
+  set (to_guided := (λ C : GuidedPartialSection, pr222 C)).
+  assert (K : (∏ (C D:GuidedPartialSection)
+                 (x:X) (Cx : to_subset C x) (Dx : to_subset D x),
+                  to_section C x Cx = to_section D x Dx)).
+  { intros C C'. use (rec (λ x, hSetpair _ _)).
+    { apply impred_isaset; intros Cx; apply impred_isaset; intros Dx.
+      exact (pr2 (P x) _ _). }
+    intros x hyp Cx C'x.
+    simple refine (to_guided C x Cx @ _ @ ! to_guided C' x C'x).
     apply maponpaths. apply funextsec; intros y; apply funextsec; intros lt.
     use hyp. exact lt. }
 Abort.
