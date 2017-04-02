@@ -4,10 +4,10 @@
 
 (** In this file our goal is to prove Zorn's Lemma and Zermelo's Well-Ordering Theorem. *)
 
-Require Import UniMath.Combinatorics.OrderedSets.
 Require Import UniMath.MoreFoundations.All.
 Require Import UniMath.MoreFoundations.DecidablePropositions.
 Require Import UniMath.MoreFoundations.Propositions.
+Require Import UniMath.Combinatorics.OrderedSets.
 
 Local Open Scope logic.
 Local Open Scope prop.
@@ -1486,23 +1486,25 @@ Defined.
 
 Definition lessthan_choice {X:Poset} (x y:X) : hProp.
 Proof.
-  intros. apply (coprod_hProp (x < y) (x = y))%set.
+  intros. apply (coprod_hProp (Poset_lessthan x y) (x = y))%set.
   intros lt. exact (pr2 lt).
 Defined.
+
+Notation "m << n" := (lessthan_choice m n) (at level 70, no associativity) :poset.
 
 Lemma lessthan_choice_isrefl {X:Poset} (x:X) : lessthan_choice x x.
 Proof.
   exact (ii2 (idpath x)).
 Defined.
 
-Lemma lessthan_choice_to_le {X:Poset} (x y:X) : lessthan_choice x y -> x ≤ y.
+Lemma lessthan_choice_to_le {X:Poset} (x y:X) : x << y -> x ≤ y.
 Proof.
   intros [lt|eq].
   - exact (pr1 lt).
   - induction eq. apply isrefl_posetRelation.
 Defined.
 
-Lemma le_to_lessthan_choice {X:Poset} (x y:X) : LEM -> x ≤ y -> lessthan_choice x y.
+Lemma le_to_lessthan_choice {X:Poset} (x y:X) : LEM -> x ≤ y -> x << y.
 Proof.
   intros lem le.
   induction (lem (x=y)) as [eq|ne].
@@ -1510,8 +1512,7 @@ Proof.
   - exact (ii1 (le,,ne)).
 Defined.
 
-Lemma lessthan_choice_trans {X:Poset} (x y z:X) :
-  LEM -> x ≤ y -> lessthan_choice y z -> lessthan_choice x z.
+Lemma lessthan_choice_trans {X:Poset} (x y z:X) : LEM -> x ≤ y -> y << z -> x << z.
 Proof.
   intros lem lxy lyz.
   use le_to_lessthan_choice.
@@ -1520,7 +1521,7 @@ Proof.
 Defined.
 
 Lemma lessthan_choice_trans' {X:Poset} (x y z:X) :
-  LEM -> lessthan_choice x y -> y ≤ z -> lessthan_choice x z.
+  LEM -> x << y -> y ≤ z -> x << z.
 Proof.
   intros lem lxy lyz.
   use le_to_lessthan_choice.
@@ -1528,14 +1529,10 @@ Proof.
   - use (istrans_posetRelation X x y z _ lyz). now apply lessthan_choice_to_le.
 Defined.
 
-Lemma lessthan_choice_trans_2 {X:Poset} (x y z:X) :
-  lessthan_choice x y -> lessthan_choice y z -> lessthan_choice x z.
+Lemma lessthan_choice_trans_2 {X:Poset} (x y z:X) : x << y -> y << z -> x << z.
 Proof.
   intros [[lxy nexy]|exy] [[lyz neyz]|eyz].
-  - apply ii1. split.
-    + exact (istrans_posetRelation X x y z lxy lyz).
-    + intros exz. induction exz.
-      exact (nexy (isantisymm_posetRelation X x y lxy lyz)).
+  - apply ii1. now use (Poset_lt_istrans (y := y)).
   - apply ii1. induction eyz. exact (lxy,,nexy).
   - apply ii1. induction exy. exact (lyz,,neyz).
   - apply ii2. now induction exy, eyz.
@@ -1666,34 +1663,43 @@ Section Recursion.
       induction (ishinh_irrel (C,,Cx) C'x). exact (to_guided C x Cx). }
     assert (C'total : ∀ x, C' x).
     { use ind. intros x0 hyp.
-      set (C'' := (λ x:X, lessthan_choice x x0)).
+      set (C'' := (λ x:X, x << x0)).
       (** Now we add enough structure to show C'' qualifies for membership
           in [G], so it is contained in C', leading
           to a contradiction. *)
+      (** First we define a section on C''. *)
       transparent assert (f'' : (∏ x : X, C'' x -> P x)%type).
       { intros x le. induction le as [lt|eq].
         - use (f' x). now use hyp.
         - simple refine (rec x _). intros y lt. use (f' y).
           use hyp. exact (transportf (λ t, y<t) eq lt). }
+      (** Show f' and f'' agree where they are both defined. *)
+      assert (f'_f'' : ∀ y e' e'', y < x0 ⇒ f' y e' = f'' y e'').
+      { intros y e' [ylt|yeq] lt.
+        - change (f'' _ _) with (f' _ (hyp _ ylt)). apply maponpaths; apply propproperty.
+        - apply fromempty. induction yeq. exact (Poset_nlt_self lt). }
+      assert (f''_x0 : ∏ C''x0, f'' x0 C''x0 =
+                         rec x0 (λ y lt, f' y (hyp y lt))).
+      { induction C''x0 as [lt|eq].
+        - apply fromempty. exact (Poset_nlt_self lt).
+        - now induction (uip (setproperty _) (idpath x0) eq). }
       assert (ini'' : isInitial C'').
       { intros x y C''y le. exact (lessthan_choice_trans x y x0 lem le C''y). }
       assert (C''guided : isGuidedPartialSection rec C'' f'' ini'').
       { intros x [xlt|xeq].
-        - change (f'' x (ii1 xlt)) with (f' x (hyp x xlt)).
+        - change (f'' x _) with (f' x (hyp x xlt)).
           simple refine (C'guided x _ @ _).
           apply maponpaths; apply funextsec; intro y; apply funextsec; intro lt.
-          match goal with |- _ = _ _ ?D => induction D as [ylt|yeq] end.
-          + change (f'' _ _) with (f' y (hyp y ylt)). apply maponpaths, propproperty.
-          + apply fromempty. induction yeq. exact (gt_to_nle _ _ lt (pr1 xlt)).
-        - induction xeq. simpl.
+          use f'_f''. now use (Poset_lt_istrans (y := x)).
+        - induction xeq. simple refine (f''_x0 (ii2 (idpath x)) @ _).
           apply (maponpaths (rec x)); apply funextsec; intro y; apply funextsec; intro lt.
-          match goal with |- _ = f'' y ?D => induction D as [ylt|yeq] end.
-          + change (f'' _ _) with (f' y (hyp y ylt)). apply maponpaths; apply propproperty.
-          + induction yeq; apply fromempty. exact (Poset_nlt_self lt). }
+          now use f'_f''. }
       set (C''inG := C'',,f'',,ini'',,C''guided : G).
-      simple refine (subtype_union_containedIn S C''inG x0 (_:lessthan_choice x0 x0)).
+      simple refine (subtype_union_containedIn S C''inG x0 (_:x0 << x0)).
       apply lessthan_choice_isrefl. }
-    intros x. use (f' x). exact (C'total x).
+    (** We have shown the domain of f' is all of X, so now we may define the desired section
+        of P. *)
+    exact (λ x, f' x (C'total x)).
   Defined.
 
 End Recursion.

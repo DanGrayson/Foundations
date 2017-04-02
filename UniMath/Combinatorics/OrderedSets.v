@@ -177,15 +177,26 @@ Proof.
   intros ? ? [_ ne]. now use ne.
 Defined.
 
+Notation "m < n" := (Poset_lessthan m n) :poset.
+
+Lemma Poset_lt_istrans {X:Poset} {x y z:X} : (x < y ⇒ (y < z ⇒ x < z)).
+Proof.
+  intros. intros [lxy nxy] [lyz nyz]. split.
+  - exact (istrans_posetRelation X x y z lxy lyz).
+  - intros exz. induction exz.
+    exact (nxy (isantisymm_posetRelation X x y lxy lyz)).
+Defined.
+
+Close Scope poset.
+
+(* These notations should be in scope poset, instead: *)
 Notation "X ≅ Y" := (PosetEquivalence X Y) (at level 60, no associativity) : oset.
 Notation "m ≤ n" := (posetRelation _ m n) (no associativity, at level 70) : oset.
 Notation "m <= n" := (posetRelation _ m n) (no associativity, at level 70) : oset.
 Notation "m < n" := (Poset_lessthan m n) :oset.
-Notation "n ≥ m" := (posetRelation _ m n) (no associativity, at level 70) : oset.
-Notation "n >= m" := (posetRelation _ m n) (no associativity, at level 70) : oset.
-Notation "n > m" := (Poset_lessthan m n) :oset.
-
-Close Scope poset.
+Notation "n ≥ m" := (posetRelation _ m n) (only parsing, no associativity, at level 70) : oset.
+Notation "n >= m" := (posetRelation _ m n) (only parsing, no associativity, at level 70) : oset.
+Notation "n > m" := (Poset_lessthan m n) (only parsing) :oset.
 
 Local Open Scope oset.
 
