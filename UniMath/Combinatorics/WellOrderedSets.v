@@ -1550,53 +1550,40 @@ Proof.
       change (hProptoType(pr1 C x)) in Cx.
     induction (ishinh_irrel (C,,Cx) C'x). exact (pr222 C x Cx). }
   assert (e : ∀ x, C' x).
-  { apply (proof_by_contradiction lem); intros n; change hfalse.
-    assert (n' := negforall_to_existsneg _ lem n); clear n.
-    induction (WO_theSmallest n') as [x0 [nC'x0 min0]]; clear n'.
-    assert (sm : ∀ y, y < x0 ⇒ C' y).
-    { intros y lt. apply (proof_by_contradiction lem); intros n. exact (Poset_lt_to_nle lt (min0 y n)). }
-    (** now x0 is the smallest element of X not in C': we will adjoin it to C' *)
-    set (C'' := subtype_plus C' x0 nC'x0).
-    (** record the statement that x0 is in C'' *)
-    assert (x0inC'' := subtype_plus_has_point C' x0 nC'x0 : C'' x0).
+  { use ind. intros x0 hyp.
+    set (C'' := λ x, x ≤ x0).
+    assert (x0inC'' := isrefl_posetRelation X x0 : C'' x0).
     (** now we show C'' for membership in GuidedPartialSection so it is contained in C', leading to a contradiction *)
     transparent assert (f'' : (∏ x : X, C'' x -> P x)%type).
-    { intros x [C'x|e].
-      - exact (f' x C'x).
-      - simple refine (rec x _). intros y lt. induction e. exact (f' y (sm y lt)). }
-    assert (ini'' : (WO_isInitial C'')).
-    { intros x y C''y le. change (C' x ⨿ (x0 = x)). induction C''y as [C'y|ex0y].
-      - exact (ii1 (ini' x y C'y le : C' x)).
-      - induction ex0y. induction (lem (x = x0)) as [e|ne].
-        + exact (ii2 (!e)).
-        + apply ii1. use (sm x). exact (le,,ne). }
+    { intros x le. change (hProptoType (x ≤ x0)) in le.
+      induction (lem (x0 = x)) as [eq|ne].
+      - induction eq. simple refine (rec x0 _). intros y lt. use (f' y).
+        use hyp. exact lt.
+      - use (f' x). use hyp. exists le. intros eq. use ne; clear ne.
+        exact (pathsinv0 eq). }
+    assert (ini'' : WO_isInitial C'').
+    { intros x y C''y le. change (x ≤ x0). change (hProptoType (y ≤ x0)) in C''y.
+      now use istrans_posetRelation. }
     assert (C''guided : isGuidedPartialSection C'' f'' ini'').
-    { intros x [C'x|ex0x].
-      - change (f'' x (ii1 C'x)) with (f' x C'x).
-        simple refine (C'guided x C'x @ _).
+    { intros x C''x. change (hProptoType (x ≤ x0)) in C''x.
+      unfold f''.
+      induction (lem (x0 = x)) as [eq|ne].
+      - induction eq. simpl.
+        apply maponpaths. apply funextsec; intro y. apply funextsec; intro lt.
+        match goal with |- _ = coprod_rect _ _ _ ?D => induction D as [eq'|ne'] end.
+        + induction eq'; apply fromempty. exact (Poset_nlt_self lt).
+        + simpl. apply maponpaths. apply propproperty.
+      - cbn.
+        simple refine (C'guided x _ @ _).
         apply maponpaths.
         apply funextsec; intro y.
         apply funextsec; intro lt.
-        generalize (Poset_lt_to_le y x lt); intro le.
-        induction (proofirrelevance (C'' y) (propproperty _)
-                                    (ii1 (ini' y x C'x le) : C'' y)
-                                    (ini'' y x (ii1 C'x) le)).
-        reflexivity.
-      - induction ex0x. unfold f''.
-        apply maponpaths.
-        apply funextsec; intro y.
-        apply funextsec; intro lt.
-        simpl.
-        match goal with |- _ = match ?D with | ii1 C'x => _ | ii2 e => _ end => induction D as [C'y|b] end.
-        + apply maponpaths. apply propproperty.
-        + apply fromempty. induction b. exact (Poset_nlt_self lt). }
+        match goal with |- _ = coprod_rect _ _ _ ?D => induction D as [eq'|ne'] end.
+        + induction eq'. apply fromempty. exact (gt_to_nle _ _ lt C''x).
+        + simpl. apply maponpaths. apply propproperty. }
     set (C''inG := C'',,f'',,ini'',,C''guided : GuidedPartialSection).
-    assert (C''inC' := subtype_union_containedIn S C''inG : C'' ⊆ C').
-    assert (x0inC' := C''inC' x0 x0inC'').
-    exact (nC'x0 x0inC'). }
-  intros x.
-  use (f' x).
-  exact (e x).
+    exact (subtype_union_containedIn S C''inG x0 x0inC''). }
+  intros x. use (f' x). exact (e x).
 Defined.
 
 Lemma bigSet (X:Type) : LEM -> ∑ Y:hSet, ∏ f : Y -> X, ¬ isincl f.
@@ -1638,15 +1625,7 @@ Defined.
 
 Theorem OrderedSet_recursion (X:OrderedSet) : isInductivelyOrdered X -> isRecursivelyOrdered X.
 Proof.
-  (* Could we use this theorem earlier, to prove the well ordering theorem? *)
   intros ind P g.
-  (** The elements of G will be subsets C of X that are initial segments for the ordering, equipped
-     with a section f of P and a proof of ∏ x ∈ C, f x = g x (λ y, f y).  One may say that f is
-     guided by g.  Then two pairs (C,f), (C',f') agree on their common intersection, which is C or
-     C', and thus the union of all their graphs is a maximal guided function with domain U, say.  If
-     U were a proper subset, then its minimal upper bound could be added to U, contradiction, so U =
-     X.
-   *)
   set (isGuidedPartialSection := (λ (C:subtype_set X)
                       (f : (∏ (c:X) (Cc : C c), P c))
                       (ini : hProp_to_hSet (OrderedSet_isInitial C)),
@@ -1664,8 +1643,6 @@ Proof.
     apply funextsec; intros lt.
     apply hyp.
     exact lt. }
-
-
 Abort.
 
 Definition HLevel_to_type n : HLevel n -> UU := pr1.
@@ -1681,7 +1658,6 @@ Theorem WellOrderedSet_recursion_3 (X:WellOrderedSet) :
   LEM -> ∏ (P : X -> HLevel 3) (rec : ∏ x:X, (∏ y, y < x -> P y) -> P x), (∏ x, P x).
 Proof.
   intros lem P g.
-  assert (ind := WellOrderedSet_induction X lem).
   assert (rec := WellOrderedSet_recursion X lem).
   set (isGuidedPartialSection := (λ (C:subtype_set X)
                       (f : (∏ (c:X) (Cc : C c), P c))
@@ -1700,5 +1676,4 @@ Proof.
     simple refine (gui x Cx @ _ @ ! gui' x C'x).
     apply maponpaths. apply funextsec; intros y; apply funextsec; intros lt.
     use hyp. exact lt. }
-
 Abort.
