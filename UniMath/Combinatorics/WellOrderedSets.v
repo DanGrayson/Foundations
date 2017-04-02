@@ -1626,6 +1626,8 @@ Section Recursion.
 
   Open Scope woset.
 
+  Open Scope subtype.
+
   Theorem WellOrderedSet_recursion : isRecursivelyOrdered X.
   Proof.
     intros P rec.
@@ -1651,15 +1653,13 @@ Section Recursion.
     (** Define a partial section f' on C'. *)
     transparent assert (f' : (∏ (x : X) (C'x : C' x), P x)%type).
     { intros x e. use (squash_to_hSet (defVal x) _ e). intros C D. now use K. }
-    fold G in f'.               (* display f' more compactly *)
     transparent assert ( ini' : (isInitial C') ).
     { intros x y C'y le. apply (squash_to_hProp C'y); clear C'y; intros C.
       apply hinhpr. exact (pr1 C,,to_initial (pr1 C) x y (pr2 C) le). }
-    fold G US in ini'.
+    fold US in ini'.
     assert (C'guided : (isGuidedPartialSection rec C' f' ini')).
     { intros x C'x.
-      apply (squash_to_hProp C'x); intros [C Cx];
-        change (hProptoType(to_subset C x)) in Cx.
+      apply (squash_to_hProp C'x); intros [C Cx]; change (hProptoType(to_subset C x)) in Cx.
       induction (ishinh_irrel (C,,Cx) C'x). exact (to_guided C x Cx). }
     assert (C'total : ∀ x, C' x).
     { use ind. intros x0 hyp.
@@ -1687,16 +1687,15 @@ Section Recursion.
       { intros x y C''y le. exact (lessthan_choice_trans x y x0 lem le C''y). }
       assert (C''guided : isGuidedPartialSection rec C'' f'' ini'').
       { intros x [xlt|xeq].
-        - change (f'' x _) with (f' x (hyp x xlt)).
-          simple refine (C'guided x _ @ _).
+        - change (f'' x _) with (f' x (hyp x xlt)). simple refine (C'guided x _ @ _).
           apply maponpaths; apply funextsec; intro y; apply funextsec; intro lt.
           use f'_f''. now use (Poset_lt_istrans (y := x)).
         - induction xeq. simple refine (f''_x0 (ii2 (idpath x)) @ _).
           apply (maponpaths (rec x)); apply funextsec; intro y; apply funextsec; intro lt.
           now use f'_f''. }
+      clear f'_f'' f''_x0.
       set (C''inG := C'',,f'',,ini'',,C''guided : G).
-      simple refine (subtype_union_containedIn S C''inG x0 (_:x0 << x0)).
-      apply lessthan_choice_isrefl. }
+      exact (subtype_union_containedIn S C''inG x0 (lessthan_choice_isrefl x0)). }
     (** We have shown the domain of f' is all of X, so now we may define the desired section
         of P. *)
     exact (λ x, f' x (C'total x)).
