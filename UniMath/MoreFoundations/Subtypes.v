@@ -150,11 +150,8 @@ Definition isDecidablePredicate {X} (S:X->hProp) := ∏ x, decidable (S x).
 
 Definition subtype_plus {X:hSet} (S:hsubtype X) (z:X) (nSz : ¬ (S z)) : hsubtype X.
 Proof.
-  intros x. exists (S x ⨿ (z = x))%set.
-  apply isapropcoprod.
-  - apply propproperty.
-  - apply setproperty.
-  - intros Sx e. exact (nSz (transportb S e Sx)).
+  intros x. use (coprod_hProp (S x) (z = x)%set).
+  intros Sx e. exact (nSz (transportb S e Sx)).
 Defined.
 
 Definition subtype_plus_incl {X:hSet} (S:hsubtype X) (z:X) (nSz : ¬ (S z)) :

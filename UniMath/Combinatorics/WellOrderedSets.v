@@ -438,7 +438,7 @@ Proof.
         apply proofirrelevance_hProp.
       * induction ezt. unfold z'.
         (** now show [z ≤ z], by reflexivity *)
-        induction (proofirrelevance_hProp _ S'z (ii2 (idpath z))).
+        match goal with |- hProptoType (TOSrel S' (z,,?a) (z,,?b)) => induction (proofirrelevance_hProp _ a b) end.
         exact (TOrefl S' _).
 Defined.
 
@@ -1186,7 +1186,8 @@ Proof.
             now apply (le_to_le le). }
         + reflexivity.
       - induction ezx.
-        assert (e : (pr1 W,, Q) = @upto' X W' (z,, ii2 (idpath z))).
+        change (pr1 (g (pr1 W,, Q)) = pr1 (g (@upto' X W' (z,, ii2 (idpath z))))).
+        apply (maponpaths (λ E, pr1 (g E))).
         { apply subtypeEquality_prop. apply (invmap (hsubtype_univalence _ _)).
           intros y.
           change (W y ⇔ @upto X W' (z,, ii2 (idpath z)) y).
@@ -1207,8 +1208,7 @@ Proof.
               apply fromempty. unfold lt,hneg in yz.
               assert (K := Poset_lt_to_ne _ _ yz); clear yz.
               use K; clear K.
-              now apply subtypeEquality_prop. }
-        now induction e. }
+              now apply subtypeEquality_prop. } }
     assert (W'W := chain_union_le S Schain (W',,W'guided) : W' ≼ W).
     assert (K := pr2 (subtype_inc (pr1 W'W) (z,,W'z)) : W z).
     exact (nWz K).
