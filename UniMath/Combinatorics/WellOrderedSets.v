@@ -1480,6 +1480,65 @@ Proof.
   exact (K x Sx).
 Defined.
 
+(** ** Decidable order relations *)
+
+Definition lessthan_choice {X:Poset} (x y:X) : hProp.
+Proof.
+  intros. apply (coprod_hProp (x < y) (x = y))%set.
+  intros lt. exact (pr2 lt).
+Defined.
+
+Lemma lessthan_choice_isrefl {X:Poset} (x:X) : lessthan_choice x x.
+Proof.
+  exact (ii2 (idpath x)).
+Defined.
+
+Lemma lessthan_choice_to_le {X:Poset} (x y:X) : lessthan_choice x y -> x ≤ y.
+Proof.
+  intros [lt|eq].
+  - exact (pr1 lt).
+  - induction eq. apply isrefl_posetRelation.
+Defined.
+
+Lemma le_to_lessthan_choice {X:Poset} (x y:X) : LEM -> x ≤ y -> lessthan_choice x y.
+Proof.
+  intros lem le.
+  induction (lem (x=y)) as [eq|ne].
+  - exact (ii2 eq).
+  - exact (ii1 (le,,ne)).
+Defined.
+
+Lemma lessthan_choice_trans {X:Poset} (x y z:X) :
+  LEM -> x ≤ y -> lessthan_choice y z -> lessthan_choice x z.
+Proof.
+  intros lem lxy lyz.
+  use le_to_lessthan_choice.
+  - exact lem.
+  - use (istrans_posetRelation X x y z lxy _). now apply lessthan_choice_to_le.
+Defined.
+
+Lemma lessthan_choice_trans' {X:Poset} (x y z:X) :
+  LEM -> lessthan_choice x y -> y ≤ z -> lessthan_choice x z.
+Proof.
+  intros lem lxy lyz.
+  use le_to_lessthan_choice.
+  - exact lem.
+  - use (istrans_posetRelation X x y z _ lyz). now apply lessthan_choice_to_le.
+Defined.
+
+Lemma lessthan_choice_trans_2 {X:Poset} (x y z:X) :
+  lessthan_choice x y -> lessthan_choice y z -> lessthan_choice x z.
+Proof.
+  intros [[lxy nexy]|exy] [[lyz neyz]|eyz].
+  - apply ii1. split.
+    + exact (istrans_posetRelation X x y z lxy lyz).
+    + intros exz. induction exz.
+      exact (nexy (isantisymm_posetRelation X x y lxy lyz)).
+  - apply ii1. induction eyz. exact (lxy,,nexy).
+  - apply ii1. induction exy. exact (lyz,,neyz).
+  - apply ii2. now induction exy, eyz.
+Defined.
+
 (** ** Transfinite recursion *)
 
 Definition WO_isInitial {X:WellOrderedSet} (Y:hsubtype X) : hProp := ∀ (x y : X), Y y ⇒ (x ≤ y ⇒ Y x).
@@ -1555,39 +1614,37 @@ Proof.
     induction (ishinh_irrel (C,,Cx) C'x). exact (to_guided C x Cx). }
   assert (e : ∀ x, C' x).
   { use ind. intros x0 hyp.
-    set (C'' := λ x, x ≤ x0).
+    set (C'' := (λ x:X, lessthan_choice x x0)).
     (** now we show C'' for membership in GuidedPartialSection so it is contained in C', leading to a contradiction *)
     transparent assert (f'' : (∏ x : X, C'' x -> P x)%type).
-    { intros x le. change (hProptoType (x ≤ x0)) in le.
-      induction (lem (x0 = x)) as [eq|ne].
-      - induction eq; clear le. simple refine (rec x0 _). intros y lt. use (f' y).
-        now use hyp.
-      - use (f' x). use hyp. exists le. intros eq. use ne; clear ne.
-        now induction eq. }
+    { intros x le. unfold C'' in le.
+      induction le as [lt|eq].
+      - use (f' x). now use hyp.
+      - induction eq. simple refine (rec x _). intros y lt. use (f' y).
+        now use hyp. }
     assert (ini'' : WO_isInitial C'').
-    { intros x y C''y le; change (x ≤ x0); change (hProptoType (y ≤ x0)) in C''y.
-      now use istrans_posetRelation. }
+    { intros x y C''y le. exact (lessthan_choice_trans x y x0 lem le C''y). }
     assert (C''guided : isGuidedPartialSection C'' f'' ini'').
-    { intros x C''x. change (hProptoType (x ≤ x0)) in C''x.
-      unfold f''.
-      induction (lem (x0 = x)) as [eq|ne].
-      - induction eq. simpl.
-        apply maponpaths. apply funextsec; intro y. apply funextsec; intro lt.
-        match goal with |- _ = coprod_rect _ _ _ ?D => induction D as [eq'|ne'] end.
-        + induction eq'; apply fromempty. exact (Poset_nlt_self lt).
-        + simpl. apply maponpaths. apply propproperty.
-      - cbn.
+    { intros x [xlt|xeq].
+      - change (f'' x (ii1 xlt)) with (f' x (hyp x xlt)).
         simple refine (C'guided x _ @ _).
         apply maponpaths.
         apply funextsec; intro y.
         apply funextsec; intro lt.
-        match goal with |- _ = coprod_rect _ _ _ ?D => induction D as [eq'|ne'] end.
-        + induction eq'. apply fromempty. exact (gt_to_nle _ _ lt C''x).
-        + simpl. apply maponpaths. apply propproperty. }
+        induction (ini'' y x (ii1 xlt) (Poset_lt_to_le y x lt)) as [ylt|yeq].
+        + change (f'' y (ii1 ylt)) with (f' y (hyp y ylt)).
+          apply maponpaths. apply propproperty.
+        + induction yeq. apply fromempty. exact (gt_to_nle _ _ lt (pr1 xlt)).
+      - induction xeq. simpl.
+        apply maponpaths. apply funextsec; intro y. apply funextsec; intro lt.
+        match goal with |- _ = f'' y ?D => induction D as [ylt|yeq] end.
+        + unfold f''; simpl; change (f' y (hyp y lt) = f' y (hyp y ylt)).
+          apply maponpaths. apply propproperty.
+        + induction yeq; apply fromempty. exact (Poset_nlt_self lt). }
     set (C''inG := C'',,f'',,ini'',,C''guided : GuidedPartialSection).
     simple refine (subtype_union_containedIn S C''inG x0 _).
-    change (x0 ≤ x0).
-    apply isrefl_posetRelation. }
+    change (lessthan_choice x0 x0).
+    apply lessthan_choice_isrefl. }
   intros x. use (f' x). exact (e x).
 Defined.
 

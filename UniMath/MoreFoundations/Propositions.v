@@ -120,3 +120,11 @@ Notation "'∃!' x .. y , P"
   := (iscontr_hProp (∑ x, .. (∑ y, P) ..))
        (at level 200, x binder, y binder, right associativity) : type_scope.
 (* type this in emacs in agda-input method with \ex ! *)
+
+Definition coprod_hProp (P Q:hProp) : (P ⇒ ¬ Q) -> hProp.
+Proof.
+  intros inc. exists (P ⨿ Q). apply isapropcoprod.
+  - apply propproperty.
+  - apply propproperty.
+  - exact inc.
+Defined.
