@@ -315,6 +315,8 @@ Notation "x ≤ y" := (posetRelation (OrderedSet_to_Poset (WellOrderedSet_to_Ord
 
 Notation "x < y" := (@Poset_lessthan (OrderedSet_to_Poset (WellOrderedSet_to_OrderedSet _)) x y) : woset.
 
+Definition isInitial {X:OrderedSet} (Y:hsubtype X) : hProp := ∀ (x y : X), Y y ⇒ (x ≤ y ⇒ Y x)%oset.
+
 (** ** Well ordered subsets of a set *)
 
 Definition WOSubset_set (X:hSet) : hSet := ∑ (S:subtype_set X), WellOrdering (carrier_set S).
@@ -1541,111 +1543,140 @@ Defined.
 
 (** ** Transfinite recursion *)
 
-Definition WO_isInitial {X:WellOrderedSet} (Y:hsubtype X) : hProp := ∀ (x y : X), Y y ⇒ (x ≤ y ⇒ Y x).
+Section Recursion.
 
-Definition isRecursivelyOrdered (X:OrderedSet) :=
-  (
-    ∏ (P : X -> hSet) (rec : ∏ x:X, (∏ y, y < x -> P y) -> P x), (∏ x, P x)
-  )%oset.
+  Section Tools.
 
-Theorem WellOrderedSet_recursion (X:WellOrderedSet) : LEM -> isRecursivelyOrdered X.
-Proof.
-  (**
-    To prove that a well ordered set satisfies this well founded recursion principle:
+    Section A.
 
-        ∏ (P : X -> hSet) (rec : ∏ x:X, (∏ y, y < x -> P y) -> P x), (∏ x, P x)
+      Context (X:OrderedSet).
 
-    one introduces P and rec and studies partially defined sections of P that are
-    "guided" by rec, in the sense that every value is equal to that obtained by applying
-    rec to the collection of previous values.
+      Definition recursiveHypothesis (P:X->hSet) : UU
+        := (∏ x:X, (∏ y, y < x -> P y) -> P x)%type.
 
-    Then one wants to show that any two guided partial sections take equal values on points
-    where both are defined. This can be done with well founded induction, but only because
-    the equations are propositions.
+      Definition isRecursivelyOrdered
+        := (∏ (P:X->hSet), recursiveHypothesis P -> ∏ x, P x)%type.
 
-    Then one gets a unique largest guided partial section, defined on the union of all of them.
-    If its domain is not all of X, one takes the smallest element of X not in the domain
-    and adds it to the domain, use rec to extend the definition of the section. achieving a
-    contradiction.
-   *)
-  intros lem P rec.
-  assert (ind := WellOrderedSet_induction X lem).
-  (**
-     The elements of G will be subsets C of X that are initial segments for the ordering, equipped
-     with a section f of P and a proof of ∏ x ∈ C, f x = rec x (λ y, f y).  One may say that f is
-     guided by rec.  Then two pairs (C,f), (C',f') agree on their common intersection, which is C or
-     C', and thus the union of all their graphs is a maximal guided function with domain U, say.  If
-     U were a proper subset, then its minimal upper bound could be added to U, contradiction, so U =
-     X.
-   *)
-  set (isGuidedPartialSection := (λ (C:subtype_set X)
-                      (f : (∏ (c:X) (Cc : C c), P c))
-                      (ini : hProp_to_hSet (WO_isInitial C)),
-                    ∀ (x:X) (Cx:C x),
-                      f x Cx =
-                      rec x (λ y lt, f y (ini y x Cx (Poset_lt_to_le _ _ lt))))%set).
-  set (GuidedPartialSection := (∑ C f ini, isGuidedPartialSection C f ini)%type).
-  set (to_subset := (λ C : GuidedPartialSection, pr1 C)).
-  set (to_section := (λ C : GuidedPartialSection, pr12 C)).
-  set (to_initial := (λ C : GuidedPartialSection, pr122 C)).
-  set (to_guided := (λ C : GuidedPartialSection, pr222 C)).
-  assert (K : (∀ (C D:GuidedPartialSection)
-                 (x:X) (Cx : to_subset C x) (Dx : to_subset D x),
-                  to_section C x Cx = to_section D x Dx)%set).
-  { intros C C'. use ind. intros x hyp Cx C'x.
-    simple refine (to_guided C x Cx @ _ @ ! to_guided C' x C'x).
-    apply maponpaths. apply funextsec; intros y; apply funextsec; intros lt.
-    use hyp. exact lt. }
-  (** Set up the family S of subsets that are domains of partial guided sections *)
-  set (S := pr1 : GuidedPartialSection -> subtype_set X).
-  (** Form the union C' of their domains *)
-  set (C' := subtype_union S).
-  transparent assert (f' : (∏ (x : X) (C'x : C' x), P x)%type).
-  { intros x e. use (squash_to_hSet _ _ e).
-    { intros [C SCx]. exact (to_section C x SCx). }
-    intros C D. now use K. }
-  transparent assert ( ini' : (WO_isInitial C') ).
-  { intros x y C'y le. apply (squash_to_hProp C'y); clear C'y; intros [C SCy].
-    apply hinhpr. exists C. exact (to_initial C x y SCy le). }
-  assert (C'guided : isGuidedPartialSection C' f' ini').
-  { intros x C'x.
-    apply (squash_to_hProp C'x); intros [C Cx];
-      change (hProptoType(to_subset C x)) in Cx.
-    induction (ishinh_irrel (C,,Cx) C'x). exact (to_guided C x Cx). }
-  assert (e : ∀ x, C' x).
-  { use ind. intros x0 hyp.
-    set (C'' := (λ x:X, lessthan_choice x x0)).
-    (** now we show C'' for membership in GuidedPartialSection so it is contained in C', leading to a contradiction *)
-    transparent assert (f'' : (∏ x : X, C'' x -> P x)%type).
-    { intros x le. induction le as [lt|eq].
-      - use (f' x). now use hyp.
-      - induction eq. simple refine (rec x _). intros y lt. use (f' y).
-        now use hyp. }
-    assert (ini'' : WO_isInitial C'').
-    { intros x y C''y le. exact (lessthan_choice_trans x y x0 lem le C''y). }
-    assert (C''guided : isGuidedPartialSection C'' f'' ini'').
-    { intros x [xlt|xeq].
-      - change (f'' x (ii1 xlt)) with (f' x (hyp x xlt)).
-        simple refine (C'guided x _ @ _).
-        apply maponpaths.
-        apply funextsec; intro y.
-        apply funextsec; intro lt.
-        induction (ini'' y x (ii1 xlt) (Poset_lt_to_le y x lt)) as [ylt|yeq].
-        + change (f'' y (ii1 ylt)) with (f' y (hyp y ylt)).
-          apply maponpaths. apply propproperty.
-        + induction yeq. apply fromempty. exact (gt_to_nle _ _ lt (pr1 xlt)).
-      - induction xeq. simpl.
-        apply maponpaths. apply funextsec; intro y. apply funextsec; intro lt.
-        match goal with |- _ = f'' y ?D => induction D as [ylt|yeq] end.
-        + change (f' y (hyp y lt) = f' y (hyp y ylt)).
-          apply maponpaths. apply propproperty.
-        + induction yeq; apply fromempty. exact (Poset_nlt_self lt). }
-    set (C''inG := C'',,f'',,ini'',,C''guided : GuidedPartialSection).
-    simple refine (subtype_union_containedIn S C''inG x0 _).
-    change (lessthan_choice x0 x0).
-    apply lessthan_choice_isrefl. }
-  intros x. use (f' x). exact (e x).
-Defined.
+    End A.
+
+    Section B.
+
+      Context {X:OrderedSet} {P:X->hSet} (rec:recursiveHypothesis X P).
+
+      Open Scope set.
+
+      Definition isGuidedPartialSection
+                 (C:subtype_set X)
+                 (f : (∏ (c:X) (Cc : C c), P c)%set)
+                 (ini : hProp_to_hSet (isInitial C)) : hProp
+        := ∀ (x:X) (Cx:C x),
+          f x Cx = rec x (λ y lt, f y (ini y x Cx (Poset_lt_to_le _ _ lt))).
+
+      Definition GuidedPartialSection := ∑ C f ini, isGuidedPartialSection C f ini.
+
+    End B.
+
+    Context {X:OrderedSet} {P:X->hSet} {rec:recursiveHypothesis X P}
+            (C:GuidedPartialSection rec).
+
+    Definition to_subset  := pr1 C.
+    Definition to_section := pr12 C.
+    Definition to_initial := pr122 C.
+    Definition to_guided  := pr222 C.
+
+  End Tools.
+
+  Context (X:WellOrderedSet) (lem:LEM).
+
+  Let ind := WellOrderedSet_induction X lem.
+
+  Theorem WellOrderedSet_recursion : isRecursivelyOrdered X.
+  Proof.
+    (**
+      To prove that a well ordered set satisfies this well founded recursion principle:
+
+          ∏ (P : X -> hSet) (rec : ∏ x:X, (∏ y, y < x -> P y) -> P x), (∏ x, P x)
+
+      one introduces P and rec and studies partially defined sections of P that are
+      "guided" by rec, in the sense that every value is equal to that obtained by applying
+      rec to the collection of previous values.
+
+      Then one wants to show that any two guided partial sections take equal values on points
+      where both are defined. This can be done with well founded induction, but only because
+      the equations are propositions.
+
+      Then one gets a unique largest guided partial section, defined on the union of all of them.
+      If its domain is not all of X, one takes the smallest element of X not in the domain
+      and adds it to the domain, use rec to extend the definition of the section. achieving a
+      contradiction.
+     *)
+    intros P rec.
+    (**
+       The elements of G will be subsets C of X that are initial segments for the ordering, equipped
+       with a section f of P and a proof of ∏ x ∈ C, f x = rec x (λ y, f y).  One may say that f is
+       guided by rec.  Then two pairs (C,f), (C',f') agree on their common intersection, which is C or
+       C', and thus the union of all their graphs is a maximal guided function with domain U, say.  If
+       U were a proper subset, then its minimal upper bound could be added to U, contradiction, so U =
+       X.
+     *)
+    assert (K : (∀ (C D:GuidedPartialSection rec)
+                   (x:X) (Cx : to_subset C x) (Dx : to_subset D x),
+                    to_section C x Cx = to_section D x Dx)%set).
+    { intros C C'. use ind. intros x hyp Cx C'x.
+      simple refine (to_guided C x Cx @ _ @ ! to_guided C' x C'x).
+      apply maponpaths. apply funextsec; intros y; apply funextsec; intros lt.
+      use hyp. exact lt. }
+    (** Set up the family S of subsets that are domains of partial guided sections *)
+    set (S := to_subset : GuidedPartialSection rec -> subtype_set X).
+    (** Form the union C' of their domains *)
+    set (C' := subtype_union S).
+    transparent assert (f' : (∏ (x : X) (C'x : C' x), P x)%type).
+    { intros x e. use (squash_to_hSet _ _ e).
+      { intros [C SCx]. exact (to_section C x SCx). }
+      intros C D. now use K. }
+    transparent assert ( ini' : (isInitial C') ).
+    { intros x y C'y le. apply (squash_to_hProp C'y); clear C'y; intros [C SCy].
+      apply hinhpr. exists C. exact (to_initial C x y SCy le). }
+    assert (C'guided : isGuidedPartialSection rec C' f' ini').
+    { intros x C'x.
+      apply (squash_to_hProp C'x); intros [C Cx];
+        change (hProptoType(to_subset C x)) in Cx.
+      induction (ishinh_irrel (C,,Cx) C'x). exact (to_guided C x Cx). }
+    assert (e : ∀ x, C' x).
+    { use ind. intros x0 hyp.
+      set (C'' := (λ x:X, lessthan_choice x x0)).
+      (** Now we add enough structure to show C'' qualifies for membership
+          in [GuidedPartialSection rec], so it is contained in C', leading
+          to a contradiction. *)
+      transparent assert (f'' : (∏ x : X, C'' x -> P x)%type).
+      { intros x le. induction le as [lt|eq].
+        - use (f' x). now use hyp.
+        - induction eq. simple refine (rec x _). intros y lt. use (f' y).
+          now use hyp. }
+      assert (ini'' : isInitial C'').
+      { intros x y C''y le. exact (lessthan_choice_trans x y x0 lem le C''y). }
+      assert (C''guided : isGuidedPartialSection rec C'' f'' ini'').
+      { intros x [xlt|xeq].
+        - change (f'' x (ii1 xlt)) with (f' x (hyp x xlt)).
+          simple refine (C'guided x _ @ _).
+          apply maponpaths. apply funextsec; intro y. apply funextsec; intro lt.
+          induction (ini'' y x (ii1 xlt) (Poset_lt_to_le y x lt)) as [ylt|yeq].
+          + change (f'' y (ii1 ylt)) with (f' y (hyp y ylt)).
+            apply maponpaths. apply propproperty.
+          + induction yeq. apply fromempty. exact (gt_to_nle _ _ lt (pr1 xlt)).
+        - induction xeq. simpl.
+          apply maponpaths. apply funextsec; intro y. apply funextsec; intro lt.
+          match goal with |- _ = f'' y ?D => induction D as [ylt|yeq] end.
+          + change (f' y (hyp y lt) = f' y (hyp y ylt)).
+            apply maponpaths. apply propproperty.
+          + induction yeq; apply fromempty. exact (Poset_nlt_self lt). }
+      set (C''inG := C'',,f'',,ini'',,C''guided : GuidedPartialSection rec).
+      simple refine (subtype_union_containedIn S C''inG x0 _).
+      change (lessthan_choice x0 x0). apply lessthan_choice_isrefl. }
+    intros x. use (f' x). exact (e x).
+  Defined.
+
+End Recursion.
 
 Lemma bigSet (X:Type) : LEM -> ∑ Y:hSet, ∏ f : Y -> X, ¬ isincl f.
 Proof.
@@ -1721,12 +1752,6 @@ Definition heq n {X:HLevel(S n)} (x y:X) := HLevelPair n (x=y) (pr2 X x y).
 
 Notation "a = b" := (heq _ a b) : hlevel.
 
-Definition forall_hLevel n {X : UU} (Y : X -> HLevel n)
-  := HLevelPair n (∏ x, Y x) (impred n Y (λ x, pr2 (Y x))).
-
-(* Notation "'∏h' n ( x .. y ) , P" := (forall_hLevel n (fun x =>.. (forall_hLevel n (fun y => P))..)) *)
-(*   (at level 200, x binder, y binder, right associativity) : hlevel. *)
-
 Theorem WellOrderedSet_recursion_3 (X:WellOrderedSet) :
   LEM ->
   ∏ (P : X -> HLevel 3)
@@ -1736,7 +1761,7 @@ Proof.
   assert (rec := WellOrderedSet_recursion X lem).
   set (isGuidedPartialSection := (λ (C:subtype_set X)
                       (f : (∏ (c:X) (Cc : C c), P c))
-                      (ini : hProp_to_hSet (WO_isInitial C)),
+                      (ini : hProp_to_hSet (isInitial C)),
                     ∏ (x:X) (Cx:C x),
                       f x Cx =
                       g x (λ y lt, f y (ini y x Cx (Poset_lt_to_le _ _ lt))))%type).
