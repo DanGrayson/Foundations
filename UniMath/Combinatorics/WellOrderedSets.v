@@ -1545,54 +1545,7 @@ Defined.
 
 Section Recursion.
 
-  Section Tools.
-
-    Section A.
-
-      Context (X:OrderedSet).
-
-      Definition recursiveHypothesis (P:X->hSet) : UU
-        := (∏ x:X, (∏ y, y < x -> P y) -> P x)%type.
-
-      Definition isRecursivelyOrdered
-        := (∏ (P:X->hSet), recursiveHypothesis P -> ∏ x, P x)%type.
-
-    End A.
-
-    Section B.
-
-      Context {X:OrderedSet} {P:X->hSet} (rec:recursiveHypothesis X P).
-
-      Open Scope set.
-
-      Definition isGuidedPartialSection
-                 (C:subtype_set X)
-                 (f : (∏ (c:X) (Cc : C c), P c)%set)
-                 (ini : hProp_to_hSet (isInitial C)) : hProp
-        := ∀ (x:X) (Cx:C x),
-          f x Cx = rec x (λ y lt, f y (ini y x Cx (Poset_lt_to_le _ _ lt))).
-
-      Definition GuidedPartialSection := ∑ C f ini, isGuidedPartialSection C f ini.
-
-    End B.
-
-    Context {X:OrderedSet} {P:X->hSet} {rec:recursiveHypothesis X P}
-            (C:GuidedPartialSection rec).
-
-    Definition to_subset  := pr1 C.
-    Definition to_section := pr12 C.
-    Definition to_initial := pr122 C.
-    Definition to_guided  := pr222 C.
-
-  End Tools.
-
-  Context (X:WellOrderedSet) (lem:LEM).
-
-  Let ind := WellOrderedSet_induction X lem.
-
-  Theorem WellOrderedSet_recursion : isRecursivelyOrdered X.
-  Proof.
-    (**
+  (**
       To prove that a well ordered set satisfies this well founded recursion principle:
 
           ∏ (P : X -> hSet) (rec : ∏ x:X, (∏ y, y < x -> P y) -> P x), (∏ x, P x)
@@ -1609,34 +1562,103 @@ Section Recursion.
       If its domain is not all of X, one takes the smallest element of X not in the domain
       and adds it to the domain, use rec to extend the definition of the section. achieving a
       contradiction.
-     *)
+   *)
+
+  Section Tools.
+
+    Section A.
+
+      Section A1.
+
+        Context {X:OrderedSet}.
+
+        Definition recursiveHypothesis (P:X->hSet) : UU
+          := (∏ x:X, (∏ y, y < x -> P y) -> P x)%type.
+
+      End A1.
+
+      Context (X:OrderedSet).
+
+      Definition isRecursivelyOrdered
+        := (∏ (P:X->hSet), recursiveHypothesis P -> ∏ x, P x)%type.
+
+    End A.
+
+    Section B.
+
+      Context {X:OrderedSet} {P:X->hSet} (rec:recursiveHypothesis P).
+
+      Open Scope set.
+
+      Definition isGuidedPartialSection
+                 (C:subtype_set X)
+                 (f : (∏ (c:X) (Cc : C c), P c)%set)
+                 (ini : hProp_to_hSet (isInitial C)) : hProp
+        := ∀ (x:X) (Cx:C x),
+          f x Cx = rec x (λ y lt, f y (ini y x Cx (Poset_lt_to_le _ _ lt))).
+
+      Definition GuidedPartialSection : hSet
+        := ∑ C f ini, isGuidedPartialSection C f ini.
+
+    End B.
+
+    Context {X:OrderedSet} {P:X->hSet} {rec:recursiveHypothesis P}
+            (C:GuidedPartialSection rec).
+
+    Definition to_subset  := pr1 C.
+    Definition to_section := pr12 C.
+    Definition to_initial := pr122 C.
+    Definition to_guided  := pr222 C.
+
+  End Tools.
+
+  Context (X:WellOrderedSet) (lem:LEM).
+
+  (** We prefer to use well founded induction, rather than the well founded condition on
+      the ordering, because the proof is simpler. *)
+
+  Let ind := WellOrderedSet_induction X lem.
+
+  (** *** The well founded recursion theorem for well ordered sets.  *)
+
+  Notation "p ## x" := (transportf _ p x) (right associativity, at level 65). (* for compact displays *)
+
+  Notation "| a |" := (hinhpr a) (at level 20).
+
+  Open Scope set.
+
+  Open Scope woset.
+
+  Theorem WellOrderedSet_recursion : isRecursivelyOrdered X.
+  Proof.
     intros P rec.
-    (**
-       The elements of G will be subsets C of X that are initial segments for the ordering, equipped
-       with a section f of P and a proof of ∏ x ∈ C, f x = rec x (λ y, f y).  One may say that f is
-       guided by rec.  Then two pairs (C,f), (C',f') agree on their common intersection, which is C or
-       C', and thus the union of all their graphs is a maximal guided function with domain U, say.  If
-       U were a proper subset, then its minimal upper bound could be added to U, contradiction, so U =
-       X.
-     *)
-    assert (K : (∀ (C D:GuidedPartialSection rec)
-                   (x:X) (Cx : to_subset C x) (Dx : to_subset D x),
-                    to_section C x Cx = to_section D x Dx)%set).
-    { intros C C'. use ind. intros x hyp Cx C'x.
-      simple refine (to_guided C x Cx @ _ @ ! to_guided C' x C'x).
-      apply maponpaths. apply funextsec; intros y; apply funextsec; intros lt.
-      use hyp. exact lt. }
-    (** Set up the family S of subsets that are domains of partial guided sections *)
-    set (S := to_subset : GuidedPartialSection rec -> subtype_set X).
-    (** Form the union C' of their domains *)
+    set (G := GuidedPartialSection rec).
+    assert (K : ∀ (C D:G) x Cx Dx,
+                  (to_section C x Cx = to_section D x Dx)%set).
+    { (** We prove that any two guided sections agree where both are defined.
+          The point is that if they agree at all points y less than x, then
+          they also agree at x, because the guide function [rec] determines
+          the values at x. *)
+      intros C C'. use ind. intros x hyp Cx C'x.
+      simple refine (to_guided _ _ Cx @ _ @ ! to_guided _ _ C'x).
+      apply maponpaths, funextsec; intros y; apply funextsec; intros lt.
+      now use hyp. }
+    (** Consider the family S of subsets of X that are domains of partial guided sections. *)
+    set (S := to_subset : G -> subtype_set X).
+    (** For each x, consider those partial sections defined at x. *)
+    set (US := subtype_disjoint_union S).
+    (** For each one defined at x, provide the value at x. *)
+    set (defVal := (λ x C_Cx, to_section (pr1 C_Cx) x (pr2 C_Cx)) : ∏ x (C_Cx : US x), P x).
+    (** Form the union C' of their domains. *)
     set (C' := subtype_union S).
+    (** Define a partial section f' on C'. *)
     transparent assert (f' : (∏ (x : X) (C'x : C' x), P x)%type).
-    { intros x e. use (squash_to_hSet _ _ e).
-      { intros [C SCx]. exact (to_section C x SCx). }
-      intros C D. now use K. }
+    { intros x e. use (squash_to_hSet (defVal x) _ e). intros C D. now use K. }
+    fold G in f'.               (* display f' more compactly *)
     transparent assert ( ini' : (isInitial C') ).
-    { intros x y C'y le. apply (squash_to_hProp C'y); clear C'y; intros [C SCy].
-      apply hinhpr. exists C. exact (to_initial C x y SCy le). }
+    { intros x y C'y le. apply (squash_to_hProp C'y); clear C'y; intros C.
+      apply hinhpr. exact (pr1 C,,to_initial (pr1 C) x y (pr2 C) le). }
+    fold G US in ini'.
     assert (C'guided : isGuidedPartialSection rec C' f' ini').
     { intros x C'x.
       apply (squash_to_hProp C'x); intros [C Cx];
@@ -1646,13 +1668,13 @@ Section Recursion.
     { use ind. intros x0 hyp.
       set (C'' := (λ x:X, lessthan_choice x x0)).
       (** Now we add enough structure to show C'' qualifies for membership
-          in [GuidedPartialSection rec], so it is contained in C', leading
+          in [G], so it is contained in C', leading
           to a contradiction. *)
       transparent assert (f'' : (∏ x : X, C'' x -> P x)%type).
       { intros x le. induction le as [lt|eq].
         - use (f' x). now use hyp.
-        - induction eq. simple refine (rec x _). intros y lt. use (f' y).
-          now use hyp. }
+        - simple refine (rec x _). intros y lt. use (f' y).
+          use hyp. exact (transportf (λ t, y<t) eq lt). }
       assert (ini'' : isInitial C'').
       { intros x y C''y le. exact (lessthan_choice_trans x y x0 lem le C''y). }
       assert (C''guided : isGuidedPartialSection rec C'' f'' ini'').
@@ -1670,7 +1692,7 @@ Section Recursion.
           + change (f' y (hyp y lt) = f' y (hyp y ylt)).
             apply maponpaths. apply propproperty.
           + induction yeq; apply fromempty. exact (Poset_nlt_self lt). }
-      set (C''inG := C'',,f'',,ini'',,C''guided : GuidedPartialSection rec).
+      set (C''inG := C'',,f'',,ini'',,C''guided : G).
       simple refine (subtype_union_containedIn S C''inG x0 _).
       change (lessthan_choice x0 x0). apply lessthan_choice_isrefl. }
     intros x. use (f' x). exact (e x).

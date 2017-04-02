@@ -97,7 +97,11 @@ Proof.
     + intros x t. exact (pr2 (e x) t).
 Defined.
 
-Definition subtype_union {X I:UU} (S : I -> hsubtype X) : hsubtype X := λ x, ∃ i, S i x.
+Definition subtype_disjoint_union {X I:UU} (S : I -> hsubtype X) : X -> UU
+  := λ x, ∑ i, S i x.
+
+Definition subtype_union {X I:UU} (S : I -> hsubtype X) : hsubtype X
+  := λ x, ∥ subtype_disjoint_union S x ∥.
 
 Notation "⋃ S" := (subtype_union S) (at level 100, no associativity) : subtype.
 
