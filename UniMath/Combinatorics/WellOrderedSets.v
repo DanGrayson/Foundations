@@ -1830,7 +1830,6 @@ Section Squashing.
     intros id trans xx.
     set (e := (λ x x', @squash_to_HLevel_2 (x=x') (HLevelPair 2 (f x = f x') (pr2 Y _ _)) (maponpaths f) (const_loop f c x x'))
             : ∏ x x' : X, ∥ x = x' ∥ -> f x = f x').
-    assert (eeqn := (λ _ _ _, idpath _) : ∏ x x' (p : x=x'), e x x' (|p|) = maponpaths f p).
     (* guided homotopies *)
     set (G := (∑ (y:Y) (g : ∏ x, f x = y),
                (∏ x x' (p : ∥x=x'∥), c x x' = e x x' p)
