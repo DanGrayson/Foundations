@@ -1540,6 +1540,10 @@ Defined.
 
 (** ** Transfinite recursion *)
 
+Local Notation "p ## x" := (transportf _ p x) (right associativity, at level 65). (* for compact displays *)
+
+Local Notation "| a |" := (hinhpr a) (at level 20).
+
 Section Recursion.
 
   (**
@@ -1617,10 +1621,6 @@ Section Recursion.
   Let ind := WellOrderedSet_induction X lem.
 
   (** *** The well founded recursion theorem for well ordered sets.  *)
-
-  Notation "p ## x" := (transportf _ p x) (right associativity, at level 65). (* for compact displays *)
-
-  Notation "| a |" := (hinhpr a) (at level 20).
 
   Open Scope set.
 
@@ -1777,3 +1777,254 @@ Delimit Scope hlevel with hlevel.
 Definition heq n {X:HLevel(S n)} (x y:X) := HLevelPair n (x=y) (pr2 X x y).
 
 Notation "a = b" := (heq _ a b) : hlevel.
+
+Section Squashing.
+
+  Close Scope prop.
+
+  Definition const {X:UU} {Y:UU} (f : X -> Y) : UU := ∏ x x', f x = f x'.
+
+  Corollary const_transport' {X:UU} {Y:UU} (f : X -> Y) (c : const f) :
+    ∏ x x' x'' (p : x' = x''), maponpaths f p = ! c x x' @ c x x''.
+  Proof.
+    intros. induction p. apply pathsinv0, pathsinv0l.
+  Defined.
+
+  Lemma const_loop {X:UU} {Y:UU} (f : X -> Y) :
+    const f -> ∏ x x', const (@maponpaths X Y f x x').
+  Proof.
+    intros c x x' p p'.
+    assert (Q := const_transport' f c x x x' p).
+    assert (Q' := const_transport' f c x x x' p').
+    exact (Q @ !Q').
+  Defined.
+
+  Definition squash_to_HLevel_2 {X : UU} {Y : HLevel 2} (f : X -> Y) :
+    const f -> ∥ X ∥ -> Y.
+  Proof.
+    (* compare with the proof of squash_to_hSet *)
+    intros c w.
+    (** It suffices to find a point in the image of f, which, by
+        virtue of f being constant, is a proposition. *)
+    apply (pr1 : image f -> Y).
+    apply (squash_to_prop w).
+    { change (isaprop (image f)).
+      apply isapropsubtype; intros y y' j j'.
+      apply (squash_to_prop j (pr2 Y _ _)); clear j; intros [j k].
+      apply (squash_to_prop j' (pr2 Y _ _)); clear j'; intros [j' k'].
+      exact (!k @ c j j' @ k'). }
+    intro x0. exists (f x0). apply hinhpr. now exists x0.
+  Defined.
+
+  Lemma squash_to_HLevel_2_eqn {X : UU} {Y : HLevel 2} (f : X -> Y) (c : const f) :
+    squash_to_HLevel_2 f c ∘ (λ x, |x|) = f.
+  Proof.
+    reflexivity.
+  Defined.
+
+  Definition squash_to_HLevel_3 {X : UU} {Y : HLevel 3} (f : X -> Y) (c : const f) :
+    (∏ x, c x x = idpath (f x)) ->
+    (∏ x x' x'', c x x'' = c x x' @ c x' x'') ->
+    ∥ X ∥ -> Y.
+  Proof.
+    intros id trans xx.
+    set (e := (λ x x', @squash_to_HLevel_2 (x=x') (HLevelPair 2 (f x = f x') (pr2 Y _ _)) (maponpaths f) (const_loop f c x x'))
+            : ∏ x x' : X, ∥ x = x' ∥ -> f x = f x').
+    assert (eeqn := (λ _ _ _, idpath _) : ∏ x x' (p : x=x'), e x x' (|p|) = maponpaths f p).
+    (* guided homotopies *)
+    set (G := (∑ (y:Y) (g : ∏ x, f x = y),
+               (∏ x x' (p : ∥x=x'∥), c x x' = e x x' p)
+               ×
+               (∏ x x', g x = c x x' @ g x'))).
+    apply (pr1 : G -> _); change G.
+    apply (squash_to_prop xx).
+    { change (isaprop G). apply invproofirrelevance; intros [y [g [p q]]] [y' [g' [p' q']]].
+      transparent assert (eyy' : (y = y')).
+      { use (squash_to_set (pr2 Y _ _) _ _ xx).
+        { intros x. exact (! g x @ g' x). }
+        { intros x x'; change (! g x @ g' x = ! g x' @ g' x').
+          rewrite (q x x'), (q' x x'). rewrite pathscomp_inv.
+          rewrite <- path_assoc. apply maponpaths. rewrite path_assoc.
+          now rewrite pathsinv0l. } }
+      assert (E' : ∏ x, eyy' = ! g x @ g' x).
+      { intros x. now induction (ishinh_irrel x xx). }
+      assert (E := (eyy',,E') : ∑ eyy' : y = y', ∏ x, eyy' = ! g x @ g' x).
+      clear E' eyy'.
+      induction E as [eyy' eqn].
+      (* y,, g,, p,, q = y',, g',, p',, q' *)
+      induction eyy'.
+      apply maponpaths.
+      assert (l : g = g').
+      { apply funextsec; intros x. rewrite <- (pathscomp0rid (g x)).
+        rewrite (eqn x). rewrite path_assoc. rewrite pathsinv0r. reflexivity. }
+      clear eqn. induction l. apply maponpaths.
+      assert (m : p = p').
+      { apply funextsec; intros x; apply funextsec; intros x'; apply funextsec; intros E.
+        set (P := @paths).
+        exact (pr1 (pr2 Y _ _ _ _ _ _)). }
+      induction m. apply maponpaths.
+      { apply funextsec; intros x; apply funextsec; intros x'.
+        exact (pr1 (pr2 Y _ _ _ _ _ _)). } }
+    intros x.
+    exists (f x).
+    use tpair.
+    - intros x'. exact (c x' x).
+    - split.
+      + intros x' x'' p.
+        apply (squash_to_prop p (pr2 Y _ _ _ _)); intros p'.
+        induction (ishinh_irrel p' p).
+        change (e x' x'' (| p' |)) with (maponpaths f p').
+        induction p'. apply id.
+      + intros x' x''. apply trans.
+  Defined.
+
+End Squashing.
+
+Section Recursion'.
+
+  Open Scope type.
+
+  Section Tools.
+
+    Section A.
+
+      Section A1.
+
+        Context (n:nat) {X:OrderedSet}.
+
+        Definition recursiveHypothesis' (P:X->HLevel n) : UU
+          := (∏ x:X, (∏ y, y < x -> P y) -> P x)%type.
+
+      End A1.
+
+      Context (n:nat) (X:OrderedSet).
+
+      Definition isRecursivelyOrdered'
+        := (∏ (P:X->HLevel n), recursiveHypothesis' n P -> ∏ x, P x)%type.
+
+    End A.
+
+    Section B.
+
+      Context {X:OrderedSet} {n:nat} {P:X->HLevel n} (rec:recursiveHypothesis' n P).
+
+      Definition isGuidedPartialSection'
+                 (C:subtype_set X)
+                 (f : (∏ (c:X) (Cc : C c), P c))
+                 (ini : hProp_to_hSet (isInitial C)) : UU
+        := ∏ (x:X) (Cx:C x),
+          f x Cx = rec x (λ y lt, f y (ini y x Cx (Poset_lt_to_le _ _ lt))).
+
+      Definition GuidedPartialSection' : UU
+        := ∑ C f ini, isGuidedPartialSection' C f ini.
+
+    End B.
+
+    Context {X:OrderedSet} {n:nat} {P:X->HLevel n} {rec:recursiveHypothesis' n P}
+            (C:GuidedPartialSection' rec).
+
+    Definition to_subset'  := pr1 C.
+    Definition to_section' := pr12 C.
+    Definition to_initial' := pr122 C.
+    Definition to_guided'  := pr222 C.
+
+  End Tools.
+
+  Context (n:nat) (X:OrderedSet) (lem:LEM) (ind : isRecursivelyOrdered' n X).
+
+  (** We prefer to use well founded induction, rather than the well founded condition on
+      the ordering, because the proof is simpler. *)
+
+  (** *** The well founded recursion theorem for well ordered sets.  *)
+
+  Open Scope set.
+
+  Open Scope woset.
+
+  Open Scope subtype.
+
+  Theorem WellOrderedSet_recursion' : isRecursivelyOrdered' (S n) X.
+  Proof.
+    intros P rec.
+    set (G := GuidedPartialSection' rec).
+    assert (K : ∏ (C D:G) x Cx Dx,
+                  (to_section' C x Cx = to_section' D x Dx)).
+    { (** We prove that any two guided sections agree where both are defined.
+          The point is that if they agree at all points y less than x, then
+          they also agree at x, because the guide function [rec] determines
+          the values at x. *)
+      intros C D.
+      use (ind (λ x, HLevelPair n _ _)).
+      { (* Show the members of the family are of h-level n. *)
+        apply impred; intros Cx; apply impred; intros Dx. exact (pr2 (P x) _ _). }
+      intros x hyp Cx Dx.
+      simple refine (to_guided' _ _ Cx @ _ @ ! to_guided' _ _ Dx).
+      apply maponpaths, funextsec; intros y; apply funextsec; intros lt.
+      now use hyp. }
+    (** Consider the family S of subsets of X that are domains of partial guided sections. *)
+    set (SS := to_subset' : G -> subtype_set X).
+    (** For each x, consider those partial sections defined at x. *)
+    set (USS := subtype_disjoint_union SS).
+    (** For each one defined at x, provide the value at x. *)
+    set (defVal := (λ x C_Cx, to_section' (pr1 C_Cx) x (pr2 C_Cx)) : ∏ x (C_Cx : USS x), P x).
+    (** Form the union C' of their domains. *)
+    set (C' := subtype_union SS).
+    (** Define a partial section f' on C'. *)
+    transparent assert (f' : (∏ (x : X) (C'x : C' x), P x)%type).
+    { intros x e.
+
+(*
+
+                  use (squash_to_hSet (defVal x) _ e). intros C D. now use K. }
+    transparent assert ( ini' : (isInitial C') ).
+    { intros x y C'y le. apply (squash_to_hProp C'y); clear C'y; intros C.
+      apply hinhpr. exact (pr1 C,,to_initial' (pr1 C) x y (pr2 C) le). }
+    fold USS in ini'.
+    assert (C'guided : (isGuidedPartialSection' rec C' f' ini')).
+    { intros x C'x.
+      apply (squash_to_hProp C'x); intros [C Cx]; change (hProptoType(to_subset' C x)) in Cx.
+      induction (ishinh_irrel (C,,Cx) C'x). exact (to_guided' C x Cx). }
+    (** Now we prove everything is in C'. *)
+    assert (C'total : ∀ x, C' x).
+    { (** We prove it by induction. *)
+      use ind. intros x0 hyp.
+      (** This is the inductive step, where we prove x0 is in C', using the inductive
+          hypothesis [hyp], which says that all smaller elements are in C'. *)
+      set (C'' := (λ x:X, x << x0)).
+      (** Now we add enough structure to show C'' qualifies for membership
+          in [G], so it is contained in C', leading
+          to a contradiction. First we define a section f'' on C''. *)
+      transparent assert (f'' : (∏ x : X, C'' x -> P x)%type).
+      { intros x le. induction le as [lt|eq].
+        - use (f' x). now use hyp.
+        - simple refine (rec x _). intros y lt. use (f' y).
+          use hyp. exact (transportf (λ t, y<t) eq lt). }
+      (** Show f' and f'' agree where they are both defined. *)
+      assert (f'_f'' : ∀ y e' e'', y < x0 ⇒ f' y e' = f'' y e'').
+      { intros y e' [ylt|yeq] lt.
+        - change (f'' _ _) with (f' _ (hyp _ ylt)). apply maponpaths; apply propproperty.
+        - apply fromempty. induction yeq. exact (Poset_nlt_self lt). }
+      assert (f''_x0 : ∏ C''x0, f'' x0 C''x0 = rec x0 (λ y lt, f' y (hyp y lt))).
+      { induction C''x0 as [lt|eq].
+        - apply fromempty. exact (Poset_nlt_self lt).
+        - now induction (uip (setproperty _) (idpath x0) eq). }
+      assert (ini'' : isInitial C'').
+      { intros x y C''y le. exact (lessthan_choice_trans x y x0 lem le C''y). }
+      assert (C''guided : isGuidedPartialSection' rec C'' f'' ini'').
+      { intros x [xlt|xeq].
+        - change (f'' x _) with (f' x (hyp x xlt)). simple refine (C'guided x _ @ _).
+          apply maponpaths; apply funextsec; intro y; apply funextsec; intro lt.
+          use f'_f''. now use (Poset_lt_istrans (y := x)).
+        - induction xeq. simple refine (f''_x0 (ii2 (idpath x)) @ _).
+          apply (maponpaths (rec x)); apply funextsec; intro y; apply funextsec; intro lt.
+          now use f'_f''. }
+      clear f'_f'' f''_x0.
+      set (C''inG := C'',,f'',,ini'',,C''guided : G).
+      exact (subtype_union_containedIn SS C''inG x0 (lessthan_choice_isrefl x0)). }
+    (** We have shown the domain of f' is all of X, so now f' yields the desired section of P. *)
+    exact (λ x, f' x (C'total x)).
+  Defined.
+ *)
+  Abort.
+
+End Recursion'.
