@@ -1526,11 +1526,15 @@ Proof.
                       f x Cx =
                       rec x (λ y lt, f y (ini y x Cx (Poset_lt_to_le _ _ lt))))%set).
   set (GuidedPartialSection := (∑ C f ini, isGuidedPartialSection C f ini)%type).
-  assert (K : (∀ (C D:GuidedPartialSection) (x:X) (Cx : pr1 C x) (Dx : pr1 D x), pr12 C x Cx = pr12 D x Dx)%set).
-  { intros [C [f [ini gui]]] [C' [f' [ini' gui']]].
-    change (∀ (x : X) (Cx : C x) (C'x : C' x), f x Cx = f' x C'x).
-    use ind. intros x hyp Cx C'x.
-    simple refine (gui x Cx @ _ @ ! gui' x C'x).
+  set (to_subset := (λ C : GuidedPartialSection, pr1 C)).
+  set (to_section := (λ C : GuidedPartialSection, pr12 C)).
+  set (to_initial := (λ C : GuidedPartialSection, pr122 C)).
+  set (to_guided := (λ C : GuidedPartialSection, pr222 C)).
+  assert (K : (∀ (C D:GuidedPartialSection)
+                 (x:X) (Cx : to_subset C x) (Dx : to_subset D x),
+                  to_section C x Cx = to_section D x Dx)%set).
+  { intros C C'. use ind. intros x hyp Cx C'x.
+    simple refine (to_guided C x Cx @ _ @ ! to_guided C' x C'x).
     apply maponpaths. apply funextsec; intros y; apply funextsec; intros lt.
     use hyp. exact lt. }
   (** Set up the family S of subsets that are domains of partial guided sections *)
@@ -1539,30 +1543,29 @@ Proof.
   set (C' := subtype_union S).
   transparent assert (f' : (∏ (x : X) (C'x : C' x), P x)%type).
   { intros x e. use (squash_to_hSet _ _ e).
-    { intros C. exact (pr12 (pr1 C) x (pr2 C)). }
+    { intros [C SCx]. exact (to_section C x SCx). }
     intros C D. now use K. }
   transparent assert ( ini' : (WO_isInitial C') ).
   { intros x y C'y le. apply (squash_to_hProp C'y); clear C'y; intros [C SCy].
-    apply hinhpr. exists C. exact (pr122 C x y SCy le). }
+    apply hinhpr. exists C. exact (to_initial C x y SCy le). }
   assert (C'guided : isGuidedPartialSection C' f' ini').
   { intros x C'x.
     apply (squash_to_hProp C'x); intros [C Cx];
-      change (hProptoType(pr1 C x)) in Cx.
-    induction (ishinh_irrel (C,,Cx) C'x). exact (pr222 C x Cx). }
+      change (hProptoType(to_subset C x)) in Cx.
+    induction (ishinh_irrel (C,,Cx) C'x). exact (to_guided C x Cx). }
   assert (e : ∀ x, C' x).
   { use ind. intros x0 hyp.
     set (C'' := λ x, x ≤ x0).
-    assert (x0inC'' := isrefl_posetRelation X x0 : C'' x0).
     (** now we show C'' for membership in GuidedPartialSection so it is contained in C', leading to a contradiction *)
     transparent assert (f'' : (∏ x : X, C'' x -> P x)%type).
     { intros x le. change (hProptoType (x ≤ x0)) in le.
       induction (lem (x0 = x)) as [eq|ne].
-      - induction eq. simple refine (rec x0 _). intros y lt. use (f' y).
-        use hyp. exact lt.
+      - induction eq; clear le. simple refine (rec x0 _). intros y lt. use (f' y).
+        now use hyp.
       - use (f' x). use hyp. exists le. intros eq. use ne; clear ne.
-        exact (pathsinv0 eq). }
+        now induction eq. }
     assert (ini'' : WO_isInitial C'').
-    { intros x y C''y le. change (x ≤ x0). change (hProptoType (y ≤ x0)) in C''y.
+    { intros x y C''y le; change (x ≤ x0); change (hProptoType (y ≤ x0)) in C''y.
       now use istrans_posetRelation. }
     assert (C''guided : isGuidedPartialSection C'' f'' ini'').
     { intros x C''x. change (hProptoType (x ≤ x0)) in C''x.
@@ -1582,7 +1585,9 @@ Proof.
         + induction eq'. apply fromempty. exact (gt_to_nle _ _ lt C''x).
         + simpl. apply maponpaths. apply propproperty. }
     set (C''inG := C'',,f'',,ini'',,C''guided : GuidedPartialSection).
-    exact (subtype_union_containedIn S C''inG x0 x0inC''). }
+    simple refine (subtype_union_containedIn S C''inG x0 _).
+    change (x0 ≤ x0).
+    apply isrefl_posetRelation. }
   intros x. use (f' x). exact (e x).
 Defined.
 
