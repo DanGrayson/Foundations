@@ -1822,22 +1822,19 @@ Section Squashing.
     reflexivity.
   Defined.
 
-  Definition squash_to_HLevel_3 {X : UU} {Y : HLevel 3} (f : X -> Y) (c : const f) :
+  Definition squash_to_HLevel_3 {X : UU} {Y : HLevel 3}
+             (f : X -> Y) (c : ∏ x x', f x = f x') :
     (∏ x, c x x = idpath (f x)) ->
     (∏ x x' x'', c x x'' = c x x' @ c x' x'') ->
     ∥ X ∥ -> Y.
   Proof.
     intros id trans xx.
-    set (e := (λ x x', @squash_to_HLevel_2 (x=x') (HLevelPair 2 (f x = f x') (pr2 Y _ _)) (maponpaths f) (const_loop f c x x'))
-            : ∏ x x' : X, ∥ x = x' ∥ -> f x = f x').
     (* guided homotopies *)
     set (G := (∑ (y:Y) (g : ∏ x, f x = y),
-               (∏ x x' (p : ∥x=x'∥), c x x' = e x x' p)
-               ×
                (∏ x x', g x = c x x' @ g x'))).
     apply (pr1 : G -> _); change G.
     apply (squash_to_prop xx).
-    { change (isaprop G). apply invproofirrelevance; intros [y [g [p q]]] [y' [g' [p' q']]].
+    { change (isaprop G). apply invproofirrelevance; intros [y [g q]] [y' [g' q']].
       transparent assert (eyy' : (y = y')).
       { use (squash_to_set (pr2 Y _ _) _ _ xx).
         { intros x. exact (! g x @ g' x). }
@@ -1857,24 +1854,13 @@ Section Squashing.
       { apply funextsec; intros x. rewrite <- (pathscomp0rid (g x)).
         rewrite (eqn x). rewrite path_assoc. rewrite pathsinv0r. reflexivity. }
       clear eqn. induction l. apply maponpaths.
-      assert (m : p = p').
-      { apply funextsec; intros x; apply funextsec; intros x'; apply funextsec; intros E.
-        set (P := @paths).
-        exact (pr1 (pr2 Y _ _ _ _ _ _)). }
-      induction m. apply maponpaths.
       { apply funextsec; intros x; apply funextsec; intros x'.
         exact (pr1 (pr2 Y _ _ _ _ _ _)). } }
     intros x.
     exists (f x).
     use tpair.
     - intros x'. exact (c x' x).
-    - split.
-      + intros x' x'' p.
-        apply (squash_to_prop p (pr2 Y _ _ _ _)); intros p'.
-        induction (ishinh_irrel p' p).
-        change (e x' x'' (| p' |)) with (maponpaths f p').
-        induction p'. apply id.
-      + intros x' x''. apply trans.
+    - intros x' x''. apply trans.
   Defined.
 
 End Squashing.
