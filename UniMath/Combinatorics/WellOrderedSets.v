@@ -1580,8 +1580,23 @@ Section Recursion.
 
       Context (X:OrderedSet).
 
+      Definition isRecursivelyOrdered_unique : hProp
+        := ∀ (P:X->hSet) (rec:recursiveHypothesis P), ∃! (f:∏ x, P x), ∀ x, f x = rec x (λ y _,  f y).
+
+      Lemma isRecursivelyOrdered_unique_isaprop (P:X->hSet) (rec:recursiveHypothesis P) :
+        isInductivelyOrdered X -> isaprop (∑ (f:∏ x, P x), (∀ x, f x = rec x (λ y _,  f y))%set)%type.
+      Proof.
+        intros ind. apply invproofirrelevance; intros [f p] [g q]. assert (e : f = g).
+        { apply funextsec. change (∏ x, f x =g x)%set. use ind. intros x H. simple refine (p x @ _ @ ! q x).
+          apply maponpaths. apply funextsec; intros y; apply funextsec; intros lt. now use H. }
+        induction e. apply maponpaths. apply funextsec; intros x. apply setproperty.
+      Defined.
+
       Definition isRecursivelyOrdered
-        := (∏ (P:X->hSet), recursiveHypothesis P -> ∏ x, P x)%type.
+        := ∏ (P:X->hSet) (rec:recursiveHypothesis P), ∏ x, P x.
+
+      Definition isRecursivelyOrdered_section : isRecursivelyOrdered_unique -> isRecursivelyOrdered
+        := λ F P rec, pr11 (F P rec).
 
     End A.
 
@@ -1799,21 +1814,24 @@ Section Squashing.
     exact (Q @ !Q').
   Defined.
 
+  Definition squash_to_HLevel_2_full {X : UU} {Y : HLevel 2} (f : X -> Y) :
+    const f -> ∥ X ∥ -> iscontr (image f).
+  Proof.
+    intros c w.
+    apply isaprop_for_iscontr.
+    { apply isapropsubtype; intros y y' j j'.
+      apply (squash_to_prop j (pr2 Y _ _)); clear j; intros [j k].
+      apply (squash_to_prop j' (pr2 Y _ _)); clear j'; intros [j' k'].
+      exact (!k @ c j j' @ k'). }
+    intros i. apply (squash_to_prop w i).
+    intro x. exists (f x). apply hinhpr. now exists x.
+  Defined.
+
   Definition squash_to_HLevel_2 {X : UU} {Y : HLevel 2} (f : X -> Y) :
     const f -> ∥ X ∥ -> Y.
   Proof.
     (* compare with the proof of squash_to_hSet *)
-    intros c w.
-    (** It suffices to find a point in the image of f, which, by
-        virtue of f being constant, is a proposition. *)
-    apply (pr1 : image f -> Y).
-    apply (squash_to_prop w).
-    { change (isaprop (image f)).
-      apply isapropsubtype; intros y y' j j'.
-      apply (squash_to_prop j (pr2 Y _ _)); clear j; intros [j k].
-      apply (squash_to_prop j' (pr2 Y _ _)); clear j'; intros [j' k'].
-      exact (!k @ c j j' @ k'). }
-    intro x0. exists (f x0). apply hinhpr. now exists x0.
+    intros c w. exact (pr11 (squash_to_HLevel_2_full f c w)).
   Defined.
 
   Lemma squash_to_HLevel_2_eqn {X : UU} {Y : HLevel 2} (f : X -> Y) (c : const f) :
