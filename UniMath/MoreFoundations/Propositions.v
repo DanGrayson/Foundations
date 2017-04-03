@@ -128,3 +128,9 @@ Proof.
   - apply propproperty.
   - exact inc.
 Defined.
+
+Lemma isaprop_for_iscontr {X:UU} : isaprop X -> (isaprop X -> X) -> iscontr X.
+Proof.
+  intros i f.
+  exact (iscontraprop1 i (f i)).
+Defined.
