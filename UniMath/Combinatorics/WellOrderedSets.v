@@ -1830,36 +1830,27 @@ Section Squashing.
   Proof.
     intros id trans xx.
     (* guided homotopies *)
-    set (G := (∑ (y:Y) (g : ∏ x, f x = y),
-               (∏ x x', g x = c x x' @ g x'))).
-    apply (pr1 : G -> _); change G.
-    apply (squash_to_prop xx).
+    set (G := (∑ (y:Y) (g : ∏ x, f x = y), (∏ x x', g x = c x x' @ g x'))).
+    apply (pr1 : G -> _); change G. apply (squash_to_prop xx).
     { change (isaprop G). apply invproofirrelevance; intros [y [g q]] [y' [g' q']].
       transparent assert (eyy' : (y = y')).
       { use (squash_to_set (pr2 Y _ _) _ _ xx).
         { intros x. exact (! g x @ g' x). }
         { intros x x'; change (! g x @ g' x = ! g x' @ g' x').
-          rewrite (q x x'), (q' x x'). rewrite pathscomp_inv.
-          rewrite <- path_assoc. apply maponpaths. rewrite path_assoc.
-          now rewrite pathsinv0l. } }
+          rewrite (q x x'), (q' x x'). rewrite pathscomp_inv. rewrite <- path_assoc.
+          apply maponpaths. rewrite path_assoc. now rewrite pathsinv0l. } }
       assert (E' : ∏ x, eyy' = ! g x @ g' x).
       { intros x. now induction (ishinh_irrel x xx). }
       assert (E := (eyy',,E') : ∑ eyy' : y = y', ∏ x, eyy' = ! g x @ g' x).
-      clear E' eyy'.
-      induction E as [eyy' eqn].
-      (* y,, g,, p,, q = y',, g',, p',, q' *)
-      induction eyy'.
-      apply maponpaths.
+      clear E' eyy'. induction E as [eyy' eqn]. induction eyy'. apply maponpaths.
       assert (l : g = g').
       { apply funextsec; intros x. rewrite <- (pathscomp0rid (g x)).
         rewrite (eqn x). rewrite path_assoc. rewrite pathsinv0r. reflexivity. }
       clear eqn. induction l. apply maponpaths.
       { apply funextsec; intros x; apply funextsec; intros x'.
         exact (pr1 (pr2 Y _ _ _ _ _ _)). } }
-    intros x.
-    exists (f x).
-    use tpair.
-    - intros x'. exact (c x' x).
+    intros x. exists (f x). use tpair.
+    - intros x'. apply c.
     - intros x' x''. apply trans.
   Defined.
 
