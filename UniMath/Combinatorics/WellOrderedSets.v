@@ -1823,12 +1823,13 @@ Section Squashing.
   Defined.
 
   Definition squash_to_HLevel_3 {X : UU} {Y : HLevel 3}
-             (f : X -> Y) (c : ∏ x x', f x = f x') :
-    (∏ x, c x x = idpath (f x)) ->
-    (∏ x x' x'', c x x'' = c x x' @ c x' x'') ->
-    ∥ X ∥ -> Y.
+             (f : X -> Y) (c : const f) :
+    (∏ x x' x'', c x x'' = c x x' @ c x' x'') -> ∥ X ∥ -> Y.
+  (** This is a special case of a theorem in
+      "The General Universal Property of the Propositional Truncation"
+      by Nicolai Kraus, at https://arxiv.org/abs/1411.2682 *)
   Proof.
-    intros id trans xx.
+    intros trans xx.
     (* guided homotopies *)
     set (G := (∑ (y:Y) (g : ∏ x, f x = y), (∏ x x', g x = c x x' @ g x'))).
     apply (pr1 : G -> _); change G. apply (squash_to_prop xx).
@@ -1845,7 +1846,7 @@ Section Squashing.
       clear E' eyy'. induction E as [eyy' eqn]. induction eyy'. apply maponpaths.
       assert (l : g = g').
       { apply funextsec; intros x. rewrite <- (pathscomp0rid (g x)).
-        rewrite (eqn x). rewrite path_assoc. rewrite pathsinv0r. reflexivity. }
+        rewrite (eqn x). rewrite path_assoc. now rewrite pathsinv0r. }
       clear eqn. induction l. apply maponpaths.
       { apply funextsec; intros x; apply funextsec; intros x'.
         exact (pr1 (pr2 Y _ _ _ _ _ _)). } }
@@ -1906,7 +1907,9 @@ Section Recursion'.
 
   End Tools.
 
-  Context (n:nat) (X:OrderedSet) (lem:LEM) (ind : isRecursivelyOrdered' n X).
+  Let n := 2 : nat.
+
+  Context (X:OrderedSet) (lem:LEM) (ind : isRecursivelyOrdered' n X).
 
   (** We prefer to use well founded induction, rather than the well founded condition on
       the ordering, because the proof is simpler. *)
@@ -1943,15 +1946,19 @@ Section Recursion'.
     set (USS := subtype_disjoint_union SS).
     (** For each one defined at x, provide the value at x. *)
     set (defVal := (λ x C_Cx, to_section' (pr1 C_Cx) x (pr2 C_Cx)) : ∏ x (C_Cx : USS x), P x).
+    (** Relate two values *)
+    set (K' := λ (x:X) (x1 x2:USS x), K (pr1 x1) (pr1 x2) x (pr2 x1) (pr2 x2) : defVal x x1 = defVal x x2).
     (** Form the union C' of their domains. *)
     set (C' := subtype_union SS).
     (** Define a partial section f' on C'. *)
     transparent assert (f' : (∏ (x : X) (C'x : C' x), P x)%type).
-    { intros x e.
+    { intros x e. set (c := K' x). use (squash_to_HLevel_3 (defVal x) _ _ e).
+      - change (const (defVal x)). intros C D. exact (c C D).
+      - intros B C D. change (c B D = c B C @ c C D).
 
-(*
+        (*
 
-                  use (squash_to_hSet (defVal x) _ e). intros C D. now use K. }
+    }
     transparent assert ( ini' : (isInitial C') ).
     { intros x y C'y le. apply (squash_to_hProp C'y); clear C'y; intros C.
       apply hinhpr. exact (pr1 C,,to_initial' (pr1 C) x y (pr2 C) le). }
