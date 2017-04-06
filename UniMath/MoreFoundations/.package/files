@@ -5,6 +5,7 @@ AlternativeProofs.v
 Subposets.v
 Propositions.v
 Sets.v
+HLevels.v
 Subtypes.v
 DecidablePropositions.v
 AxiomOfChoice.v

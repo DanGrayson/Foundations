@@ -9,6 +9,7 @@ Require Export
         UniMath.MoreFoundations.AxiomOfChoice
         UniMath.MoreFoundations.Propositions
         UniMath.MoreFoundations.Sets
+        UniMath.MoreFoundations.HLevels
         UniMath.MoreFoundations.Subposets
         UniMath.MoreFoundations.Subtypes
         UniMath.MoreFoundations.Tactics

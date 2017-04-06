@@ -1542,8 +1542,6 @@ Defined.
 
 Local Notation "p ## x" := (transportf _ p x) (right associativity, at level 65). (* for compact displays *)
 
-Local Notation "| a |" := (hinhpr a) (at level 20).
-
 Section Recursion.
 
   (**
@@ -1808,102 +1806,7 @@ Proof.
   exact n.
 Defined.
 
-Definition HLevel_to_type n : HLevel n -> UU := pr1.
-
-Coercion HLevel_to_type : HLevel >-> UU.
-
-Definition HLevelPair n (X:UU) : isofhlevel n X -> HLevel n
-  := λ i, X,,i.
-
 Close Scope set.
-
-Delimit Scope hlevel with hlevel.
-
-Definition heq n {X:HLevel(S n)} (x y:X) := HLevelPair n (x=y) (pr2 X x y).
-
-Notation "a = b" := (heq _ a b) : hlevel.
-
-Section Squashing.
-
-  Close Scope prop.
-
-  Definition const {X:UU} {Y:UU} (f : X -> Y) : UU := ∏ x x', f x = f x'.
-
-  Corollary const_transport' {X:UU} {Y:UU} (f : X -> Y) (c : const f) :
-    ∏ x x' x'' (p : x' = x''), maponpaths f p = ! c x x' @ c x x''.
-  Proof.
-    intros. induction p. apply pathsinv0, pathsinv0l.
-  Defined.
-
-  Lemma const_loop {X:UU} {Y:UU} (f : X -> Y) :
-    const f -> ∏ x x', const (@maponpaths X Y f x x').
-  Proof.
-    intros c x x' p p'.
-    assert (Q := const_transport' f c x x x' p).
-    assert (Q' := const_transport' f c x x x' p').
-    exact (Q @ !Q').
-  Defined.
-
-  Definition squash_to_HLevel_2_full {X : UU} {Y : HLevel 2} (f : X -> Y) :
-    const f -> ∥ X ∥ -> iscontr (image f).
-  Proof.
-    intros c w.
-    apply isaprop_for_iscontr.
-    { apply isapropsubtype; intros y y' j j'.
-      apply (squash_to_prop j (pr2 Y _ _)); clear j; intros [j k].
-      apply (squash_to_prop j' (pr2 Y _ _)); clear j'; intros [j' k'].
-      exact (!k @ c j j' @ k'). }
-    intros i. apply (squash_to_prop w i).
-    intro x. exists (f x). apply hinhpr. now exists x.
-  Defined.
-
-  Definition squash_to_HLevel_2 {X : UU} {Y : HLevel 2} (f : X -> Y) :
-    const f -> ∥ X ∥ -> Y.
-  Proof.
-    (* compare with the proof of squash_to_hSet *)
-    intros c w. exact (pr11 (squash_to_HLevel_2_full f c w)).
-  Defined.
-
-  Lemma squash_to_HLevel_2_eqn {X : UU} {Y : HLevel 2} (f : X -> Y) (c : const f) :
-    squash_to_HLevel_2 f c ∘ (λ x, |x|) = f.
-  Proof.
-    reflexivity.
-  Defined.
-
-  Definition squash_to_HLevel_3 {X : UU} {Y : HLevel 3}
-             (f : X -> Y) (c : const f) :
-    (∏ x x' x'', c x x'' = c x x' @ c x' x'') -> ∥ X ∥ -> Y.
-  (** This is a special case of a theorem in
-      "The General Universal Property of the Propositional Truncation"
-      by Nicolai Kraus, at https://arxiv.org/abs/1411.2682 *)
-  Proof.
-    intros trans xx.
-    (* guided homotopies *)
-    set (G := (∑ (y:Y) (g : ∏ x, f x = y), (∏ x x', g x = c x x' @ g x'))).
-    apply (pr1 : G -> _); change G. apply (squash_to_prop xx).
-    { change (isaprop G). apply invproofirrelevance; intros [y [g q]] [y' [g' q']].
-      transparent assert (eyy' : (y = y')).
-      { use (squash_to_set (pr2 Y _ _) _ _ xx).
-        { intros x. exact (! g x @ g' x). }
-        { intros x x'; change (! g x @ g' x = ! g x' @ g' x').
-          rewrite (q x x'), (q' x x'). rewrite pathscomp_inv. rewrite <- path_assoc.
-          apply maponpaths. rewrite path_assoc. now rewrite pathsinv0l. } }
-      assert (E' : ∏ x, eyy' = ! g x @ g' x).
-      { intros x. now induction (ishinh_irrel x xx). }
-      assert (E := (eyy',,E') : ∑ eyy' : y = y', ∏ x, eyy' = ! g x @ g' x).
-      clear E' eyy'. induction E as [eyy' eqn]. induction eyy'. apply maponpaths.
-      assert (l : g = g').
-      { apply funextsec; intros x. rewrite <- (pathscomp0rid (g x)).
-        rewrite (eqn x). rewrite path_assoc. now rewrite pathsinv0r. }
-      clear eqn. induction l. apply maponpaths.
-      { apply funextsec; intros x; apply funextsec; intros x'.
-        exact (pr1 (pr2 Y _ _ _ _ _ _)). } }
-    intros x. exists (f x). use tpair.
-    - intros x'. apply c.
-    - intros x' x''. apply trans.
-  Defined.
-
-End Squashing.
 
 Section Recursion'.
 
@@ -1959,11 +1862,6 @@ Section Recursion'.
 
   Context (X:OrderedSet) (lem:LEM) (ind : isRecursivelyOrdered' n X).
 
-  (** We prefer to use well founded induction, rather than the well founded condition on
-      the ordering, because the proof is simpler. *)
-
-  (** *** The well founded recursion theorem for well ordered sets.  *)
-
   Open Scope set.
 
   Open Scope woset.
@@ -1972,6 +1870,7 @@ Section Recursion'.
 
   Theorem WellOrderedSet_recursion' : isRecursivelyOrdered' (S n) X.
   Proof.
+    (** We follow the same general strategy as in [WellOrderedSet_recursion] above. *)
     intros P rec.
     set (G := GuidedPartialSection' rec).
     assert (K : ∏ (x : X) (C : G) (Cx : pr1 C x) (D : G) (Dx : pr1 D x),
@@ -2004,93 +1903,7 @@ Section Recursion'.
       - change (const (defVal x)). intros C D. exact (c x C D).
       - intros B C D.
         change (c x B D = c x B C @ c x C D). (** Show that [c x] is transitive.  *)
-        unfold recursiveHypothesis' in rec.
-        unfold GuidedPartialSection', isGuidedPartialSection' in G.
-        unfold subtype_disjoint_union in USS.
-
-
-        (*
-
-    }
-    transparent assert ( ini' : (isInitial C') ).
-    { intros x y C'y le. apply (squash_to_hProp C'y); clear C'y; intros C.
-      apply hinhpr. exact (pr1 C,,to_initial' (pr1 C) x y (pr2 C) le). }
-    fold USS in ini'.
-    assert (C'guided : (isGuidedPartialSection' rec C' f' ini')).
-    { intros x C'x.
-      apply (squash_to_hProp C'x); intros [C Cx]; change (hProptoType(to_subset' C x)) in Cx.
-      induction (ishinh_irrel (C,,Cx) C'x). exact (to_guided' C x Cx). }
-    (** Now we prove everything is in C'. *)
-    assert (C'total : ∀ x, C' x).
-    { (** We prove it by induction. *)
-      use ind. intros x0 hyp.
-      (** This is the inductive step, where we prove x0 is in C', using the inductive
-          hypothesis [hyp], which says that all smaller elements are in C'. *)
-      set (C'' := (λ x:X, x << x0)).
-      (** Now we add enough structure to show C'' qualifies for membership
-          in [G], so it is contained in C', leading
-          to a contradiction. First we define a section f'' on C''. *)
-      transparent assert (f'' : (∏ x : X, C'' x -> P x)%type).
-      { intros x le. induction le as [lt|eq].
-        - use (f' x). now use hyp.
-        - simple refine (rec x _). intros y lt. use (f' y).
-          use hyp. exact (transportf (λ t, y<t) eq lt). }
-      (** Show f' and f'' agree where they are both defined. *)
-      assert (f'_f'' : ∀ y e' e'', y < x0 ⇒ f' y e' = f'' y e'').
-      { intros y e' [ylt|yeq] lt.
-        - change (f'' _ _) with (f' _ (hyp _ ylt)). apply maponpaths; apply propproperty.
-        - apply fromempty. induction yeq. exact (Poset_nlt_self lt). }
-      assert (f''_x0 : ∏ C''x0, f'' x0 C''x0 = rec x0 (λ y lt, f' y (hyp y lt))).
-      { induction C''x0 as [lt|eq].
-        - apply fromempty. exact (Poset_nlt_self lt).
-        - now induction (uip (setproperty _) (idpath x0) eq). }
-      assert (ini'' : isInitial C'').
-      { intros x y C''y le. exact (lessthan_choice_trans x y x0 lem le C''y). }
-      assert (C''guided : isGuidedPartialSection' rec C'' f'' ini'').
-      { intros x [xlt|xeq].
-        - change (f'' x _) with (f' x (hyp x xlt)). simple refine (C'guided x _ @ _).
-          apply maponpaths; apply funextsec; intro y; apply funextsec; intro lt.
-          use f'_f''. now use (Poset_lt_istrans (y := x)).
-        - induction xeq. simple refine (f''_x0 (ii2 (idpath x)) @ _).
-          apply (maponpaths (rec x)); apply funextsec; intro y; apply funextsec; intro lt.
-          now use f'_f''. }
-      clear f'_f'' f''_x0.
-      set (C''inG := C'',,f'',,ini'',,C''guided : G).
-      exact (subtype_union_containedIn SS C''inG x0 (lessthan_choice_isrefl x0)). }
-    (** We have shown the domain of f' is all of X, so now f' yields the desired section of P. *)
-    exact (λ x, f' x (C'total x)).
-  Defined.
- *)
+        (* perhaps someone else can figure this out from this point *)
   Abort.
 
 End Recursion'.
-
-Section Accessibility.
-
-  (** Here we compare the notion of accessibility with the notions above.
-      Compare with the treatment in sub/coq/theories/Init/Wf.v . *)
-
-  Variable A : Type.
-  Variable R : A -> A -> hProp.
-
-  Inductive Acc (x: A) : Type := Acc_intro : (∏ y:A, R y x -> Acc y) -> Acc x.
-
-  Definition well_founded := ∏ a:A, Acc a.
-
-  Theorem well_founded_induction :
-    ∏ P:A -> Type,
-        (∏ x:A, (∏ y:A, R y x -> P y) -> P x) -> ∏ a:A, Acc a -> P a.
-  Proof.
-    intros P rec a acc. induction acc as [a acc ind]. exact (rec a ind).
-  Defined.
-
-  Lemma isaprop_Acc (x:A) : isaprop (Acc x).
-  Proof.
-    apply (well_founded_induction (λ a, isaprop(Acc a))).
-    - intros a H.
-      apply invproofirrelevance; intros k k'.
-
-
-  Abort.
-
-End Accessibility.
