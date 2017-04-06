@@ -2064,3 +2064,33 @@ Section Recursion'.
   Abort.
 
 End Recursion'.
+
+Section Accessibility.
+
+  (** Here we compare the notion of accessibility with the notions above.
+      Compare with the treatment in sub/coq/theories/Init/Wf.v . *)
+
+  Variable A : Type.
+  Variable R : A -> A -> hProp.
+
+  Inductive Acc (x: A) : Type := Acc_intro : (∏ y:A, R y x -> Acc y) -> Acc x.
+
+  Definition well_founded := ∏ a:A, Acc a.
+
+  Theorem well_founded_induction :
+    ∏ P:A -> Type,
+        (∏ x:A, (∏ y:A, R y x -> P y) -> P x) -> ∏ a:A, Acc a -> P a.
+  Proof.
+    intros P rec a acc. induction acc as [a acc ind]. exact (rec a ind).
+  Defined.
+
+  Lemma isaprop_Acc (x:A) : isaprop (Acc x).
+  Proof.
+    apply (well_founded_induction (λ a, isaprop(Acc a))).
+    - intros a H.
+      apply invproofirrelevance; intros k k'.
+
+
+  Abort.
+
+End Accessibility.
