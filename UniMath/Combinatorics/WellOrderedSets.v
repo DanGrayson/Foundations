@@ -1580,14 +1580,23 @@ Section Recursion.
 
       Context (X:OrderedSet).
 
-      Definition isRecursivelyOrdered_unique : hProp
-        := ∀ (P:X->hSet) (rec:recursiveHypothesis P), ∃! (f:∏ x, P x), ∀ x, f x = rec x (λ y _,  f y).
+      Definition isGuidedSection {P:X->hSet} (rec:recursiveHypothesis P) (f : (∏ (x:X), P x)%set) : hProp
+        := ∀ (x:X), f x = rec x (λ y yltx, f y).
 
-      Lemma isRecursivelyOrdered_unique_isaprop (P:X->hSet) (rec:recursiveHypothesis P) :
-        isInductivelyOrdered X -> isaprop (∑ (f:∏ x, P x), (∀ x, f x = rec x (λ y _,  f y))%set)%type.
+      Definition isRecursivelyOrdered_unique : hProp
+        := ∀ (P:X->hSet) (rec:recursiveHypothesis P), ∃! (f:∏ x, P x), isGuidedSection rec f.
+
+      Definition isRecursivelyOrdered_guided : UU
+        := (∏ (P:X->hSet) (rec:recursiveHypothesis P), ∑ (f:∏ x, P x), isGuidedSection rec f)%type.
+
+      Lemma isRecursivelyOrdered_unique_isaprop :
+        isInductivelyOrdered X ->
+        (∏ (P:X->hSet) (rec:recursiveHypothesis P), isaprop (∑ f, isGuidedSection rec f))%type.
       Proof.
-        intros ind. apply invproofirrelevance; intros [f p] [g q]. assert (e : f = g).
-        { apply funextsec. change (∏ x, f x =g x)%set. use ind. intros x H. simple refine (p x @ _ @ ! q x).
+        intros ind P rec. apply invproofirrelevance; intros [f p] [g q].
+        (** Show now that any two sections of P guided by [rec] are equal. *)
+        assert (e : f = g).
+        { apply funextsec. change (∏ x, f x = g x)%set. use ind. intros x H. simple refine (p x @ _ @ ! q x).
           apply maponpaths. apply funextsec; intros y; apply funextsec; intros lt. now use H. }
         induction e. apply maponpaths. apply funextsec; intros x. apply setproperty.
       Defined.
@@ -1597,6 +1606,14 @@ Section Recursion.
 
       Definition isRecursivelyOrdered_section : isRecursivelyOrdered_unique -> isRecursivelyOrdered
         := λ F P rec, pr11 (F P rec).
+
+      Lemma isRecursivelyOrdered_guided_to_unique :
+        isInductivelyOrdered X -> isRecursivelyOrdered_guided -> isRecursivelyOrdered_unique.
+      Proof.
+        intros ind recgui P rec. apply iscontraprop1.
+        - exact (isRecursivelyOrdered_unique_isaprop ind P rec).
+        - exact (recgui P rec).
+      Defined.
 
     End A.
 
@@ -1628,35 +1645,29 @@ Section Recursion.
 
   End Tools.
 
-  Context (X:WellOrderedSet) (lem:LEM).
+  Context (lem:LEM).
 
-  (** We prefer to use well founded induction, rather than the well founded condition on
-      the ordering, because the proof is simpler. *)
-
-  Let ind := WellOrderedSet_induction X lem.
-
-  (** *** The well founded recursion theorem for well ordered sets.  *)
-
-  Open Scope set.
-
-  Open Scope woset.
-
-  Open Scope subtype.
-
-  Theorem WellOrderedSet_recursion : isRecursivelyOrdered X.
+  Theorem OrderedSet_recursion_guided (X:OrderedSet) :
+    isInductivelyOrdered X -> isRecursivelyOrdered_guided X.
   Proof.
-    intros P rec.
-    set (G := GuidedPartialSection rec).
-    assert (K : ∀ (C D:G) x Cx Dx,
-                  (to_section C x Cx = to_section D x Dx)%set).
-    { (** We prove that any two guided sections agree where both are defined.
-          The point is that if they agree at all points y less than x, then
-          they also agree at x, because the guide function [rec] determines
-          the values at x. *)
-      intros C C'. use ind. intros x hyp Cx C'x.
-      simple refine (to_guided _ _ Cx @ _ @ ! to_guided _ _ C'x).
-      apply maponpaths, funextsec; intros y; apply funextsec; intros lt.
-      now use hyp. }
+    intros ind P rec.
+    set (isGuidedPartialSection := (λ (C:subtype_set X)
+                        (f : (∏ (c:X) (Cc : C c), P c))
+                        (ini : hProp_to_hSet (OrderedSet_isInitial C)),
+                      ∀ (x:X) (Cx:C x),
+                        f x Cx =
+                        rec x (λ y lt, f y (ini y x Cx (Poset_lt_to_le _ _ lt))))%set).
+    set (G := (∑ C f ini, isGuidedPartialSection C f ini)%type).
+    assert (K : (∀ (C D:G) (x:X) (Cx : pr1 C x) (Dx : pr1 D x), pr12 C x Cx = pr12 D x Dx)%set).
+    { intros [C [f [ini gui]]] [C' [f' [ini' gui']]]. use ind. intros x hyp Cx C'x.
+      simpl in hyp, Cx, C'x.
+      simpl.
+      simple refine (gui x Cx @ _ @ ! gui' x C'x).
+      apply maponpaths.
+      apply funextsec; intros y.
+      apply funextsec; intros lt.
+      apply hyp.
+      exact lt. }
     (** Consider the family S of subsets of X that are domains of partial guided sections. *)
     set (S := to_subset : G -> subtype_set X).
     (** For each x, consider those partial sections defined at x. *)
@@ -1672,7 +1683,7 @@ Section Recursion.
     { intros x y C'y le. apply (squash_to_hProp C'y); clear C'y; intros C.
       apply hinhpr. exact (pr1 C,,to_initial (pr1 C) x y (pr2 C) le). }
     fold US in ini'.
-    assert (C'guided : (isGuidedPartialSection rec C' f' ini')).
+    assert (C'guided : (isGuidedPartialSection C' f' ini')).
     { intros x C'x.
       apply (squash_to_hProp C'x); intros [C Cx]; change (hProptoType(to_subset C x)) in Cx.
       induction (ishinh_irrel (C,,Cx) C'x). exact (to_guided C x Cx). }
@@ -1702,7 +1713,7 @@ Section Recursion.
         - now induction (uip (setproperty _) (idpath x0) eq). }
       assert (ini'' : isInitial C'').
       { intros x y C''y le. exact (lessthan_choice_trans x y x0 lem le C''y). }
-      assert (C''guided : isGuidedPartialSection rec C'' f'' ini'').
+      assert (C''guided : isGuidedPartialSection C'' f'' ini'').
       { intros x [xlt|xeq].
         - change (f'' x _) with (f' x (hyp x xlt)). simple refine (C'guided x _ @ _).
           apply maponpaths; apply funextsec; intro y; apply funextsec; intro lt.
@@ -1714,7 +1725,48 @@ Section Recursion.
       set (C''inG := C'',,f'',,ini'',,C''guided : G).
       exact (subtype_union_containedIn S C''inG x0 (lessthan_choice_isrefl x0)). }
     (** We have shown the domain of f' is all of X, so now f' yields the desired section of P. *)
-    exact (λ x, f' x (C'total x)).
+    exists (λ x, f' x (C'total x)).
+    (** Now show the section is guided by [rec]. *)
+    intros x. simple refine (C'guided x (C'total x) @ _).
+    apply maponpaths. apply funextsec; intros y; apply funextsec; intros lt.
+    apply maponpaths. apply proofirrelevance_hProp.
+  Defined.
+
+  Context (X:WellOrderedSet).
+
+  (** We prefer to use well founded induction, rather than the well founded condition on
+      the ordering, because the proof is simpler. *)
+
+  Let ind := WellOrderedSet_induction X lem.
+
+  (** *** The well founded recursion theorem for well ordered sets.  *)
+
+  Open Scope set.
+
+  Open Scope woset.
+
+  Open Scope subtype.
+
+  Theorem WellOrderedSet_recursion_guided : isRecursivelyOrdered_guided X.
+  Proof.
+    (** One might try also to prove this theorem by following the proof
+        of Theorem 3.11 in:
+                Well-ordering and choice in toposes
+                Mawanda Mbila-Mambu
+                Journal of Pure and Applied Algebra
+                Volume 50, Issue 2, February 1988, Pages 171-184
+                http://www.sciencedirect.com/science/article/pii/0022404988901132 *)
+    exact (OrderedSet_recursion_guided X ind).
+  Defined.
+
+  Corollary WellOrderedSet_recursion_unique : isRecursivelyOrdered_unique X.
+  Proof.
+    exact (isRecursivelyOrdered_guided_to_unique X ind WellOrderedSet_recursion_guided).
+  Defined.
+
+  Corollary WellOrderedSet_recursion : isRecursivelyOrdered X.
+  Proof.
+    intros P rec. exact (pr11 (WellOrderedSet_recursion_unique P rec)).
   Defined.
 
 End Recursion.
@@ -1755,28 +1807,6 @@ Proof.
   exists (V,,R,,wo).
   exact n.
 Defined.
-
-Theorem OrderedSet_recursion (X:OrderedSet) : isInductivelyOrdered X -> isRecursivelyOrdered X.
-Proof.
-  intros ind P g.
-  set (isGuidedPartialSection := (λ (C:subtype_set X)
-                      (f : (∏ (c:X) (Cc : C c), P c))
-                      (ini : hProp_to_hSet (OrderedSet_isInitial C)),
-                    ∀ (x:X) (Cx:C x),
-                      f x Cx =
-                      g x (λ y lt, f y (ini y x Cx (Poset_lt_to_le _ _ lt))))%set).
-  set (GuidedPartialSection := (∑ C f ini, isGuidedPartialSection C f ini)%type).
-  assert (K : (∀ (C D:GuidedPartialSection) (x:X) (Cx : pr1 C x) (Dx : pr1 D x), pr12 C x Cx = pr12 D x Dx)%set).
-  { intros [C [f [ini gui]]] [C' [f' [ini' gui']]]. use ind. intros x hyp Cx C'x.
-    simpl in hyp, Cx, C'x.
-    simpl.
-    simple refine (gui x Cx @ _ @ ! gui' x C'x).
-    apply maponpaths.
-    apply funextsec; intros y.
-    apply funextsec; intros lt.
-    apply hyp.
-    exact lt. }
-Abort.
 
 Definition HLevel_to_type n : HLevel n -> UU := pr1.
 
@@ -1944,17 +1974,17 @@ Section Recursion'.
   Proof.
     intros P rec.
     set (G := GuidedPartialSection' rec).
-    assert (K : ∏ (C D:G) x Cx Dx,
+    assert (K : ∏ (x : X) (C : G) (Cx : pr1 C x) (D : G) (Dx : pr1 D x),
                   (to_section' C x Cx = to_section' D x Dx)).
     { (** We prove that any two guided sections agree where both are defined.
           The point is that if they agree at all points y less than x, then
           they also agree at x, because the guide function [rec] determines
           the values at x. *)
-      intros C D.
+      (** We proceed by induction as in [isRecursivelyOrdered_unique_isaprop] above.  *)
       use (ind (λ x, HLevelPair n _ _)).
       { (* Show the members of the family are of h-level n. *)
-        apply impred; intros Cx; apply impred; intros Dx. exact (pr2 (P x) _ _). }
-      intros x hyp Cx Dx.
+        repeat (apply impred; intro); exact (pr2 (P x) _ _). }
+      intros x hyp C Cx D Dx.
       simple refine (to_guided' _ _ Cx @ _ @ ! to_guided' _ _ Dx).
       apply maponpaths, funextsec; intros y; apply funextsec; intros lt.
       now use hyp. }
@@ -1965,14 +1995,19 @@ Section Recursion'.
     (** For each one defined at x, provide the value at x. *)
     set (defVal := (λ x C_Cx, to_section' (pr1 C_Cx) x (pr2 C_Cx)) : ∏ x (C_Cx : USS x), P x).
     (** Relate two values *)
-    set (K' := λ (x:X) (x1 x2:USS x), K (pr1 x1) (pr1 x2) x (pr2 x1) (pr2 x2) : defVal x x1 = defVal x x2).
+    set (c := λ (x:X) (u u':USS x), K x (pr1 u) (pr2 u) (pr1 u') (pr2 u') : defVal x u = defVal x u').
     (** Form the union C' of their domains. *)
     set (C' := subtype_union SS).
     (** Define a partial section f' on C'. *)
     transparent assert (f' : (∏ (x : X) (C'x : C' x), P x)%type).
-    { intros x e. set (c := K' x). use (squash_to_HLevel_3 (defVal x) _ _ e).
-      - change (const (defVal x)). intros C D. exact (c C D).
-      - intros B C D. change (c B D = c B C @ c C D).
+    { intros x e. use (squash_to_HLevel_3 (defVal x) _ _ e).
+      - change (const (defVal x)). intros C D. exact (c x C D).
+      - intros B C D.
+        change (c x B D = c x B C @ c x C D). (** Show that [c x] is transitive.  *)
+        unfold recursiveHypothesis' in rec.
+        unfold GuidedPartialSection', isGuidedPartialSection' in G.
+        unfold subtype_disjoint_union in USS.
+
 
         (*
 
