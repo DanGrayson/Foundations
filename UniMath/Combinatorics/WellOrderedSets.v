@@ -1238,7 +1238,7 @@ Defined.
 
 (** ** Well ordered sets *)
 
-Open Scope woset.
+Local Open Scope woset.
 
 Lemma isaprop_theSmallest {X : hSet}
       (R : hrel X) (total : isTotalOrder R) (S : hsubtype X) :
@@ -1806,9 +1806,9 @@ Proof.
   exact n.
 Defined.
 
-Close Scope set.
-
 Section Recursion'.
+
+  (** In this section we try to establish recursion over well ordered sets into types of h-level 3, without success. *)
 
   Open Scope type.
 
@@ -1875,35 +1875,87 @@ Section Recursion'.
     set (G := GuidedPartialSection' rec).
     assert (K : ∏ (x : X) (C : G) (Cx : pr1 C x) (D : G) (Dx : pr1 D x),
                   (to_section' C x Cx = to_section' D x Dx)).
-    { (** We prove that any two guided sections agree where both are defined.
-          The point is that if they agree at all points y less than x, then
-          they also agree at x, because the guide function [rec] determines
-          the values at x. *)
-      (** We proceed by induction as in [isRecursivelyOrdered_unique_isaprop] above.  *)
-      use (ind (λ x, HLevelPair n _ _)).
-      { (* Show the members of the family are of h-level n. *)
-        repeat (apply impred; intro); exact (pr2 (P x) _ _). }
+    { use (ind (λ x, HLevelPair n _ _)).
+      { repeat (apply impred; intro); exact (pr2 (P x) _ _). }
       intros x hyp C Cx D Dx.
       simple refine (to_guided' _ _ Cx @ _ @ ! to_guided' _ _ Dx).
       apply maponpaths, funextsec; intros y; apply funextsec; intros lt.
       now use hyp. }
-    (** Consider the family S of subsets of X that are domains of partial guided sections. *)
     set (SS := to_subset' : G -> subtype_set X).
-    (** For each x, consider those partial sections defined at x. *)
     set (USS := subtype_disjoint_union SS).
-    (** For each one defined at x, provide the value at x. *)
     set (defVal := (λ x C_Cx, to_section' (pr1 C_Cx) x (pr2 C_Cx)) : ∏ x (C_Cx : USS x), P x).
-    (** Relate two values *)
     set (c := λ (x:X) (u u':USS x), K x (pr1 u) (pr2 u) (pr1 u') (pr2 u') : defVal x u = defVal x u').
-    (** Form the union C' of their domains. *)
     set (C' := subtype_union SS).
-    (** Define a partial section f' on C'. *)
     transparent assert (f' : (∏ (x : X) (C'x : C' x), P x)%type).
     { intros x e. use (squash_to_HLevel_3 (defVal x) _ _ e).
       - change (const (defVal x)). intros C D. exact (c x C D).
-      - intros B C D.
-        change (c x B D = c x B C @ c x C D). (** Show that [c x] is transitive.  *)
-        (* perhaps someone else can figure this out from this point *)
+      - intros B C D. change (c x B D = c x B C @ c x C D).
+        (** perhaps someone else can figure this out from this point *)
   Abort.
 
 End Recursion'.
+
+Section Zorn.
+
+
+  Context (X : Poset).
+
+  Definition isChain (C : subtype_set X) := ∀ x y, C x ⇒ (C y ⇒ x ≤ y ∨ y ≤ x).
+
+  Definition Chain : hSet := ∑ C, isChain C.
+
+  Lemma imageIsChainUpto {T : OrderedSet} (f : posetmorphism T X) (t':T) :
+    isChain (λ x, ∃ t, t < t' × f t = x).
+  Proof.
+    intros x y Cx Cy.
+    apply (squash_to_hProp Cx); clear Cx; intros [t [p p']].
+    apply (squash_to_hProp Cy); clear Cy; intros [u [q q']].
+    apply (squash_to_hProp (OrderedSet_istotal t u)); intros [c|c].
+    - apply hinhpr, ii1. assert (Q := pr2 f _ _ c). induction p', q'. exact Q.
+    - apply hinhpr, ii2. assert (Q := pr2 f _ _ c). induction p', q'. exact Q.
+  Defined.
+
+  Definition imageChainUpto {T : OrderedSet} (f : posetmorphism T X) (u:T) : Chain
+    := (λ x, ∃ t, t < u × f t = x) ,, imageIsChainUpto f u.
+
+  Definition hasUpperBound (C : subtype_set X) := ∃ x, ∀ y (Cy : C y), y ≤ x.
+
+  Definition hasStrictUpperBound (C : subtype_set X) := ∃ x, ∀ y (Cy : C y), y < x.
+
+  Context (bounds : ∀ C : Chain, hasUpperBound (pr1 C)).
+
+  Lemma Zorn : AxiomOfChoice ⇒ ∃ x:X, isMaximal x.
+  Proof.
+    intros ac.
+    assert (lem := AC_to_LEM ac).
+    assert (W := bigWellOrderedSet X ac). apply (squash_to_hProp W); clear W; intros [W noincl].
+    apply (proof_by_contradiction lem); intro nomax; change hfalse.
+    assert (allnotmax := neghexisttoforallneg _ nomax); clear nomax.
+    change (hProptoType (∀ x:X, ¬ isMaximal x)) in allnotmax.
+    unfold isMaximal in allnotmax.
+    assert (allbigger := (λ x, notMaximal_to_isSmaller _ lem (allnotmax x)) : ∀ x:X, ∃ y, x < y);
+      clear allnotmax.
+    assert (bounds' : ∀ C:Chain, hasStrictUpperBound (pr1 C)).
+    { intros C. apply (squash_to_hProp (bounds C)); clear bounds; intros [y ge].
+      apply (squash_to_hProp (allbigger y)); clear allbigger; intros [y' gt].
+      apply hinhpr. exists y'. intros x Cx. exact (Poset_le_lt_istrans (ge x Cx) gt). }
+    clear bounds.
+    (** For each chain C, choose a strict upper bound. *)
+    apply (squash_to_hProp (ac _ _ bounds')); clear bounds'; intros bounds.
+    change (∏ C:Chain, ∑ y, ∀ x, pr1 C x ⇒ x < y)%type in bounds.
+    assert (Q : ∀ w:W, ∃! (f : posetmorphism (Subset_to_OrderedSet (λ v, v<w)) X),
+                               (∀ v, f v = pr1 (bounds (imageChainUpto f v))) ∧
+                               (isincl_hProp f)
+                ).
+    { use (WellOrderedSet_induction W lem).
+      intros w f.
+      apply iscontraprop1.
+      - apply invproofirrelevance; intros [[g m] [k l]] [[g' m'] [k' l']].
+        apply subtypeEquality_prop. change ((g,,m) = (g',,m')). apply subtypeEquality.
+        + intros h. apply isaprop_isaposetmorphism.
+        + change (g = g'). apply funextfun.
+          (* now prove it by induction *)
+
+  Abort.
+
+End Zorn.

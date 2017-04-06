@@ -17,10 +17,10 @@ Definition isSmallest {X : Poset} (x : X) : UU := ∏ y, x ≤ y.
 
 Definition isBiggest {X : Poset} (x : X) : UU := ∏ y, y ≤ x.
 
-Definition isMinimal {X : Poset} (x : X) : UU := ∏ y, y ≤ x -> x = y.
+Definition isMinimal {X : Poset} (x : X) : hProp := (∀ y, y ≤ x ⇒ x = y)%set.
 (* the definition in Sets.v is wrong *)
 
-Definition isMaximal {X : Poset} (x : X) : UU := ∏ y, x ≤ y -> x = y.
+Definition isMaximal {X : Poset} (x : X) : hProp := (∀ y, x ≤ y ⇒ x = y)%set.
 (* the definition in Sets.v is wrong *)
 
 Definition consecutive {X : Poset} (x y : X) : UU := x < y × ∏ z, ¬ (x < z × z < y).
@@ -179,12 +179,34 @@ Defined.
 
 Notation "m < n" := (Poset_lessthan m n) :poset.
 
-Lemma Poset_lt_istrans {X:Poset} {x y z:X} : (x < y ⇒ (y < z ⇒ x < z)).
+Lemma Poset_lt_istrans {X:Poset} {x y z:X} : x < y -> y < z -> x < z.
 Proof.
-  intros. intros [lxy nxy] [lyz nyz]. split.
+  intros ? ? ? ? [lxy nxy] [lyz nyz]. split.
   - exact (istrans_posetRelation X x y z lxy lyz).
   - intros exz. induction exz.
     exact (nxy (isantisymm_posetRelation X x y lxy lyz)).
+Defined.
+
+Lemma Poset_lt_le_istrans {X:Poset} {x y z:X} : x < y -> y ≤ z -> x < z.
+Proof.
+  intros ? ? ? ? [xy nxy] yz. split.
+  - exact (istrans_posetRelation _ _ _ _ xy yz).
+  - intros eq. induction eq. exact (nxy (isantisymm_posetRelation X x y xy yz)).
+Defined.
+
+Lemma Poset_le_lt_istrans {X:Poset} {x y z:X} : x ≤ y -> y < z -> x < z.
+Proof.
+  intros ? ? ? ? xy [yz nyz]. split.
+  - exact (istrans_posetRelation _ _ _ _ xy yz).
+  - intros eq. induction eq. exact (nyz (! isantisymm_posetRelation X x y xy yz)).
+Defined.
+
+Definition notMaximal_to_isSmaller {X : Poset} (x : X) : LEM -> ¬ isMaximal x -> ∃ y : X, x < y.
+Proof.
+  intros ? ? lem notmax. assert (Q := negforall_to_existsneg _ lem notmax); clear notmax.
+  change (hProptoType (∃ t : X, ¬ (x ≤ t ⇒ x = t))%set) in Q.
+  apply (squash_to_hProp Q); clear Q; intros [t n]. apply hinhpr. exists t.
+  exact (negimpl_to_conj _ _ lem n).
 Defined.
 
 Close Scope poset.
@@ -208,6 +230,29 @@ Definition OrderedSet_isantisymm {X:OrderedSet} (x y:X) : x ≤ y -> y ≤ x -> 
 
 Definition OrderedSet_istotal {X:OrderedSet} (x y:X): x ≤ y ∨ y ≤ x
   := pr2 X x y.
+
+Lemma isPartialOrder_resrel {X : UU} (L : hrel X) (P : hsubtype X) :
+  isPartialOrder L → isPartialOrder (resrel L P).
+Proof.
+  intros ? ? ? [[trans refl] anti]. repeat split.
+  - now apply istransresrel.
+  - now apply isreflresrel.
+  - now apply isantisymmresrel.
+Defined.
+
+Definition Subset_to_Poset {X:Poset} (Y : hsubtype X) : Poset.
+Proof.
+  intros. exists (carrier_set Y).
+  use tpair.
+  - exact (resrel (posetRelation X) Y).
+  - change (isPartialOrder (resrel (posetRelation X) Y)). apply isPartialOrder_resrel.
+    exact (pr22 X).
+Defined.
+
+Definition Subset_to_OrderedSet {X:OrderedSet} (Y : hsubtype X) : OrderedSet.
+Proof.
+  intros. exists (Subset_to_Poset Y). apply istotalresrel. use OrderedSet_istotal.
+Defined.
 
 Lemma nge_to_le {X:OrderedSet} : ∀ x y : X, ¬ (x ≤ y) ⇒ y ≤ x.
 Proof.

@@ -134,3 +134,5 @@ Proof.
   intros i f.
   exact (iscontraprop1 i (f i)).
 Defined.
+
+Definition isincl_hProp {X Y} (f:X->Y) := hProppair (isincl f) (isapropisincl f).
