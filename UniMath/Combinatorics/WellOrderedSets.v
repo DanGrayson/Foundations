@@ -2002,9 +2002,9 @@ Section Zorn.
       (** decide whether the hypothesis is defined everywhere and is order preserving  *)
       set (hyp' := convertPartialFunction' W (PartialElement X) ((λ y, y<w),,hyp) : W -> PartialElement (PartialElement X)).
       set (hyp'' := combinePartialElement ∘ hyp' : PartialFunction W X).
-      induction (lem (isPartialPosetMap hyp'')) as [par|no].
-      - exact (anElement (pr1 (bounds (chainImagePartial hyp'' par)))).
-      - exact (noElement _). }
+      exists ((∀ y lt, isElement (hyp y lt)) ∧
+              (isPartialPosetMap hyp'')).
+      intros [def par]. exact (pr1 (bounds (chainImagePartial hyp'' par))). }
   Abort.
 
 End Zorn.
