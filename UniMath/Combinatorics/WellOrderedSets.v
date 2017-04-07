@@ -1433,9 +1433,8 @@ Proof.
   exact (gt_to_nle _ _ lt ge).
 Defined.
 
-Corollary WellOrderedSet_induction (X:WellOrderedSet) : LEM -> isInductivelyOrdered X.
+Corollary WellOrderedSet_induction (lem:LEM) (X:WellOrderedSet) : isInductivelyOrdered X.
 Proof.
-  intros lem.
   apply (WellFounded_induction X lem).
   apply WO_isWellFounded.
 Defined.
@@ -1735,7 +1734,7 @@ Section Recursion.
   (** We prefer to use well founded induction, rather than the well founded condition on
       the ordering, because the proof is simpler. *)
 
-  Let ind := WellOrderedSet_induction X lem.
+  Let ind := WellOrderedSet_induction lem X.
 
   (** *** The well founded recursion theorem for well ordered sets.  *)
 
@@ -1895,14 +1894,55 @@ Section Recursion'.
 
 End Recursion'.
 
+Definition isChain {X : Poset} (C : subtype_set X) : hProp := ∀ x y, C x ⇒ (C y ⇒ x ≤ y ∨ y ≤ x).
+
+Definition Chain (X:Poset) : hSet := ∑ C, @isChain X C.
+
+Section PartialFunctions.
+
+  Definition PartialElement (X:hSet) := (∑ P:hPropset, ∏ p:pr1 P, X)%set.
+  Definition noElement X : PartialElement X := hfalse,,@fromempty (pr1 X).
+  Definition anElement {X:hSet} (x:X) : PartialElement X := htrue,,λ _, x.
+  Definition isElement {X:hSet} (x:PartialElement X) : hProp := pr1 x.
+  Definition theElement {X:hSet} (x:PartialElement X) : isElement x -> X := pr2 x.
+  Definition combinePartialElement {X:hSet} : PartialElement (PartialElement X) -> PartialElement X.
+  Proof.
+    intros Pf. exists (∑ p, isElement (pr2 Pf p))%prop.
+    intros pq. exact (theElement (pr2 Pf (pr1 pq)) (pr2 pq)).
+  Defined.
+  Definition PartialFunction (T:UU) (X:hSet) := T -> PartialElement X.
+  Definition PartialFunction' (T:UU) (X:hSet) := (∑ (P:T->hProp), ∏ t, P t -> X)%type.
+  Definition convertPartialFunction' (T:UU) (X:hSet) : PartialFunction' T X -> PartialFunction T X
+    := λ f t,pr1 f t,,pr2 f t.
+  Definition convertPartialFunction (T:UU) (X:hSet) : PartialFunction T X -> PartialFunction' T X.
+  Proof.
+    intros f. exists (λ t, pr1 (f t)). exact (λ t, pr2 (f t)).
+  Defined.
+  Definition isFunction {T:UU} {X:hSet} (f : PartialFunction T X) := ∀ t, isElement (f t).
+  Definition toFunction {T:UU} {X:hSet} (f : PartialFunction T X) : isFunction f -> (T -> X)
+    := λ a t, theElement (f t) (a t).
+  Definition imagePartialFunction {T:UU} {X:hSet} (f : PartialFunction T X) : hsubtype X
+    := λ x, ∃ t (i:isElement (f t)), x = theElement _ i.
+  Definition isPartialPosetMap {T X:Poset} (f : PartialFunction T X)
+    := ∀ t t' (i:isElement (f t)) (i':isElement (f t')), theElement _ i ≤ theElement _ i'.
+  Lemma isChainImagePartial {T:OrderedSet} {X:Poset} (f : PartialFunction T X) :
+    isPartialPosetMap f -> isChain (imagePartialFunction f).
+  Proof.
+    intros ord x y Cx Cy.
+    apply (squash_to_hProp Cx); clear Cx; intros [t [p p']].
+    apply (squash_to_hProp Cy); clear Cy; intros [u [q q']].
+    apply (squash_to_hProp (OrderedSet_istotal t u)); intros [c|c].
+    - apply hinhpr, ii1. rewrite p', q'. exact (ord t u p q).
+    - apply hinhpr, ii1. rewrite p', q'. exact (ord t u p q).
+  Defined.
+  Definition chainImagePartial {T:OrderedSet} {X:Poset} (f : PartialFunction T X) : isPartialPosetMap f -> Chain X
+    := λ par, imagePartialFunction f,,isChainImagePartial f par.
+
+End PartialFunctions.
+
 Section Zorn.
 
-
   Context (X : Poset).
-
-  Definition isChain (C : subtype_set X) := ∀ x y, C x ⇒ (C y ⇒ x ≤ y ∨ y ≤ x).
-
-  Definition Chain : hSet := ∑ C, isChain C.
 
   Lemma imageIsChainUpto {T : OrderedSet} (f : posetmorphism T X) (t':T) :
     isChain (λ x, ∃ t, t < t' × f t = x).
@@ -1915,7 +1955,7 @@ Section Zorn.
     - apply hinhpr, ii2. assert (Q := pr2 f _ _ c). induction p', q'. exact Q.
   Defined.
 
-  Definition imageChainUpto {T : OrderedSet} (f : posetmorphism T X) (u:T) : Chain
+  Definition imageChainUpto {T : OrderedSet} (f : posetmorphism T X) (u:T) : Chain X
     := (λ x, ∃ t, t < u × f t = x) ,, imageIsChainUpto f u.
 
   Lemma imageChainUpto_eqn {T : OrderedSet} (f g : posetmorphism T X) (u:T) :
@@ -1933,7 +1973,7 @@ Section Zorn.
 
   Definition hasStrictUpperBound (C : subtype_set X) := ∃ x, ∀ y (Cy : C y), y < x.
 
-  Context (bounds : ∀ C : Chain, hasUpperBound (pr1 C)).
+  Context (bounds : ∀ C : Chain X, hasUpperBound (pr1 C)).
 
   Lemma Zorn : AxiomOfChoice ⇒ ∃ x:X, isMaximal x.
   Proof.
@@ -1946,42 +1986,22 @@ Section Zorn.
     unfold isMaximal in allnotmax.
     assert (allbigger := (λ x, notMaximal_to_isSmaller _ lem (allnotmax x)) : ∀ x:X, ∃ y, x < y);
       clear allnotmax.
-    assert (bounds' : ∀ C:Chain, hasStrictUpperBound (pr1 C)).
+    assert (bounds' : ∀ C:Chain X, hasStrictUpperBound (pr1 C)).
     { intros C. apply (squash_to_hProp (bounds C)); clear bounds; intros [y ge].
       apply (squash_to_hProp (allbigger y)); clear allbigger; intros [y' gt].
       apply hinhpr. exists y'. intros x Cx. exact (Poset_le_lt_istrans (ge x Cx) gt). }
     clear bounds.
     (** For each chain C, choose a strict upper bound. *)
     apply (squash_to_hProp (ac _ _ bounds')); clear bounds'; intros bounds.
-    change (∏ C:Chain, ∑ y, ∀ x, pr1 C x ⇒ x < y)%type in bounds.
-    assert (Q : ∀ w:W, ∃! (f : posetmorphism (Subset_to_OrderedSet (λ v, v<w)) X),
-                               (∀ v, f v = pr1 (bounds (imageChainUpto f v))) ∧
-                               (isincl_hProp f)
-                ).
-    { use (WellOrderedSet_induction W lem).
+    change (∏ C:Chain X, ∑ y, ∀ x, pr1 C x ⇒ x < y)%type in bounds.
+    assert (Q : PartialFunction W X).
+    { use (WellOrderedSet_recursion lem W).
       intros w hyp.
-      apply iscontraprop1.
-      - apply invproofirrelevance; intros [[g m] [k l]] [[g' m'] [k' l']].
-        apply subtypeEquality_prop. change ((g,,m) = (g',,m')). apply subtypeEquality.
-        + intros h. apply isaprop_isaposetmorphism.
-        + change (g = g'). apply funextfun.
-          (* now prove it by induction *)
-          simpl in k.
-          change (∏ v : Subset_to_OrderedSet(λ v, v < w),
-                        g v = pr1 (bounds (imageChainUpto (g,, m) v)))%type in k.
-          change (∏ v : Subset_to_OrderedSet(λ v, v < w),
-                        g' v = pr1 (bounds (imageChainUpto (g',, m') v)))%type in k'.
-          intros [v lt]. generalize lt; clear lt. generalize v; clear v.
-          change (∀ v lt, g (v,, lt) = g' (v,, lt)).
-          use (WellOrderedSet_induction W lem).
-          intros v H ltvw. simple refine (k _ @ _ @ ! k' _).
-          apply (maponpaths (λ b, pr1 (bounds b))).
-          apply imageChainUpto_eqn. intros t lttv.
-          use H. exact (pr1 (Subset_to_OrderedSet_lt _ _ _) lttv).
-      -
-
-
-
+      set (hyp' := convertPartialFunction' W (PartialElement X) ((λ y, y<w),,hyp) : W -> PartialElement (PartialElement X)).
+      set (hyp'' := combinePartialElement ∘ hyp' : PartialFunction W X).
+      induction (lem (isPartialPosetMap hyp'')) as [par|no].
+      - exact (anElement (pr1 (bounds (chainImagePartial hyp'' par)))).
+      - exact (noElement _). }
   Abort.
 
 End Zorn.
