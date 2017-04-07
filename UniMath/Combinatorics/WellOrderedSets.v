@@ -1922,18 +1922,20 @@ Section PartialFunctions.
   Definition toFunction {T:UU} {X:hSet} (f : PartialFunction T X) : isFunction f -> (T -> X)
     := λ a t, theElement (f t) (a t).
   Definition imagePartialFunction {T:UU} {X:hSet} (f : PartialFunction T X) : hsubtype X
-    := λ x, ∃ t (i:isElement (f t)), x = theElement _ i.
-  Definition isPartialPosetMap {T X:Poset} (f : PartialFunction T X)
-    := ∀ t t' (i:isElement (f t)) (i':isElement (f t')), theElement _ i ≤ theElement _ i'.
+    := λ x, ∃ t (i:isElement (f t)), theElement _ i = x.
+  Definition isPartialPosetMap {T X:Poset} (f : PartialFunction T X) : hProp
+    := ∀ t t' (i:isElement (f t)) (i':isElement (f t')), t ≤ t' ⇒ theElement _ i ≤ theElement _ i'.
   Lemma isChainImagePartial {T:OrderedSet} {X:Poset} (f : PartialFunction T X) :
     isPartialPosetMap f -> isChain (imagePartialFunction f).
   Proof.
     intros ord x y Cx Cy.
-    apply (squash_to_hProp Cx); clear Cx; intros [t [p p']].
-    apply (squash_to_hProp Cy); clear Cy; intros [u [q q']].
-    apply (squash_to_hProp (OrderedSet_istotal t u)); intros [c|c].
-    - apply hinhpr, ii1. rewrite p', q'. exact (ord t u p q).
-    - apply hinhpr, ii1. rewrite p', q'. exact (ord t u p q).
+    apply (squash_to_hProp Cx); clear Cx; intros [t [i eq]].
+    apply (squash_to_hProp Cy); clear Cy; intros [t' [i' eq']].
+    induction eq, eq'.
+    apply (squash_to_hProp (OrderedSet_istotal t t')).
+    intros [c|c'].
+    - exact (hinhpr (ii1 (ord t t' i i' c))).
+    - exact (hinhpr (ii2 (ord t' t i' i c'))).
   Defined.
   Definition chainImagePartial {T:OrderedSet} {X:Poset} (f : PartialFunction T X) : isPartialPosetMap f -> Chain X
     := λ par, imagePartialFunction f,,isChainImagePartial f par.
@@ -1997,6 +1999,7 @@ Section Zorn.
     assert (Q : PartialFunction W X).
     { use (WellOrderedSet_recursion lem W).
       intros w hyp.
+      (** decide whether the hypothesis is defined everywhere and is order preserving  *)
       set (hyp' := convertPartialFunction' W (PartialElement X) ((λ y, y<w),,hyp) : W -> PartialElement (PartialElement X)).
       set (hyp'' := combinePartialElement ∘ hyp' : PartialFunction W X).
       induction (lem (isPartialPosetMap hyp'')) as [par|no].
