@@ -1996,15 +1996,30 @@ Section Zorn.
     (** For each chain C, choose a strict upper bound. *)
     apply (squash_to_hProp (ac _ _ bounds')); clear bounds'; intros bounds.
     change (∏ C:Chain X, ∑ y, ∀ x, pr1 C x ⇒ x < y)%type in bounds.
-    assert (Q : PartialFunction W X).
+    (** We define a function [f : W -> X], but since we want to postpone the proof that it is well
+        defined, order preserving, and injective, for simplicity, we present it first as a partial
+        function.  *)
+    transparent assert (f : (PartialFunction W X)).
     { use (WellOrderedSet_recursion lem W).
+      Open Scope oset.
       intros w hyp.
-      (** decide whether the hypothesis is defined everywhere and is order preserving  *)
-      set (hyp' := convertPartialFunction' W (PartialElement X) ((λ y, y<w),,hyp) : W -> PartialElement (PartialElement X)).
-      set (hyp'' := combinePartialElement ∘ hyp' : PartialFunction W X).
-      exists ((∀ y lt, isElement (hyp y lt)) ∧
-              (isPartialPosetMap hyp'')).
-      intros [def par]. exact (pr1 (bounds (chainImagePartial hyp'' par))). }
+      exists (∑ (def : ∀ y lt, isElement (hyp y lt)),
+              let f := λ y lt, theElement (hyp y lt) (def y lt) in
+              (∀ x, isaprop_hProp (∑ y lt, f y lt = x)%type) ∧
+              (∀ y lt y' lt', y ≤ y' ⇒ f y lt ≤ f y' lt'))%prop.
+      Open Scope woset.
+      intros dp. set (f := λ y lt, theElement (hyp y lt) (pr1 dp y lt)).
+      set (im_f := λ x, hProppair (∑ y lt, f y lt = x)%type (pr12 dp x)).
+      simple refine (pr1 (bounds (im_f,,_))).
+      abstract (
+          intros x y [v [lt eq]] [v' [lt' eq']];
+          induction eq, eq';
+          apply (squash_to_hProp (OrderedSet_istotal v v'));
+          intros [c|c']; [
+            exact (hinhpr (ii1 (pr22 dp v lt v' lt' c))) |
+            exact (hinhpr (ii2 (pr22 dp v' lt' v lt c'))) ]) using L. }
+
+
   Abort.
 
 End Zorn.

@@ -136,3 +136,5 @@ Proof.
 Defined.
 
 Definition isincl_hProp {X Y} (f:X->Y) := hProppair (isincl f) (isapropisincl f).
+
+Definition isaprop_hProp X := hProppair (isaprop X) (isapropisaprop X).
