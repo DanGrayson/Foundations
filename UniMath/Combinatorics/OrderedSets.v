@@ -249,9 +249,29 @@ Proof.
     exact (pr22 X).
 Defined.
 
+Lemma Subset_to_Poset_lt {X:OrderedSet} (Y : hsubtype X) :
+  ∀ y y' : Subset_to_Poset Y, y < y' ⇔ pr1 y < pr1 y'.
+Proof.
+  intros ? ? y y'. split.
+  - intros [le ne]. split.
+    + exact le.
+    + use (negf _ ne); clear ne; intros eq. now apply subtypeEquality_prop.
+  - intros [le ne]. split.
+    + exact le.
+    + use (negf _ ne); clear ne; intros eq. now apply maponpaths.
+Defined.
+
 Definition Subset_to_OrderedSet {X:OrderedSet} (Y : hsubtype X) : OrderedSet.
 Proof.
   intros. exists (Subset_to_Poset Y). apply istotalresrel. use OrderedSet_istotal.
+Defined.
+
+Lemma Subset_to_OrderedSet_lt {X:OrderedSet} (Y : hsubtype X) :
+  ∀ y y' : Subset_to_OrderedSet Y, y < y' ⇔ pr1 y < pr1 y'.
+Proof.
+  intros ? ? y y'. split.
+  - intros lt. now apply Subset_to_Poset_lt.
+  - intros lt. now apply Subset_to_Poset_lt.
 Defined.
 
 Lemma nge_to_le {X:OrderedSet} : ∀ x y : X, ¬ (x ≤ y) ⇒ y ≤ x.

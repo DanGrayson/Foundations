@@ -1918,6 +1918,17 @@ Section Zorn.
   Definition imageChainUpto {T : OrderedSet} (f : posetmorphism T X) (u:T) : Chain
     := (λ x, ∃ t, t < u × f t = x) ,, imageIsChainUpto f u.
 
+  Lemma imageChainUpto_eqn {T : OrderedSet} (f g : posetmorphism T X) (u:T) :
+    ( ∀ t, t < u ⇒ f t = g t ) -> imageChainUpto f u = imageChainUpto g u.
+  Proof.
+    intros e. apply subtypeEquality_prop.
+    apply funextfun; intros x.
+    change ((∃ t, t < u × f t = x) = (∃ t, t < u × g t = x)).
+    apply hPropUnivalence.
+    - apply hinhfun; intros [t [lt eq]]. exact (t ,, lt ,, ! e t lt @ eq).
+    - apply hinhfun; intros [t [lt eq]]. exact (t ,, lt ,,   e t lt @ eq).
+  Defined.
+
   Definition hasUpperBound (C : subtype_set X) := ∃ x, ∀ y (Cy : C y), y ≤ x.
 
   Definition hasStrictUpperBound (C : subtype_set X) := ∃ x, ∀ y (Cy : C y), y < x.
@@ -1948,13 +1959,28 @@ Section Zorn.
                                (isincl_hProp f)
                 ).
     { use (WellOrderedSet_induction W lem).
-      intros w f.
+      intros w hyp.
       apply iscontraprop1.
       - apply invproofirrelevance; intros [[g m] [k l]] [[g' m'] [k' l']].
         apply subtypeEquality_prop. change ((g,,m) = (g',,m')). apply subtypeEquality.
         + intros h. apply isaprop_isaposetmorphism.
         + change (g = g'). apply funextfun.
           (* now prove it by induction *)
+          simpl in k.
+          change (∏ v : Subset_to_OrderedSet(λ v, v < w),
+                        g v = pr1 (bounds (imageChainUpto (g,, m) v)))%type in k.
+          change (∏ v : Subset_to_OrderedSet(λ v, v < w),
+                        g' v = pr1 (bounds (imageChainUpto (g',, m') v)))%type in k'.
+          intros [v lt]. generalize lt; clear lt. generalize v; clear v.
+          change (∀ v lt, g (v,, lt) = g' (v,, lt)).
+          use (WellOrderedSet_induction W lem).
+          intros v H ltvw. simple refine (k _ @ _ @ ! k' _).
+          apply (maponpaths (λ b, pr1 (bounds b))).
+          apply imageChainUpto_eqn. intros t lttv.
+          use H. exact (pr1 (Subset_to_OrderedSet_lt _ _ _) lttv).
+      -
+
+
 
   Abort.
 
