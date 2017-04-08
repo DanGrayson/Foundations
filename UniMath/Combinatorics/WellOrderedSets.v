@@ -1766,6 +1766,11 @@ Section Recursion.
     intros P rec. exact (pr11 (WellOrderedSet_recursion_unique P rec)).
   Defined.
 
+  Definition WellOrderedSet_recursion_eqn (P:X->hSet) (rec:recursiveHypothesis P)
+        (f := WellOrderedSet_recursion P rec)
+    : ∏ x, f x = rec x (λ y lt, f y)
+    := pr21 (WellOrderedSet_recursion_unique P rec).
+
 End Recursion.
 
 Lemma bigSet (X:Type) : LEM -> ∑ Y:hSet, ∏ f : Y -> X, ¬ isincl f.
@@ -1900,7 +1905,7 @@ Definition Chain (X:Poset) : hSet := ∑ C, @isChain X C.
 
 Section PartialFunctions.
 
-  Definition PartialElement (X:hSet) := (∑ P:hPropset, ∏ p:pr1 P, X)%set.
+  Definition PartialElement (X:hSet) : hSet := (∑ P:hPropset, ∏ p:pr1 P, X)%set.
   Definition noElement X : PartialElement X := hfalse,,@fromempty (pr1 X).
   Definition anElement {X:hSet} (x:X) : PartialElement X := htrue,,λ _, x.
   Definition isElement {X:hSet} (x:PartialElement X) : hProp := pr1 x.
@@ -1999,9 +2004,8 @@ Section Zorn.
     (** We define a function [f : W -> X], but since we want to postpone the proof that it is well
         defined, order preserving, and injective, for simplicity, we present it first as a partial
         function.  *)
-    transparent assert (f : (PartialFunction W X)).
-    { use (WellOrderedSet_recursion lem W).
-      Open Scope oset.
+    transparent assert (rec : (recursiveHypothesis (λ w:W, PartialElement X))).
+    { Open Scope oset.
       intros w hyp.
       exists (∑ (def : ∀ y lt, isElement (hyp y lt)),
               let f := λ y lt, theElement (hyp y lt) (def y lt) in
@@ -2011,13 +2015,35 @@ Section Zorn.
       intros dp. set (f := λ y lt, theElement (hyp y lt) (pr1 dp y lt)).
       set (im_f := λ x, hProppair (∑ y lt, f y lt = x)%type (pr12 dp x)).
       simple refine (pr1 (bounds (im_f,,_))).
+      change (isChain im_f).
       abstract (
           intros x y [v [lt eq]] [v' [lt' eq']];
           induction eq, eq';
           apply (squash_to_hProp (OrderedSet_istotal v v'));
           intros [c|c']; [
             exact (hinhpr (ii1 (pr22 dp v lt v' lt' c))) |
-            exact (hinhpr (ii2 (pr22 dp v' lt' v lt c'))) ]) using L. }
+            exact (hinhpr (ii2 (pr22 dp v' lt' v lt c'))) ]) using _L_. }
+    assert (g := pr1 (WellOrderedSet_recursion_unique lem W _ rec)
+           : ∑ (f:PartialFunction W X), isGuidedSection W rec f).
+    induction g as [g eqn]. unfold isGuidedSection in eqn.
+    assert (gisfun : isFunction g).
+    { use (WellOrderedSet_induction lem W _ (λ w def, _));
+        change (isElement (g w));
+        change (hProptoType (∀ y : W, y < w ⇒ isElement (g y))) in def.
+      rewrite eqn. exists def.
+      set (f := λ y lt, theElement (g y) (def y lt)).
+      split.
+      - change (∀ x, isaprop_hProp (∑ y lt, f y lt = x)%type).
+        intros x.
+        admit.
+      - change (∀ y lt y' lt', y ≤ y' ⇒ f y lt <= f y' lt').
+        intros y lt y' lt' le.
+        admit. }
+    set (g' := toFunction g gisfun). use (noincl g').
+    apply increasing_to_isincl.
+    { intros w w'. exact (lem (w=w')). }
+    intros y w lt.
+
 
 
   Abort.

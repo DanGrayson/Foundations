@@ -292,6 +292,21 @@ Proof.
   use neq. now use OrderedSet_isantisymm.
 Defined.
 
+Lemma increasing_to_isincl {X:OrderedSet} {Y:Poset} (f:X->Y) :
+  isdeceq X -> (∀ x x', x < x' ⇒ f x < f x') -> isincl f.
+Proof.
+  intros X Y f dec lt.
+  apply isinclbetweensets;[apply setproperty|apply setproperty|].
+  intros x x' eq. induction (dec x x') as [e|n].
+  - exact e.
+  - apply fromempty; change hfalse.
+    apply (squash_to_hProp (OrderedSet_istotal x x')); intros [le|le].
+    + assert (Q := (negf(pr2 ∘ lt x x') ∘ todneg _) eq : ¬ (x < x')).
+      use Q. exact (le,,n).
+    + assert (Q' := (negf(pr2 ∘ lt x' x) ∘ todneg _) (!eq) : ¬ (x' < x)).
+      use Q'. exact (le,,negf pathsinv0 n).
+Defined.
+
 Lemma isdeceq_isdec_ordering (X:OrderedSet) : isdeceq X -> isdec_ordering X.
 Proof.
   intros ? deceq ? ?.
