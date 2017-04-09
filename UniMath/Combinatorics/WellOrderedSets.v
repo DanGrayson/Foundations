@@ -21,6 +21,10 @@ Local Open Scope tosubset.
 Delimit Scope wosubset with wosubset. (* subsets equipped with a well ordering *)
 Local Open Scope wosubset.
 
+(** Posets *)
+
+Definition isInitial {X:Poset} (Y:hsubtype X) : hProp := ∀ (x y : X), Y y ⇒ (x ≤ y ⇒ Y x)%poset.
+
 (** ** Totally ordered subsets of a set *)
 
 Definition TotalOrdering (S:hSet) : hSet := ∑ (R : hrel_set S), isTotalOrder R.
@@ -314,8 +318,6 @@ Definition WOrel (X:WellOrderedSet) : hrel X := pr12 X.
 Notation "x ≤ y" := (posetRelation (OrderedSet_to_Poset (WellOrderedSet_to_OrderedSet _)) x y) : woset.
 
 Notation "x < y" := (@Poset_lessthan (OrderedSet_to_Poset (WellOrderedSet_to_OrderedSet _)) x y) : woset.
-
-Definition isInitial {X:OrderedSet} (Y:hsubtype X) : hProp := ∀ (x y : X), Y y ⇒ (x ≤ y ⇒ Y x)%oset.
 
 (** ** Well ordered subsets of a set *)
 
@@ -1578,7 +1580,7 @@ Section Recursion.
       Context (X:OrderedSet).
 
       Definition isGuidedSection {P:X->hSet} (rec:recursiveHypothesis P) (f : (∏ (x:X), P x)%set) : hProp
-        := ∀ (x:X), f x = rec x (λ y yltx, f y).
+        := ∀ x, f x = rec x (λ y yltx, f y).
 
       Definition isRecursivelyOrdered_unique : hProp
         := ∀ (P:X->hSet) (rec:recursiveHypothesis P), ∃! (f:∏ x, P x), isGuidedSection rec f.
@@ -1632,13 +1634,103 @@ Section Recursion.
 
     End B.
 
-    Context {X:OrderedSet} {P:X->hSet} {rec:recursiveHypothesis P}
-            (C:GuidedPartialSection rec).
+    Section C.
 
-    Definition to_subset  := pr1 C.
-    Definition to_section := pr12 C.
-    Definition to_initial := pr122 C.
-    Definition to_guided  := pr222 C.
+      Context {X:OrderedSet} {P:X->hSet} {rec:recursiveHypothesis P}
+              (C:GuidedPartialSection rec).
+
+      Definition to_subset  := pr1 C.
+      Definition to_section := pr12 C.
+      Definition to_initial := pr122 C.
+      Definition to_guided  := pr222 C.
+
+    End C.
+
+    Section D.
+
+      (** In this section, we develop a mutual recursion principle, to deal with the case where
+          [recursiveHypothesis] is not powerful enough to deal with those cases where we can produce
+          the next value in [P x] only after establishing a property relating all the previous
+          values provided by the inductive hypothesis of type [∏ y, y < x -> P y].  For example, as
+          will see below, when proving Zorn's lemma by transfinite induction, there will be a
+          partially ordered set [Z], [P] will be [λ _, Z], and we need to know that the set of
+          previous values form a chain in Z. *)
+
+      Definition InitialSegment (X:Poset) : UU := ( ∑ Y:hsubtype X, isInitial Y )%type.
+
+      Definition InitialSegment_to_subtype {X:Poset} (Y : InitialSegment X) : hsubtype X := pr1 Y.
+
+      Coercion InitialSegment_to_subtype : InitialSegment >-> hsubtype.
+
+      Definition segment_all (X:Poset) : InitialSegment X
+        := tpair isInitial (λ _, htrue) (λ _ _ _ _, tt).
+
+      Definition segment_lt {X:Poset} (x:X) : InitialSegment X.
+      Proof.
+        exists (λ y, y < x). intros y z lt le. exact (Poset_le_lt_istrans le lt).
+      Defined.
+
+      Definition segment_le {X:Poset} (x:X) : InitialSegment X.
+      Proof.
+        exists (λ y, y ≤ x). intros y z l m. exact (istrans_posetRelation _ _ _ _ m l).
+      Defined.
+
+      Definition extend_fun {X:Poset} (P : X -> UU) (x:X) :
+        isdeceq X -> (∏ y, y < x -> P y) -> P x -> (∏ y, y ≤ x -> P y).
+      Proof.
+        intros dec f p y z.
+        induction (dec y x) as [eq|ne].
+        - exact (transportb _ eq p).
+        - exact (f y (z,,ne)).
+      Defined.
+
+      Definition segment_le_incl {X:Poset}
+                 (Y : InitialSegment X) (y:X) (Yy:Y y) : segment_le y ⊆ Y
+        := λ z le, pr2 Y z y Yy le.
+
+      Definition partialSection {X:Poset} (P : X -> UU) (Y : InitialSegment X)
+        := (∏ y, Y y -> P y)%type.
+
+      Definition restrict_fun {X:Poset} (P : X -> UU) (Y : InitialSegment X)
+                 (f : partialSection P Y) (y:X) (Yy:Y y) : partialSection P (segment_le y)
+       := λ z zley, f z (segment_le_incl Y y Yy z zley).
+
+      Context (X:OrderedSet) (dec : isdeceq X).
+
+      (** The goal is to get a section of P. *)
+      Context (P:X->hSet).
+
+      (** Q is a property of partial sections of P that are defined just on an initial segment of X,
+       and the goal is to establish Q by mutual induction while defining the section. *)
+      Context (Q : ∏ Y : InitialSegment X, (∏ y, Y y -> P y) -> hProp).
+
+      Definition mutualRecursiveHypothesis : UU
+        := (∏ (x:X) (f : ∏ y, y < x -> P y),
+            Q (segment_lt x) f
+            -> ∑ p : P x, Q (segment_le x) (extend_fun P x dec f p)
+           )%type.
+
+      (** Now we need Q to satisfy two good properties, one allowing passage to smaller initial
+      segments, and one allowing passage to larger initial segments. *)
+
+      Context (Qsub : ∀ (Y Y' : InitialSegment X) (i : Y ⊆ Y')
+                (f : ∏ y', Y' y' -> P y'), Q Y' f ⇒ Q Y (λ y Yy, f y (i y Yy))).
+
+      Context (Qfilt : ∀ (Y:InitialSegment X) (f : ∏ y, Y y -> P y),
+                  (∀ y (Yy : Y y), Q (segment_le y) (restrict_fun P Y f y Yy))
+                    ⇒ Q Y f).
+
+      Lemma mutualRecursionPrinciple (RO : isRecursivelyOrdered_unique X) :
+        ∏ rec : mutualRecursiveHypothesis,
+                ∑ (f : ∏ x, P x), Q (segment_all X) (λ y _, f y).
+      (* f being guided by rec is a property that can be incorporated into Q later *)
+      Proof.
+
+
+      Defined.
+
+
+    End D.
 
   End Tools.
 
@@ -2042,9 +2134,11 @@ Section Zorn.
     set (g' := toFunction g gisfun). use (noincl g').
     apply increasing_to_isincl.
     { intros w w'. exact (lem (w=w')). }
-    intros y w lt.
+    intros y w [lt ne].
+    unfold g', toFunction, theElement.
 
 
+      (* rewrite (eqn w). *)
 
   Abort.
 
