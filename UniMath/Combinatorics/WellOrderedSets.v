@@ -1925,8 +1925,8 @@ Section MutualRecursion.
 
   Definition mutualRecursiveHypothesis : UU
     := (
-        ∏ (x:X) (f : PartialSection (segment_lt x) P),
-          Q _ f -> ∑ p : P x, Q _ (extendPartialSection P x dec f p)
+        ∏ (x:X) (f : ForcedSection (segment_lt x)),
+          ∑ p : P x, Q _ (extendPartialSection P x dec (pr1 f) p)
        ) % type.
 
   Context (mut : mutualRecursiveHypothesis).
@@ -1936,46 +1936,42 @@ Section MutualRecursion.
   Lemma mutualRecursionPrinciple : iscontr (ForcedSection (segment_all X)).
   Proof.
     apply iscontraprop1; [use Qprop|].
-    set (G := ForcedPartialSection).
     (** Consider the family S of subsets of X that are domains of partial guided sections. *)
-    set (S := pr1 : G -> InitialSegment X).
+    set (I := pr1 : ForcedPartialSection -> InitialSegment X).
     (** For each x, consider those partial sections defined at x. *)
-    set (US := subtype_disjoint_union S).
+    set (UI := subtype_disjoint_union I).
     (** For each one defined at x, provide the value at x. *)
-    set (defVal := (λ x Cfq_Cx, (pr121 Cfq_Cx) x (pr2 Cfq_Cx)) : ∏ x (C_Cx : US x), P x).
-    (** Form the union C' of their domains. *)
-    set (U := segment_union S).
-    set (C' := pr1 U).
-    (** Define a partial section f' on C'. *)
-    transparent assert (f' : (PartialSection U P)).
-    { intros x e. use (squash_to_hSet (defVal x) _ e). intros C D. use ForcedPartialSection_eqn. }
-    assert (C'guided : Q _ f').
-    { use Qunion. intros x Ux. apply (squash_to_hProp Ux); intros dUx.
-      induction (ishinh_irrel dUx Ux). induction dUx as [[C [f q]] Cx].
-      exact (Qres _ _ (segment_le_incl C x Cx) f q). }
-    set (f'guided := (f',,C'guided) : ForcedSection U).
-    (** Now we prove everything is in C'. *)
+    set (defVal := (λ x f, (pr121 f) x (pr2 f)) : ∏ x (UI : UI x), P x).
+    (** Form the union of their domains. *)
+    set (U := segment_union I).
+    (** Define a forced partial section f' on U. *)
+    assert (F : ForcedSection U).
+    { use tpair.
+      { intros x e.
+        (** This is where we use the property that [P x] is a set. *)
+        use (squash_to_hSet (defVal x) _ e).
+        intros C D. use ForcedPartialSection_eqn. }
+      { use Qunion. intros x Ux. apply (squash_to_hProp Ux); intros dUx.
+        induction (ishinh_irrel dUx Ux). induction dUx as [[C [g q]] Cx].
+        exact (Qres _ _ (segment_le_incl C x Cx) g q). } }
+    (** Now we prove everything is in U. *)
     assert (Utotal : ∀ x, U x).
     { (** We prove it by induction. *)
-      use ind. intros x0 hyp.
+      use ind. intros x0 hyp; change (hProptoType (segment_lt x0 ⊆ U)) in hyp.
       (** This is the inductive step, where we prove x0 is in C', using the inductive
           hypothesis [hyp], which says that all smaller elements are in C'. *)
-      set (C''seg := segment_le x0).
-      set (C'' := pr1 C''seg).
-      assert (ini'' := pr2 C''seg : isInitial C'').
+      set (C := segment_le x0).
       (** Now we add enough structure to show C'' qualifies for membership
-          in [G], so it is contained in C', leading
-          to a contradiction. First we define a section f'' on C''. *)
-      assert (f'' : ForcedSection C''seg).
-      { change (hProptoType (segment_lt x0 ⊆ C')) in hyp.
-        set (L := restrictForcedSection _ _ hyp f'guided).
-        set (M := pr2 (mut x0 (pr1 L) (pr2 L))). (* TO DO : make mut accept L *)
-        exact (tpair (Q C''seg) _ M). }
-      set (C''inG := C''seg,,f'' : G).
-      exact (subtype_union_containedIn S C''inG x0 (isrefl_posetRelation _ x0)). }
-    (** We have shown the domain of f' is all of X, so now f' yields the desired section of P. *)
-    simple refine (restrictForcedSection _ U _ f'guided).
-    intros x _. exact (Utotal x).
+          in [ForcedPartialSection], so it is contained in C', leading
+          to a contradiction. First we define a section f' on C''. *)
+      assert (f' : ForcedSection C).
+      { assert (L := restrictForcedSection _ _ hyp F).
+        assert (M := pr2 (mut x0 L)).
+        exact (tpair (Q C) _ M). }
+      set (g := C,,f' : ForcedPartialSection).
+      exact (subtype_union_containedIn I g x0 (isrefl_posetRelation _ x0)). }
+    (** We have shown the domain of f is all of X, so now f yields the desired section of P. *)
+    exact (restrictForcedSection (segment_all X) U (λ x _, Utotal x) F).
   Defined.
 
 End MutualRecursion.
