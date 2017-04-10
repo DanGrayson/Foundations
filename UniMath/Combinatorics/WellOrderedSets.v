@@ -1858,7 +1858,7 @@ Section Recursion.
 
   Context (lem:LEM).
 
-  Theorem OrderedSet_recursion_guided (X:OrderedSet) : isInductivelyOrdered X -> isRecursivelyOrdered X.
+  Theorem OrderedSet_recursion_new (X:OrderedSet) : isInductivelyOrdered X -> isRecursivelyOrdered X.
   Proof.
     intros ind P rec.
     assert (dec := (λ x y, lem (x=y)) : isdeceq X).
@@ -1881,14 +1881,25 @@ Section Recursion.
       induction e. apply maponpaths. apply funextsec; intros x; apply funextsec; intros lt.
       apply setproperty.
     - exact ind.
-    - intros x F.
-      use tpair.
+    - intros x F. use tpair.
       + use rec. exact (pr1 F).
       + intros y le; change (hProptoType (y ≤ x)) in le.
-
-
-  (* Defined. *)
-  Abort.
+        unfold extendPartialSection. simpl.
+        induction (dec y x) as [eq|ne].
+        * induction eq.  simpl.
+          change (transportb (λ x : X, P x) (idpath y) (rec y (pr1 F)))
+                 with (rec y (pr1 F)).
+          apply maponpaths. apply funextsec; intros z. apply funextsec; intros lt.
+          induction (dec z y) as [eq|ne].
+          { induction eq. apply fromempty. now use (pr2 lt). }
+          { simpl. apply maponpaths. apply propproperty. }
+        * simpl. simple refine (pr2 F y (le,,ne) @ _).
+          apply maponpaths. apply funextsec; intros z. apply funextsec; intros lt.
+          induction (dec z x) as [eqzx|nezx].
+          { apply fromempty. induction eqzx. apply fromempty. induction lt as [le' ne'].
+            exact (ne (isantisymm_posetRelation _ y z le le')). }
+          { simpl. apply maponpaths. apply propproperty. }
+  Defined.
 
   Theorem OrderedSet_recursion_guided (X:OrderedSet) :
     isInductivelyOrdered X -> isRecursivelyOrdered_guided X.
