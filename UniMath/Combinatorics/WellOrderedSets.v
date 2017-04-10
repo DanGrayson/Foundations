@@ -1858,6 +1858,38 @@ Section Recursion.
 
   Context (lem:LEM).
 
+  Theorem OrderedSet_recursion_guided (X:OrderedSet) : isInductivelyOrdered X -> isRecursivelyOrdered X.
+  Proof.
+    intros ind P rec.
+    assert (dec := (λ x y, lem (x=y)) : isdeceq X).
+    simple refine (mutualRecursion X dec P _ _ _ _ _ _).
+    - intros Cini f. exact (isGuidedPartialSection rec (pr1 Cini) f (pr2 Cini)).
+    - intros C D i f q x Cx. change (hProptoType (C x)) in Cx. simple refine (q x (i x Cx) @ _).
+      apply maponpaths. apply funextsec; intro y; apply funextsec; intro lt.
+      unfold restrictPartialSection. apply maponpaths. apply propproperty.
+    - intros C f loc x Cx. assert (Q := loc x Cx x (isrefl_posetRelation _ _)). simpl in Q.
+      unfold restrict_fun in Q.
+      induction (proofirrelevance_hProp (pr1 C x) (segment_le_incl C x Cx x (isrefl_posetRelation X x)) Cx).
+      simple refine (Q @ _). apply maponpaths. apply funextsec; intro y; apply funextsec; intro lt.
+      apply maponpaths. apply propproperty.
+    - intros C. apply invproofirrelevance. intros [f p] [g q]. assert (e : f = g).
+      { change (@paths (∏ x Cx, P x)%set f g). apply funextsec.
+        change (∏ x, @eqset (∏ Cx, P x) (f x) (g x))%set. use ind. intros x H. apply funextsec; intros Cx.
+        simple refine (p x Cx @ _ @ ! q x Cx).
+        apply maponpaths. apply funextsec; intros y; apply funextsec; intros lt.
+        apply (maponpaths (λ k, k (pr2 C y x Cx (Poset_lt_to_le y x lt)))). now use H. }
+      induction e. apply maponpaths. apply funextsec; intros x; apply funextsec; intros lt.
+      apply setproperty.
+    - exact ind.
+    - intros x F.
+      use tpair.
+      + use rec. exact (pr1 F).
+      + intros y le; change (hProptoType (y ≤ x)) in le.
+
+
+  (* Defined. *)
+  Abort.
+
   Theorem OrderedSet_recursion_guided (X:OrderedSet) :
     isInductivelyOrdered X -> isRecursivelyOrdered_guided X.
   Proof.
