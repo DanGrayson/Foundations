@@ -1491,21 +1491,21 @@ Proof.
   intros lt. exact (pr2 lt).
 Defined.
 
-Notation "m << n" := (lessthan_choice m n) (at level 70, no associativity) :poset.
+Notation "m <∨= n" := (lessthan_choice m n) (at level 70, no associativity) :poset.
 
 Lemma lessthan_choice_isrefl {X:Poset} (x:X) : lessthan_choice x x.
 Proof.
   exact (ii2 (idpath x)).
 Defined.
 
-Lemma lessthan_choice_to_le {X:Poset} (x y:X) : x << y -> x ≤ y.
+Lemma lessthan_choice_to_le {X:Poset} (x y:X) : x <∨= y -> x ≤ y.
 Proof.
   intros [lt|eq].
   - exact (pr1 lt).
   - induction eq. apply isrefl_posetRelation.
 Defined.
 
-Lemma le_to_lessthan_choice {X:Poset} (x y:X) : LEM -> x ≤ y -> x << y.
+Lemma le_to_lessthan_choice {X:Poset} (x y:X) : LEM -> x ≤ y -> x <∨= y.
 Proof.
   intros lem le.
   induction (lem (x=y)) as [eq|ne].
@@ -1513,7 +1513,7 @@ Proof.
   - exact (ii1 (le,,ne)).
 Defined.
 
-Lemma lessthan_choice_trans {X:Poset} (x y z:X) : LEM -> x ≤ y -> y << z -> x << z.
+Lemma lessthan_choice_trans {X:Poset} (x y z:X) : LEM -> x ≤ y -> y <∨= z -> x <∨= z.
 Proof.
   intros lem lxy lyz.
   use le_to_lessthan_choice.
@@ -1522,7 +1522,7 @@ Proof.
 Defined.
 
 Lemma lessthan_choice_trans' {X:Poset} (x y z:X) :
-  LEM -> x << y -> y ≤ z -> x << z.
+  LEM -> x <∨= y -> y ≤ z -> x <∨= z.
 Proof.
   intros lem lxy lyz.
   use le_to_lessthan_choice.
@@ -1530,7 +1530,7 @@ Proof.
   - use (istrans_posetRelation X x y z _ lyz). now apply lessthan_choice_to_le.
 Defined.
 
-Lemma lessthan_choice_trans_2 {X:Poset} (x y z:X) : x << y -> y << z -> x << z.
+Lemma lessthan_choice_trans_2 {X:Poset} (x y z:X) : x <∨= y -> y <∨= z -> x <∨= z.
 Proof.
   intros [[lxy nexy]|exy] [[lyz neyz]|eyz].
   - apply ii1. now use (Poset_lt_istrans (y := y)).
@@ -1696,7 +1696,7 @@ Section Recursion.
       use ind. intros x0 hyp.
       (** This is the inductive step, where we prove x0 is in C', using the inductive
           hypothesis [hyp], which says that all smaller elements are in C'. *)
-      set (C'' := (λ x:X, x << x0)).
+      set (C'' := (λ x:X, x <∨= x0)).
       (** Now we add enough structure to show C'' qualifies for membership
           in [G], so it is contained in C', leading
           to a contradiction. First we define a section f'' on C''. *)
@@ -1808,6 +1808,12 @@ Section MutualRecursion.
     exists (λ y, y ≤ x). intros y z l m. exact (istrans_posetRelation _ _ _ _ m l).
   Defined.
 
+  Definition segment_lt_or_eq {X:Poset} (x:X) : LEM -> InitialSegment X.
+  Proof.
+    intros lem.
+    exists (λ y, y <∨= x). intros y z l m. exact (lessthan_choice_trans _ _ _ lem m l).
+  Defined.
+
   Definition segment_intersect {X:Poset} (Y Z : InitialSegment X) : InitialSegment X.
   Proof.
     use tpair.
@@ -1884,21 +1890,21 @@ Section MutualRecursion.
   adding the equations that specify how the partial section at any point is constructed, using the
   recursive hypothesis, from the previous values.  *)
 
-  Definition GuidedSection (Y:InitialSegment X) := (∑ (f : PartialSection Y P), Q Y f)%type.
+  Definition ForcedSection (Y:InitialSegment X) := (∑ (f : PartialSection Y P), Q Y f)%type.
 
-  Definition restrictGuidedSection (Y Z:InitialSegment X) :
-    Y ⊆ Z -> GuidedSection Z -> GuidedSection Y.
+  Definition restrictForcedSection (Y Z:InitialSegment X) :
+    Y ⊆ Z -> ForcedSection Z -> ForcedSection Y.
   Proof.
     intros i [f q]. exists (restrictPartialSection Y Z P i f). exact (Qres Y Z i f q).
   Defined.
 
-  Context (Qprop : ∀ (Y:InitialSegment X), isaprop_hProp ( GuidedSection Y )).
+  Context (Qprop : ∀ (Y:InitialSegment X), isaprop_hProp ( ForcedSection Y )).
 
   (** That motivates the definition of guided partial section. *)
 
-  Definition GuidedPartialSection' := (∑ (C:InitialSegment X), GuidedSection C)%type.
+  Definition ForcedPartialSection := (∑ (C:InitialSegment X), ForcedSection C)%type.
 
-  Lemma GuidedPartialSection'_eqn (C D:GuidedPartialSection')
+  Lemma ForcedPartialSection_eqn (C D:ForcedPartialSection)
         (x:X) (Cx : pr1 C x) (Dx : pr1 D x) : pr12 C x Cx = pr12 D x Dx.
   Proof.
     (** Restrict the two sections to the intersection of their domains and use [Qprop] to show
@@ -1906,9 +1912,9 @@ Section MutualRecursion.
     induction C as [C f], D as [D g].
     simpl in Cx, Dx; simpl.
     set (E := segment_intersect C D).
-    set (f' := restrictGuidedSection E C (λ _, pr1) f).
-    set (g' := restrictGuidedSection E D (λ _, pr2) g).
-    assert (eq := proofirrelevance (GuidedSection E) (Qprop E) f' g' : f' = g').
+    set (f' := restrictForcedSection E C (λ _, pr1) f).
+    set (g' := restrictForcedSection E D (λ _, pr2) g).
+    assert (eq := proofirrelevance (ForcedSection E) (Qprop E) f' g' : f' = g').
     exact (maponpaths (λ h, pr1 h x (Cx,,Dx)) eq).
   Defined.
 
@@ -1925,10 +1931,12 @@ Section MutualRecursion.
 
   Context (mut : mutualRecursiveHypothesis).
 
-  Lemma mutualRecursionPrinciple : ∃! (f : PartialSection (segment_all X) P), Q _ f.
+  Context (lem : LEM).
+
+  Lemma mutualRecursionPrinciple : iscontr (ForcedSection (segment_all X)).
   Proof.
     apply iscontraprop1; [use Qprop|].
-    set (G := GuidedPartialSection').
+    set (G := ForcedPartialSection).
     (** Consider the family S of subsets of X that are domains of partial guided sections. *)
     set (S := pr1 : G -> InitialSegment X).
     (** For each x, consider those partial sections defined at x. *)
@@ -1940,64 +1948,35 @@ Section MutualRecursion.
     set (C' := pr1 U).
     (** Define a partial section f' on C'. *)
     transparent assert (f' : (PartialSection U P)).
-    { intros x e. use (squash_to_hSet (defVal x) _ e). intros C D. use GuidedPartialSection'_eqn. }
+    { intros x e. use (squash_to_hSet (defVal x) _ e). intros C D. use ForcedPartialSection_eqn. }
     assert (C'guided : Q _ f').
     { use Qunion. intros x Ux. apply (squash_to_hProp Ux); intros dUx.
       induction (ishinh_irrel dUx Ux). induction dUx as [[C [f q]] Cx].
       exact (Qres _ _ (segment_le_incl C x Cx) f q). }
-
-
-
-    (* proof in progress *)
-
-
+    set (f'guided := (f',,C'guided) : ForcedSection U).
     (** Now we prove everything is in C'. *)
-    assert (C'total : ∀ x, C' x).
+    assert (Utotal : ∀ x, U x).
     { (** We prove it by induction. *)
       use ind. intros x0 hyp.
       (** This is the inductive step, where we prove x0 is in C', using the inductive
           hypothesis [hyp], which says that all smaller elements are in C'. *)
-      set (C'' := (λ x:X, x << x0)).
+      set (C''seg := segment_le x0).
+      set (C'' := pr1 C''seg).
+      assert (ini'' := pr2 C''seg : isInitial C'').
       (** Now we add enough structure to show C'' qualifies for membership
           in [G], so it is contained in C', leading
           to a contradiction. First we define a section f'' on C''. *)
-      transparent assert (f'' : (∏ x : X, C'' x -> P x)%type).
-      { intros x le. induction le as [lt|eq].
-        - use (f' x). now use hyp.
-        - simple refine (rec x _). intros y lt. use (f' y).
-          use hyp. exact (transportf (λ t, y<t) eq lt). }
-      (** Show f' and f'' agree where they are both defined. *)
-      assert (f'_f'' : ∀ y e' e'', y < x0 ⇒ f' y e' = f'' y e'').
-      { intros y e' [ylt|yeq] lt.
-        - change (f'' _ _) with (f' _ (hyp _ ylt)). apply maponpaths; apply propproperty.
-        - apply fromempty. induction yeq. exact (Poset_nlt_self lt). }
-      assert (f''_x0 : ∏ C''x0, f'' x0 C''x0 = rec x0 (λ y lt, f' y (hyp y lt))).
-      { induction C''x0 as [lt|eq].
-        - apply fromempty. exact (Poset_nlt_self lt).
-        - now induction (uip (setproperty _) (idpath x0) eq). }
-      assert (ini'' : isInitial C'').
-      { intros x y C''y le. exact (lessthan_choice_trans x y x0 lem le C''y). }
-      assert (C''guided : isGuidedPartialSection C'' f'' ini'').
-      { intros x [xlt|xeq].
-        - change (f'' x _) with (f' x (hyp x xlt)). simple refine (C'guided x _ @ _).
-          apply maponpaths; apply funextsec; intro y; apply funextsec; intro lt.
-          use f'_f''. now use (Poset_lt_istrans (y := x)).
-        - induction xeq. simple refine (f''_x0 (ii2 (idpath x)) @ _).
-          apply (maponpaths (rec x)); apply funextsec; intro y; apply funextsec; intro lt.
-          now use f'_f''. }
-      clear f'_f'' f''_x0.
-      set (C''inG := C'',,f'',,ini'',,C''guided : G).
-      exact (subtype_union_containedIn S C''inG x0 (lessthan_choice_isrefl x0)). }
+      assert (f'' : ForcedSection C''seg).
+      { change (hProptoType (segment_lt x0 ⊆ C')) in hyp.
+        set (L := restrictForcedSection _ _ hyp f'guided).
+        set (M := pr2 (mut x0 (pr1 L) (pr2 L))). (* TO DO : make mut accept L *)
+        exact (tpair (Q C''seg) _ M). }
+      set (C''inG := C''seg,,f'' : G).
+      exact (subtype_union_containedIn S C''inG x0 (isrefl_posetRelation _ x0)). }
     (** We have shown the domain of f' is all of X, so now f' yields the desired section of P. *)
-    exists (λ x, f' x (C'total x)).
-    (** Now show the section is guided by [rec]. *)
-    intros x. simple refine (C'guided x (C'total x) @ _).
-    apply maponpaths. apply funextsec; intros y; apply funextsec; intros lt.
-    apply maponpaths. apply proofirrelevance_hProp.
-
-
+    simple refine (restrictForcedSection _ U _ f'guided).
+    intros x _. exact (Utotal x).
   Defined.
-  Abort.                    (* proof in progress *)
 
 End MutualRecursion.
 
@@ -2131,50 +2110,6 @@ Definition isChain {X : Poset} (C : subtype_set X) : hProp := ∀ x y, C x ⇒ (
 
 Definition Chain (X:Poset) : hSet := ∑ C, @isChain X C.
 
-Section PartialFunctions.
-
-  Definition PartialElement (X:hSet) : hSet := (∑ P:hPropset, ∏ p:pr1 P, X)%set.
-  Definition noElement X : PartialElement X := hfalse,,@fromempty (pr1 X).
-  Definition anElement {X:hSet} (x:X) : PartialElement X := htrue,,λ _, x.
-  Definition isElement {X:hSet} (x:PartialElement X) : hProp := pr1 x.
-  Definition theElement {X:hSet} (x:PartialElement X) : isElement x -> X := pr2 x.
-  Definition combinePartialElement {X:hSet} : PartialElement (PartialElement X) -> PartialElement X.
-  Proof.
-    intros Pf. exists (∑ p, isElement (pr2 Pf p))%prop.
-    intros pq. exact (theElement (pr2 Pf (pr1 pq)) (pr2 pq)).
-  Defined.
-  Definition PartialFunction (T:UU) (X:hSet) := T -> PartialElement X.
-  Definition PartialFunction' (T:UU) (X:hSet) := (∑ (P:T->hProp), ∏ t, P t -> X)%type.
-  Definition convertPartialFunction' (T:UU) (X:hSet) : PartialFunction' T X -> PartialFunction T X
-    := λ f t,pr1 f t,,pr2 f t.
-  Definition convertPartialFunction (T:UU) (X:hSet) : PartialFunction T X -> PartialFunction' T X.
-  Proof.
-    intros f. exists (λ t, pr1 (f t)). exact (λ t, pr2 (f t)).
-  Defined.
-  Definition isFunction {T:UU} {X:hSet} (f : PartialFunction T X) := ∀ t, isElement (f t).
-  Definition toFunction {T:UU} {X:hSet} (f : PartialFunction T X) : isFunction f -> (T -> X)
-    := λ a t, theElement (f t) (a t).
-  Definition imagePartialFunction {T:UU} {X:hSet} (f : PartialFunction T X) : hsubtype X
-    := λ x, ∃ t (i:isElement (f t)), theElement _ i = x.
-  Definition isPartialPosetMap {T X:Poset} (f : PartialFunction T X) : hProp
-    := ∀ t t' (i:isElement (f t)) (i':isElement (f t')), t ≤ t' ⇒ theElement _ i ≤ theElement _ i'.
-  Lemma isChainImagePartial {T:OrderedSet} {X:Poset} (f : PartialFunction T X) :
-    isPartialPosetMap f -> isChain (imagePartialFunction f).
-  Proof.
-    intros ord x y Cx Cy.
-    apply (squash_to_hProp Cx); clear Cx; intros [t [i eq]].
-    apply (squash_to_hProp Cy); clear Cy; intros [t' [i' eq']].
-    induction eq, eq'.
-    apply (squash_to_hProp (OrderedSet_istotal t t')).
-    intros [c|c'].
-    - exact (hinhpr (ii1 (ord t t' i i' c))).
-    - exact (hinhpr (ii2 (ord t' t i' i c'))).
-  Defined.
-  Definition chainImagePartial {T:OrderedSet} {X:Poset} (f : PartialFunction T X) : isPartialPosetMap f -> Chain X
-    := λ par, imagePartialFunction f,,isChainImagePartial f par.
-
-End PartialFunctions.
-
 Section Zorn.
 
   Context (X : Poset).
@@ -2232,50 +2167,53 @@ Section Zorn.
     (** We define a function [f : W -> X], but since we want to postpone the proof that it is well
         defined, order preserving, and injective, for simplicity, we present it first as a partial
         function.  *)
-    transparent assert (rec : (recursiveHypothesis (λ w:W, PartialElement X))).
-    { Open Scope oset.
-      intros w hyp.
-      exists (∑ (def : ∀ y lt, isElement (hyp y lt)),
-              let f := λ y lt, theElement (hyp y lt) (def y lt) in
-              (∀ x, isaprop_hProp (∑ y lt, f y lt = x)%type) ∧
-              (∀ y lt y' lt', y ≤ y' ⇒ f y lt ≤ f y' lt'))%prop.
-      Open Scope woset.
-      intros dp. set (f := λ y lt, theElement (hyp y lt) (pr1 dp y lt)).
-      set (im_f := λ x, hProppair (∑ y lt, f y lt = x)%type (pr12 dp x)).
-      simple refine (pr1 (bounds (im_f,,_))).
-      change (isChain im_f).
-      abstract (
-          intros x y [v [lt eq]] [v' [lt' eq']];
-          induction eq, eq';
-          apply (squash_to_hProp (OrderedSet_istotal v v'));
-          intros [c|c']; [
-            exact (hinhpr (ii1 (pr22 dp v lt v' lt' c))) |
-            exact (hinhpr (ii2 (pr22 dp v' lt' v lt c'))) ]) using _L_. }
-    assert (g := pr1 (WellOrderedSet_recursion_unique lem W _ rec)
-           : ∑ (f:PartialFunction W X), isGuidedSection W rec f).
-    induction g as [g eqn]. unfold isGuidedSection in eqn.
-    assert (gisfun : isFunction g).
-    { use (WellOrderedSet_induction lem W _ (λ w def, _));
-        change (isElement (g w));
-        change (hProptoType (∀ y : W, y < w ⇒ isElement (g y))) in def.
-      rewrite eqn. exists def.
-      set (f := λ y lt, theElement (g y) (def y lt)).
-      split.
-      - change (∀ x, isaprop_hProp (∑ y lt, f y lt = x)%type).
-        intros x.
-        admit.
-      - change (∀ y lt y' lt', y ≤ y' ⇒ f y lt <= f y' lt').
-        intros y lt y' lt' le.
-        admit. }
-    set (g' := toFunction g gisfun). use (noincl g').
-    apply increasing_to_isincl.
-    { intros w w'. exact (lem (w=w')). }
-    intros y w [lt ne].
-    unfold g', toFunction, theElement.
-
-
-      (* rewrite (eqn w). *)
 
   Abort.                        (* new strategy: use mutualRecursionPrinciple above *)
 
 End Zorn.
+
+Section PartialFunctions.
+
+  (* We may not need this for anything. *)
+
+  Definition PartialElement (X:hSet) : hSet := (∑ P:hPropset, ∏ p:pr1 P, X)%set.
+  Definition noElement X : PartialElement X := hfalse,,@fromempty (pr1 X).
+  Definition anElement {X:hSet} (x:X) : PartialElement X := htrue,,λ _, x.
+  Definition isElement {X:hSet} (x:PartialElement X) : hProp := pr1 x.
+  Definition theElement {X:hSet} (x:PartialElement X) : isElement x -> X := pr2 x.
+  Definition combinePartialElement {X:hSet} : PartialElement (PartialElement X) -> PartialElement X.
+  Proof.
+    intros Pf. exists (∑ p, isElement (pr2 Pf p))%prop.
+    intros pq. exact (theElement (pr2 Pf (pr1 pq)) (pr2 pq)).
+  Defined.
+  Definition PartialFunction (T:UU) (X:hSet) := T -> PartialElement X.
+  Definition PartialFunction' (T:UU) (X:hSet) := (∑ (P:T->hProp), ∏ t, P t -> X)%type.
+  Definition convertPartialFunction' (T:UU) (X:hSet) : PartialFunction' T X -> PartialFunction T X
+    := λ f t,pr1 f t,,pr2 f t.
+  Definition convertPartialFunction (T:UU) (X:hSet) : PartialFunction T X -> PartialFunction' T X.
+  Proof.
+    intros f. exists (λ t, pr1 (f t)). exact (λ t, pr2 (f t)).
+  Defined.
+  Definition isFunction {T:UU} {X:hSet} (f : PartialFunction T X) := ∀ t, isElement (f t).
+  Definition toFunction {T:UU} {X:hSet} (f : PartialFunction T X) : isFunction f -> (T -> X)
+    := λ a t, theElement (f t) (a t).
+  Definition imagePartialFunction {T:UU} {X:hSet} (f : PartialFunction T X) : hsubtype X
+    := λ x, ∃ t (i:isElement (f t)), theElement _ i = x.
+  Definition isPartialPosetMap {T X:Poset} (f : PartialFunction T X) : hProp
+    := ∀ t t' (i:isElement (f t)) (i':isElement (f t')), t ≤ t' ⇒ theElement _ i ≤ theElement _ i'.
+  Lemma isChainImagePartial {T:OrderedSet} {X:Poset} (f : PartialFunction T X) :
+    isPartialPosetMap f -> isChain (imagePartialFunction f).
+  Proof.
+    intros ord x y Cx Cy.
+    apply (squash_to_hProp Cx); clear Cx; intros [t [i eq]].
+    apply (squash_to_hProp Cy); clear Cy; intros [t' [i' eq']].
+    induction eq, eq'.
+    apply (squash_to_hProp (OrderedSet_istotal t t')).
+    intros [c|c'].
+    - exact (hinhpr (ii1 (ord t t' i i' c))).
+    - exact (hinhpr (ii2 (ord t' t i' i c'))).
+  Defined.
+  Definition chainImagePartial {T:OrderedSet} {X:Poset} (f : PartialFunction T X) : isPartialPosetMap f -> Chain X
+    := λ par, imagePartialFunction f,,isChainImagePartial f par.
+
+End PartialFunctions.
