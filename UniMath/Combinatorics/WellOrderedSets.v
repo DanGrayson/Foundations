@@ -1647,7 +1647,10 @@ Section MutualRecursion.
   Context (Q : ∏ Y : InitialSegment X, PartialSection Y P -> hProp).
 
   (** Now we need Q to satisfy two good properties, one allowing passage to smaller initial
-  segments, and one allowing passage to larger initial segments. *)
+  segments, and one allowing passage to larger initial segments.  To help the intuition, one may put
+  a topology on the ordered set X, where the open sets are the initial segments; then the two
+  properties say that [ForcedSection] is a sheaf.  The collection of open sets of the form
+  [segment_le y] is the finest possible covering of Y. *)
 
   Context (Qres : ∀ (Y Z : InitialSegment X) (i : Y ⊆ Z) (f : PartialSection Z P),
               Q Z f ⇒ Q Y (restrictPartialSection Y Z P i f)).
@@ -1693,6 +1696,21 @@ Section MutualRecursion.
     exact (maponpaths (λ h, pr1 h x (Cx,,Dx)) eq).
   Defined.
 
+  Lemma glueForcedSections {I:UU} (F : I -> ForcedPartialSection) : ForcedSection (segment_union (λ i, pr1 (F i))).
+  Proof.
+    set (Y := λ i, pr1 (F i)).
+    set (UI := subtype_disjoint_union Y).
+    set (defVal := (λ x f, (pr12 (F (pr1 f))) x (pr2 f)) : ∏ x (f : UI x), P x).
+    use tpair.
+    - intros x e. use (squash_to_hSet (defVal x) _ e).
+      intros C D. use ForcedPartialSection_eqn.
+    - use Qunion. intros x Ux. apply (squash_to_hProp Ux); intros dUx.
+      induction (ishinh_irrel dUx Ux), dUx as [i Yix].
+      exact (Qres (segment_le x) (pr1 (F i))
+                  (segment_le_incl (pr1 (F i)) x Yix)
+                  (pr12 (F i)) (pr22 (F i))).
+  Defined.
+
   Context (ind : isInductivelyOrdered X).
 
   (** The mutual recursive hypothesis states that a partial section can
@@ -1718,21 +1736,12 @@ Section MutualRecursion.
   Proof.
     apply iscontraprop1; [use Qprop|].
     set (I := pr1 : ForcedPartialSection -> InitialSegment X).
-    set (UI := subtype_disjoint_union I).
-    set (defVal := (λ x f, (pr121 f) x (pr2 f)) : ∏ x (UI : UI x), P x).
-    assert (F : ForcedSection (segment_union I)).
-    { use tpair.
-      { intros x e. use (squash_to_hSet (defVal x) _ e).
-        intros C D. use ForcedPartialSection_eqn. }
-      { use Qunion. intros x Ux. apply (squash_to_hProp Ux); intros dUx.
-        induction (ishinh_irrel dUx Ux). induction dUx as [[C [g q]] Cx].
-        exact (Qres _ _ (segment_le_incl C x Cx) g q). } }
+    assert (F := @glueForcedSections ForcedPartialSection (idfun _) : ForcedSection (segment_union I)).
     use (restrictForcedSection (segment_all X) _ _ F).
     apply segment_all_in; intros x.
     use ind. intros x0 hyp. change (hProptoType (segment_lt x0 ⊆ segment_union I)) in hyp.
     assert (f0 : ForcedSection (segment_le x0)).
-    { assert (L := restrictForcedSection _ _ hyp F).
-      now apply mutualRecursiveHypothesis_extension. }
+    { use mutualRecursiveHypothesis_extension. exact (restrictForcedSection _ _ hyp F). }
     apply hinhpr; change (∑ s : ForcedPartialSection, pr1 (I s) x0).
     exists (segment_le x0,,f0). change (x0 <= x0). use isrefl_posetRelation.
   Defined.
