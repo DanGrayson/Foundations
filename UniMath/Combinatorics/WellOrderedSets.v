@@ -1646,92 +1646,6 @@ Section Recursion.
 
     End C.
 
-    Section D.
-
-      (** In this section, we develop a mutual recursion principle, to deal with the case where
-          [recursiveHypothesis] is not powerful enough to deal with those cases where we can produce
-          the next value in [P x] only after establishing a property relating all the previous
-          values provided by the inductive hypothesis of type [∏ y, y < x -> P y].  For example, as
-          will see below, when proving Zorn's lemma by transfinite induction, there will be a
-          partially ordered set [Z], [P] will be [λ _, Z], and we need to know that the set of
-          previous values form a chain in Z. *)
-
-      Definition InitialSegment (X:Poset) : UU := ( ∑ Y:hsubtype X, isInitial Y )%type.
-
-      Definition InitialSegment_to_subtype {X:Poset} (Y : InitialSegment X) : hsubtype X := pr1 Y.
-
-      Coercion InitialSegment_to_subtype : InitialSegment >-> hsubtype.
-
-      Definition segment_all (X:Poset) : InitialSegment X
-        := tpair isInitial (λ _, htrue) (λ _ _ _ _, tt).
-
-      Definition segment_lt {X:Poset} (x:X) : InitialSegment X.
-      Proof.
-        exists (λ y, y < x). intros y z lt le. exact (Poset_le_lt_istrans le lt).
-      Defined.
-
-      Definition segment_le {X:Poset} (x:X) : InitialSegment X.
-      Proof.
-        exists (λ y, y ≤ x). intros y z l m. exact (istrans_posetRelation _ _ _ _ m l).
-      Defined.
-
-      Definition extend_fun {X:Poset} (P : X -> UU) (x:X) :
-        isdeceq X -> (∏ y, y < x -> P y) -> P x -> (∏ y, y ≤ x -> P y).
-      Proof.
-        intros dec f p y z.
-        induction (dec y x) as [eq|ne].
-        - exact (transportb _ eq p).
-        - exact (f y (z,,ne)).
-      Defined.
-
-      Definition segment_le_incl {X:Poset}
-                 (Y : InitialSegment X) (y:X) (Yy:Y y) : segment_le y ⊆ Y
-        := λ z le, pr2 Y z y Yy le.
-
-      Definition partialSection {X:Poset} (P : X -> UU) (Y : InitialSegment X)
-        := (∏ y, Y y -> P y)%type.
-
-      Definition restrict_fun {X:Poset} (P : X -> UU) (Y : InitialSegment X)
-                 (f : partialSection P Y) (y:X) (Yy:Y y) : partialSection P (segment_le y)
-       := λ z zley, f z (segment_le_incl Y y Yy z zley).
-
-      Context (X:OrderedSet) (dec : isdeceq X).
-
-      (** The goal is to get a section of P. *)
-      Context (P:X->hSet).
-
-      (** Q is a property of partial sections of P that are defined just on an initial segment of X,
-       and the goal is to establish Q by mutual induction while defining the section. *)
-      Context (Q : ∏ Y : InitialSegment X, (∏ y, Y y -> P y) -> hProp).
-
-      Definition mutualRecursiveHypothesis : UU
-        := (∏ (x:X) (f : ∏ y, y < x -> P y),
-            Q (segment_lt x) f
-            -> ∑ p : P x, Q (segment_le x) (extend_fun P x dec f p)
-           )%type.
-
-      (** Now we need Q to satisfy two good properties, one allowing passage to smaller initial
-      segments, and one allowing passage to larger initial segments. *)
-
-      Context (Qsub : ∀ (Y Y' : InitialSegment X) (i : Y ⊆ Y')
-                (f : ∏ y', Y' y' -> P y'), Q Y' f ⇒ Q Y (λ y Yy, f y (i y Yy))).
-
-      Context (Qfilt : ∀ (Y:InitialSegment X) (f : ∏ y, Y y -> P y),
-                  (∀ y (Yy : Y y), Q (segment_le y) (restrict_fun P Y f y Yy))
-                    ⇒ Q Y f).
-
-      Lemma mutualRecursionPrinciple (RO : isRecursivelyOrdered_unique X) :
-        ∏ rec : mutualRecursiveHypothesis,
-                ∑ (f : ∏ x, P x), Q (segment_all X) (λ y _, f y).
-      (* f being guided by rec is a property that can be incorporated into Q later *)
-      Proof.
-
-
-      Defined.
-
-
-    End D.
-
   End Tools.
 
   Context (lem:LEM).
@@ -1742,7 +1656,7 @@ Section Recursion.
     intros ind P rec.
     set (isGuidedPartialSection := (λ (C:subtype_set X)
                         (f : (∏ (c:X) (Cc : C c), P c))
-                        (ini : hProp_to_hSet (OrderedSet_isInitial C)),
+                        (ini : OrderedSet_isInitial C),
                       ∀ (x:X) (Cx:C x),
                         f x Cx =
                         rec x (λ y lt, f y (ini y x Cx (Poset_lt_to_le _ _ lt))))%set).
@@ -1864,6 +1778,228 @@ Section Recursion.
     := pr21 (WellOrderedSet_recursion_unique P rec).
 
 End Recursion.
+
+Section MutualRecursion.
+
+  (** In this section, we develop a mutual recursion principle, to deal with the case where
+      [recursiveHypothesis] is not powerful enough to deal with those cases where we can produce
+      the next value in [P x] only after establishing a property relating all the previous
+      values provided by the inductive hypothesis of type [∏ y, y < x -> P y].  For example, as
+      will see below, when proving Zorn's lemma by transfinite induction, there will be a
+      partially ordered set [Z], [P] will be [λ _, Z], and we need to know that the set of
+      previous values form a chain in Z. *)
+
+  Definition InitialSegment (X:Poset) : UU := ( ∑ Y:hsubtype X, isInitial Y )%type.
+
+  Definition InitialSegment_to_subtype {X:Poset} (Y : InitialSegment X) : hsubtype X := pr1 Y.
+
+  Coercion InitialSegment_to_subtype : InitialSegment >-> hsubtype.
+
+  Definition segment_all (X:Poset) : InitialSegment X
+    := tpair isInitial (λ _, htrue) (λ _ _ _ _, tt).
+
+  Definition segment_lt {X:Poset} (x:X) : InitialSegment X.
+  Proof.
+    exists (λ y, y < x). intros y z lt le. exact (Poset_le_lt_istrans le lt).
+  Defined.
+
+  Definition segment_le {X:Poset} (x:X) : InitialSegment X.
+  Proof.
+    exists (λ y, y ≤ x). intros y z l m. exact (istrans_posetRelation _ _ _ _ m l).
+  Defined.
+
+  Definition segment_intersect {X:Poset} (Y Z : InitialSegment X) : InitialSegment X.
+  Proof.
+    use tpair.
+    - intros x. exact (Y x ∧ Z x).
+    - intros v w [Yw Zw] le.
+      split.
+      + exact (pr2 Y v w Yw le).
+      + exact (pr2 Z v w Zw le).
+  Defined.
+
+  Definition segment_union_helper {X:OrderedSet} {I:UU} (Y : I -> hsubtype X) :
+    ( ∀ i, isInitial (Y i) ) -> isInitial (subtype_union Y).
+  Proof.
+    intros ini x y Uy le. apply (squash_to_hProp Uy); clear Uy; intros i_Yiy.
+    apply hinhpr. exists (pr1 i_Yiy). use (ini _ _ _ _ le). apply i_Yiy.
+  Defined.
+
+  Definition segment_union {X:OrderedSet} {I:UU} :
+    (I -> InitialSegment X) -> InitialSegment X.
+  Proof.
+    intros Y. exists (subtype_union (λ i, pr1 (Y i))).
+    use segment_union_helper. intros i. exact (pr2 (Y i)).
+  Defined.
+
+  Definition PartialSection {X:Poset} (Y : InitialSegment X) (P : X -> UU)
+    := (∏ y, Y y -> P y)%type.
+
+  Definition restrictPartialSection {X:Poset} (Y Z : InitialSegment X) (P : X -> UU) :
+    Y ⊆ Z -> PartialSection Z P -> PartialSection Y P.
+  Proof.
+    intros i f y Yy.
+    exact (f y (i y Yy)).
+  Defined.
+
+  Definition extendPartialSection {X:Poset} (P : X -> UU) (x:X) : isdeceq X ->
+    PartialSection (segment_lt x) P -> P x ->
+    PartialSection (segment_le x) P.
+  Proof.
+    intros dec f p y z.
+    induction (dec y x) as [eq|ne].
+    - exact (transportb _ eq p).
+    - exact (f y (z,,ne)).
+  Defined.
+
+  Definition segment_le_incl {X:Poset}
+             (Y : InitialSegment X) (y:X) (Yy:Y y) : segment_le y ⊆ Y
+    := λ z le, pr2 Y z y Yy le.
+
+  Definition restrict_fun {X:Poset} {P : X -> UU} {Y : InitialSegment X}
+             (f : PartialSection Y P) {y:X} (Yy:Y y) : PartialSection (segment_le y) P
+   := λ z zley, f z (segment_le_incl Y y Yy z zley).
+
+  Context (X:OrderedSet) (dec : isdeceq X).
+
+  (** The goal is to get a section of P. *)
+  Context (P:X->hSet).
+
+  (** Q is a property of partial sections of P that are defined just on an initial segment of X,
+   and the goal is to establish Q on all of X by mutual induction over initial segments while
+   defining the section. *)
+  Context (Q : ∏ Y : InitialSegment X, PartialSection Y P -> hProp).
+
+  (** Now we need Q to satisfy two good properties, one allowing passage to smaller initial
+  segments, and one allowing passage to larger initial segments. *)
+
+  Context (Qres : ∀ (Y Z : InitialSegment X) (i : Y ⊆ Z) (f : PartialSection Z P),
+              Q Z f ⇒ Q Y (restrictPartialSection Y Z P i f)).
+
+  Context (Qunion : ∀ (Y:InitialSegment X) (f : PartialSection Y P),
+              (∀ y Yy, Q (segment_le y) (restrict_fun f Yy)) ⇒ Q Y f).
+
+  (** Now we assume that Q is sufficiently strong to "guide" a partial section so that there is at
+  most one partial section satisfying Q.  Any property not strong enough can be strengthened by
+  adding the equations that specify how the partial section at any point is constructed, using the
+  recursive hypothesis, from the previous values.  *)
+
+  Definition GuidedSection (Y:InitialSegment X) := (∑ (f : PartialSection Y P), Q Y f)%type.
+
+  Definition restrictGuidedSection (Y Z:InitialSegment X) :
+    Y ⊆ Z -> GuidedSection Z -> GuidedSection Y.
+  Proof.
+    intros i [f q]. exists (restrictPartialSection Y Z P i f). exact (Qres Y Z i f q).
+  Defined.
+
+  Context (Qprop : ∀ (Y:InitialSegment X), isaprop_hProp ( GuidedSection Y )).
+
+  (** That motivates the definition of guided partial section. *)
+
+  Definition GuidedPartialSection' := (∑ (C:InitialSegment X), GuidedSection C)%type.
+
+  Lemma GuidedPartialSection'_eqn (C D:GuidedPartialSection')
+        (x:X) (Cx : pr1 C x) (Dx : pr1 D x) : pr12 C x Cx = pr12 D x Dx.
+  Proof.
+    (** Restrict the two sections to the intersection of their domains and use [Qprop] to show
+        they agree there. *)
+    induction C as [C f], D as [D g].
+    simpl in Cx, Dx; simpl.
+    set (E := segment_intersect C D).
+    set (f' := restrictGuidedSection E C (λ _, pr1) f).
+    set (g' := restrictGuidedSection E D (λ _, pr2) g).
+    assert (eq := proofirrelevance (GuidedSection E) (Qprop E) f' g' : f' = g').
+    exact (maponpaths (λ h, pr1 h x (Cx,,Dx)) eq).
+  Defined.
+
+  Context (ind : isInductivelyOrdered X).
+
+  (** The mutual recursive hypothesis states that a partial section can
+   be extended to the next element of X in such a way that Q remains true. *)
+
+  Definition mutualRecursiveHypothesis : UU
+    := (
+        ∏ (x:X) (f : PartialSection (segment_lt x) P),
+          Q _ f -> ∑ p : P x, Q _ (extendPartialSection P x dec f p)
+       ) % type.
+
+  Context (mut : mutualRecursiveHypothesis).
+
+  Lemma mutualRecursionPrinciple : ∃! (f : PartialSection (segment_all X) P), Q _ f.
+  Proof.
+    apply iscontraprop1; [use Qprop|].
+    set (G := GuidedPartialSection').
+    (** Consider the family S of subsets of X that are domains of partial guided sections. *)
+    set (S := pr1 : G -> InitialSegment X).
+    (** For each x, consider those partial sections defined at x. *)
+    set (US := subtype_disjoint_union S).
+    (** For each one defined at x, provide the value at x. *)
+    set (defVal := (λ x Cfq_Cx, (pr121 Cfq_Cx) x (pr2 Cfq_Cx)) : ∏ x (C_Cx : US x), P x).
+    (** Form the union C' of their domains. *)
+    set (U := segment_union S).
+    set (C' := pr1 U).
+    (** Define a partial section f' on C'. *)
+    transparent assert (f' : (PartialSection U P)).
+    { intros x e. use (squash_to_hSet (defVal x) _ e). intros C D. use GuidedPartialSection'_eqn. }
+    assert (C'guided : Q _ f').
+    { use Qunion. intros x Ux. apply (squash_to_hProp Ux); intros dUx.
+      induction (ishinh_irrel dUx Ux). induction dUx as [[C [f q]] Cx].
+      exact (Qres _ _ (segment_le_incl C x Cx) f q). }
+
+
+
+    (* proof in progress *)
+
+
+    (** Now we prove everything is in C'. *)
+    assert (C'total : ∀ x, C' x).
+    { (** We prove it by induction. *)
+      use ind. intros x0 hyp.
+      (** This is the inductive step, where we prove x0 is in C', using the inductive
+          hypothesis [hyp], which says that all smaller elements are in C'. *)
+      set (C'' := (λ x:X, x << x0)).
+      (** Now we add enough structure to show C'' qualifies for membership
+          in [G], so it is contained in C', leading
+          to a contradiction. First we define a section f'' on C''. *)
+      transparent assert (f'' : (∏ x : X, C'' x -> P x)%type).
+      { intros x le. induction le as [lt|eq].
+        - use (f' x). now use hyp.
+        - simple refine (rec x _). intros y lt. use (f' y).
+          use hyp. exact (transportf (λ t, y<t) eq lt). }
+      (** Show f' and f'' agree where they are both defined. *)
+      assert (f'_f'' : ∀ y e' e'', y < x0 ⇒ f' y e' = f'' y e'').
+      { intros y e' [ylt|yeq] lt.
+        - change (f'' _ _) with (f' _ (hyp _ ylt)). apply maponpaths; apply propproperty.
+        - apply fromempty. induction yeq. exact (Poset_nlt_self lt). }
+      assert (f''_x0 : ∏ C''x0, f'' x0 C''x0 = rec x0 (λ y lt, f' y (hyp y lt))).
+      { induction C''x0 as [lt|eq].
+        - apply fromempty. exact (Poset_nlt_self lt).
+        - now induction (uip (setproperty _) (idpath x0) eq). }
+      assert (ini'' : isInitial C'').
+      { intros x y C''y le. exact (lessthan_choice_trans x y x0 lem le C''y). }
+      assert (C''guided : isGuidedPartialSection C'' f'' ini'').
+      { intros x [xlt|xeq].
+        - change (f'' x _) with (f' x (hyp x xlt)). simple refine (C'guided x _ @ _).
+          apply maponpaths; apply funextsec; intro y; apply funextsec; intro lt.
+          use f'_f''. now use (Poset_lt_istrans (y := x)).
+        - induction xeq. simple refine (f''_x0 (ii2 (idpath x)) @ _).
+          apply (maponpaths (rec x)); apply funextsec; intro y; apply funextsec; intro lt.
+          now use f'_f''. }
+      clear f'_f'' f''_x0.
+      set (C''inG := C'',,f'',,ini'',,C''guided : G).
+      exact (subtype_union_containedIn S C''inG x0 (lessthan_choice_isrefl x0)). }
+    (** We have shown the domain of f' is all of X, so now f' yields the desired section of P. *)
+    exists (λ x, f' x (C'total x)).
+    (** Now show the section is guided by [rec]. *)
+    intros x. simple refine (C'guided x (C'total x) @ _).
+    apply maponpaths. apply funextsec; intros y; apply funextsec; intros lt.
+    apply maponpaths. apply proofirrelevance_hProp.
+
+
+  Defined.
+  Abort.                    (* proof in progress *)
+
+End MutualRecursion.
 
 Lemma bigSet (X:Type) : LEM -> ∑ Y:hSet, ∏ f : Y -> X, ¬ isincl f.
 Proof.
@@ -2140,6 +2276,6 @@ Section Zorn.
 
       (* rewrite (eqn w). *)
 
-  Abort.
+  Abort.                        (* new strategy: use mutualRecursionPrinciple above *)
 
 End Zorn.
