@@ -1483,62 +1483,6 @@ Proof.
   exact (K x Sx).
 Defined.
 
-(** ** Decidable order relations *)
-
-Definition lessthan_choice {X:Poset} (x y:X) : hProp.
-Proof.
-  intros. apply (coprod_hProp (Poset_lessthan x y) (x = y))%set.
-  intros lt. exact (pr2 lt).
-Defined.
-
-Notation "m <∨= n" := (lessthan_choice m n) (at level 70, no associativity) :poset.
-
-Lemma lessthan_choice_isrefl {X:Poset} (x:X) : lessthan_choice x x.
-Proof.
-  exact (ii2 (idpath x)).
-Defined.
-
-Lemma lessthan_choice_to_le {X:Poset} (x y:X) : x <∨= y -> x ≤ y.
-Proof.
-  intros [lt|eq].
-  - exact (pr1 lt).
-  - induction eq. apply isrefl_posetRelation.
-Defined.
-
-Lemma le_to_lessthan_choice {X:Poset} (x y:X) : LEM -> x ≤ y -> x <∨= y.
-Proof.
-  intros lem le.
-  induction (lem (x=y)) as [eq|ne].
-  - exact (ii2 eq).
-  - exact (ii1 (le,,ne)).
-Defined.
-
-Lemma lessthan_choice_trans {X:Poset} (x y z:X) : LEM -> x ≤ y -> y <∨= z -> x <∨= z.
-Proof.
-  intros lem lxy lyz.
-  use le_to_lessthan_choice.
-  - exact lem.
-  - use (istrans_posetRelation X x y z lxy _). now apply lessthan_choice_to_le.
-Defined.
-
-Lemma lessthan_choice_trans' {X:Poset} (x y z:X) :
-  LEM -> x <∨= y -> y ≤ z -> x <∨= z.
-Proof.
-  intros lem lxy lyz.
-  use le_to_lessthan_choice.
-  - exact lem.
-  - use (istrans_posetRelation X x y z _ lyz). now apply lessthan_choice_to_le.
-Defined.
-
-Lemma lessthan_choice_trans_2 {X:Poset} (x y z:X) : x <∨= y -> y <∨= z -> x <∨= z.
-Proof.
-  intros [[lxy nexy]|exy] [[lyz neyz]|eyz].
-  - apply ii1. now use (Poset_lt_istrans (y := y)).
-  - apply ii1. induction eyz. exact (lxy,,nexy).
-  - apply ii1. induction exy. exact (lyz,,neyz).
-  - apply ii2. now induction exy, eyz.
-Defined.
-
 (** ** Transfinite recursion *)
 
 Local Notation "p ## x" := (transportf _ p x) (right associativity, at level 65). (* for compact displays *)
@@ -1578,12 +1522,6 @@ Section MutualRecursion.
     exists (λ y, y ≤ x). intros y z l m. exact (istrans_posetRelation _ _ _ _ m l).
   Defined.
 
-  Definition segment_lt_or_eq {X:Poset} (x:X) : LEM -> InitialSegment X.
-  Proof.
-    intros lem.
-    exists (λ y, y <∨= x). intros y z l m. exact (lessthan_choice_trans _ _ _ lem m l).
-  Defined.
-
   Definition segment_intersect {X:Poset} (Y Z : InitialSegment X) : InitialSegment X.
   Proof.
     use tpair.
@@ -1618,14 +1556,21 @@ Section MutualRecursion.
     exact (f y (i y Yy)).
   Defined.
 
-  Definition extendPartialSection {X:Poset} (P : X -> UU) (x:X) : isdeceq X ->
-    PartialSection (segment_lt x) P -> P x ->
-    PartialSection (segment_le x) P.
+  Definition choose_lt_eq {X:Poset} (dec:isdeceq X) {x y:X} (le : x ≤ y) :
+    (x < y) ⨿ (x = y).
   Proof.
-    intros dec f p y z.
-    induction (dec y x) as [eq|ne].
+    induction (dec x y) as [eq|ne].
+    - exact (ii2 eq).
+    - exact (ii1 (le,,ne)).
+  Defined.
+
+  Definition extendPartialSection {X:Poset} (P : X -> UU) (x:X) : isdeceq X ->
+    PartialSection (segment_lt x) P -> P x -> PartialSection (segment_le x) P.
+  Proof.
+    intros dec f p y le. change (hProptoType (y ≤ x)) in le.
+    induction (choose_lt_eq dec le) as [lt|eq].
+    - exact (f y lt).
     - exact (transportb _ eq p).
-    - exact (f y (z,,ne)).
   Defined.
 
   Definition segment_le_incl {X:Poset}
@@ -1772,93 +1717,24 @@ Section Recursion.
       contradiction.
    *)
 
-  Section Tools.
+  Definition recursiveHypothesis {X:OrderedSet} (P:X->hSet) : UU
+    := (∏ x:X, (∏ y, y < x -> P y) -> P x)%type.
 
-    Section A.
+  Definition isRecursivelyOrdered (X:OrderedSet)
+    := ∏ (P:X->hSet) (rec:recursiveHypothesis P), ∏ x, P x.
 
-      Section A1.
+  Open Scope set.
 
-        Context {X:OrderedSet}.
-
-        Definition recursiveHypothesis (P:X->hSet) : UU
-          := (∏ x:X, (∏ y, y < x -> P y) -> P x)%type.
-
-      End A1.
-
-      Context (X:OrderedSet).
-
-      Definition isGuidedSection {P:X->hSet} (rec:recursiveHypothesis P) (f : (∏ (x:X), P x)%set) : hProp
-        := ∀ x, f x = rec x (λ y yltx, f y).
-
-      Definition isRecursivelyOrdered_unique : hProp
-        := ∀ (P:X->hSet) (rec:recursiveHypothesis P), ∃! (f:∏ x, P x), isGuidedSection rec f.
-
-      Definition isRecursivelyOrdered_guided : UU
-        := (∏ (P:X->hSet) (rec:recursiveHypothesis P), ∑ (f:∏ x, P x), isGuidedSection rec f)%type.
-
-      Lemma isRecursivelyOrdered_unique_isaprop :
-        isInductivelyOrdered X ->
-        (∏ (P:X->hSet) (rec:recursiveHypothesis P), isaprop (∑ f, isGuidedSection rec f))%type.
-      Proof.
-        intros ind P rec. apply invproofirrelevance; intros [f p] [g q].
-        (** Show now that any two sections of P guided by [rec] are equal. *)
-        assert (e : f = g).
-        { apply funextsec. change (∏ x, f x = g x)%set. use ind. intros x H. simple refine (p x @ _ @ ! q x).
-          apply maponpaths. apply funextsec; intros y; apply funextsec; intros lt. now use H. }
-        induction e. apply maponpaths. apply funextsec; intros x. apply setproperty.
-      Defined.
-
-      Definition isRecursivelyOrdered
-        := ∏ (P:X->hSet) (rec:recursiveHypothesis P), ∏ x, P x.
-
-      Definition isRecursivelyOrdered_section : isRecursivelyOrdered_unique -> isRecursivelyOrdered
-        := λ F P rec, pr11 (F P rec).
-
-      Lemma isRecursivelyOrdered_guided_to_unique :
-        isInductivelyOrdered X -> isRecursivelyOrdered_guided -> isRecursivelyOrdered_unique.
-      Proof.
-        intros ind recgui P rec. apply iscontraprop1.
-        - exact (isRecursivelyOrdered_unique_isaprop ind P rec).
-        - exact (recgui P rec).
-      Defined.
-
-    End A.
-
-    Section B.
-
-      Context {X:OrderedSet} {P:X->hSet} (rec:recursiveHypothesis P).
-
-      Open Scope set.
-
-      Definition isGuidedPartialSection
-                 (C:subtype_set X)
-                 (f : (∏ (c:X) (Cc : C c), P c)%set)
-                 (ini : hProp_to_hSet (isInitial C)) : hProp
-        := ∀ (x:X) (Cx:C x),
-          f x Cx = rec x (λ y lt, f y (ini y x Cx (Poset_lt_to_le _ _ lt))).
-
-      Definition GuidedPartialSection : hSet
-        := ∑ C f ini, isGuidedPartialSection C f ini.
-
-    End B.
-
-    Section C.
-
-      Context {X:OrderedSet} {P:X->hSet} {rec:recursiveHypothesis P}
-              (C:GuidedPartialSection rec).
-
-      Definition to_subset  := pr1 C.
-      Definition to_section := pr12 C.
-      Definition to_initial := pr122 C.
-      Definition to_guided  := pr222 C.
-
-    End C.
-
-  End Tools.
+  Definition isGuidedPartialSection {X:OrderedSet} {P:X->hSet} (rec:recursiveHypothesis P)
+             (C:subtype_set X)
+             (f : (∏ (c:X) (Cc : C c), P c)%set)
+             (ini : hProp_to_hSet (isInitial C)) : hProp
+    := ∀ (x:X) (Cx:C x),
+      f x Cx = rec x (λ y lt, f y (ini y x Cx (Poset_lt_to_le _ _ lt))).
 
   Context (lem:LEM).
 
-  Theorem OrderedSet_recursion_new (X:OrderedSet) : isInductivelyOrdered X -> isRecursivelyOrdered X.
+  Theorem OrderedSet_recursion (X:OrderedSet) : isInductivelyOrdered X -> isRecursivelyOrdered X.
   Proof.
     intros ind P rec.
     assert (dec := (λ x y, lem (x=y)) : isdeceq X).
@@ -1884,149 +1760,18 @@ Section Recursion.
     - intros x F. use tpair.
       + use rec. exact (pr1 F).
       + intros y le; change (hProptoType (y ≤ x)) in le.
-        unfold extendPartialSection. simpl.
-        induction (dec y x) as [eq|ne].
-        * induction eq.  simpl.
-          change (transportb (λ x : X, P x) (idpath y) (rec y (pr1 F)))
-                 with (rec y (pr1 F)).
-          apply maponpaths. apply funextsec; intros z. apply funextsec; intros lt.
-          induction (dec z y) as [eq|ne].
-          { induction eq. apply fromempty. now use (pr2 lt). }
+        unfold extendPartialSection. induction (choose_lt_eq dec le) as [lt|eq].
+        * simpl. simple refine (pr2 F y lt @ _). apply maponpaths.
+          apply funextsec; intros z. apply funextsec; intros lt'.
+          match goal with |- _ = coprod_rect _ _ _ ?K => induction K as [lt''|eq''] end.
           { simpl. apply maponpaths. apply propproperty. }
-        * simpl. simple refine (pr2 F y (le,,ne) @ _).
+          { simpl. induction eq''. apply fromempty. clear lt. exact (gt_to_nle _ _ lt' le). }
+        * simpl. induction eq. change (transportb _ (idpath y) _) with (rec y (pr1 F)).
           apply maponpaths. apply funextsec; intros z. apply funextsec; intros lt.
-          induction (dec z x) as [eqzx|nezx].
-          { apply fromempty. induction eqzx. apply fromempty. induction lt as [le' ne'].
-            exact (ne (isantisymm_posetRelation _ y z le le')). }
+          match goal with |- _ = coprod_rect _ _ _ ?K => induction K as [lt''|eq''] end.
           { simpl. apply maponpaths. apply propproperty. }
+          { apply fromempty. exact (pr2 lt eq''). }
   Defined.
-
-  Theorem OrderedSet_recursion_guided (X:OrderedSet) :
-    isInductivelyOrdered X -> isRecursivelyOrdered_guided X.
-  Proof.
-    intros ind P rec.
-    set (isGuidedPartialSection := (λ (C:subtype_set X)
-                        (f : (∏ (c:X) (Cc : C c), P c))
-                        (ini : OrderedSet_isInitial C),
-                      ∀ (x:X) (Cx:C x),
-                        f x Cx =
-                        rec x (λ y lt, f y (ini y x Cx (Poset_lt_to_le _ _ lt))))%set).
-    set (G := (∑ C f ini, isGuidedPartialSection C f ini)%type).
-    assert (K : (∀ (C D:G) (x:X) (Cx : pr1 C x) (Dx : pr1 D x), pr12 C x Cx = pr12 D x Dx)%set).
-    { intros [C [f [ini gui]]] [C' [f' [ini' gui']]]. use ind. intros x hyp Cx C'x.
-      simpl in hyp, Cx, C'x.
-      simpl.
-      simple refine (gui x Cx @ _ @ ! gui' x C'x).
-      apply maponpaths.
-      apply funextsec; intros y.
-      apply funextsec; intros lt.
-      apply hyp.
-      exact lt. }
-    (** Consider the family S of subsets of X that are domains of partial guided sections. *)
-    set (S := to_subset : G -> subtype_set X).
-    (** For each x, consider those partial sections defined at x. *)
-    set (US := subtype_disjoint_union S).
-    (** For each one defined at x, provide the value at x. *)
-    set (defVal := (λ x C_Cx, to_section (pr1 C_Cx) x (pr2 C_Cx)) : ∏ x (C_Cx : US x), P x).
-    (** Form the union C' of their domains. *)
-    set (C' := subtype_union S).
-    (** Define a partial section f' on C'. *)
-    transparent assert (f' : (∏ (x : X) (C'x : C' x), P x)%type).
-    { intros x e. use (squash_to_hSet (defVal x) _ e). intros C D. now use K. }
-    transparent assert ( ini' : (isInitial C') ).
-    { intros x y C'y le. apply (squash_to_hProp C'y); clear C'y; intros C.
-      apply hinhpr. exact (pr1 C,,to_initial (pr1 C) x y (pr2 C) le). }
-    fold US in ini'.
-    assert (C'guided : (isGuidedPartialSection C' f' ini')).
-    { intros x C'x.
-      apply (squash_to_hProp C'x); intros [C Cx]; change (hProptoType(to_subset C x)) in Cx.
-      induction (ishinh_irrel (C,,Cx) C'x). exact (to_guided C x Cx). }
-    (** Now we prove everything is in C'. *)
-    assert (C'total : ∀ x, C' x).
-    { (** We prove it by induction. *)
-      use ind. intros x0 hyp.
-      (** This is the inductive step, where we prove x0 is in C', using the inductive
-          hypothesis [hyp], which says that all smaller elements are in C'. *)
-      set (C'' := (λ x:X, x <∨= x0)).
-      (** Now we add enough structure to show C'' qualifies for membership
-          in [G], so it is contained in C', leading
-          to a contradiction. First we define a section f'' on C''. *)
-      transparent assert (f'' : (∏ x : X, C'' x -> P x)%type).
-      { intros x le. induction le as [lt|eq].
-        - use (f' x). now use hyp.
-        - simple refine (rec x _). intros y lt. use (f' y).
-          use hyp. exact (transportf (λ t, y<t) eq lt). }
-      (** Show f' and f'' agree where they are both defined. *)
-      assert (f'_f'' : ∀ y e' e'', y < x0 ⇒ f' y e' = f'' y e'').
-      { intros y e' [ylt|yeq] lt.
-        - change (f'' _ _) with (f' _ (hyp _ ylt)). apply maponpaths; apply propproperty.
-        - apply fromempty. induction yeq. exact (Poset_nlt_self lt). }
-      assert (f''_x0 : ∏ C''x0, f'' x0 C''x0 = rec x0 (λ y lt, f' y (hyp y lt))).
-      { induction C''x0 as [lt|eq].
-        - apply fromempty. exact (Poset_nlt_self lt).
-        - now induction (uip (setproperty _) (idpath x0) eq). }
-      assert (ini'' : isInitial C'').
-      { intros x y C''y le. exact (lessthan_choice_trans x y x0 lem le C''y). }
-      assert (C''guided : isGuidedPartialSection C'' f'' ini'').
-      { intros x [xlt|xeq].
-        - change (f'' x _) with (f' x (hyp x xlt)). simple refine (C'guided x _ @ _).
-          apply maponpaths; apply funextsec; intro y; apply funextsec; intro lt.
-          use f'_f''. now use (Poset_lt_istrans (y := x)).
-        - induction xeq. simple refine (f''_x0 (ii2 (idpath x)) @ _).
-          apply (maponpaths (rec x)); apply funextsec; intro y; apply funextsec; intro lt.
-          now use f'_f''. }
-      clear f'_f'' f''_x0.
-      set (C''inG := C'',,f'',,ini'',,C''guided : G).
-      exact (subtype_union_containedIn S C''inG x0 (lessthan_choice_isrefl x0)). }
-    (** We have shown the domain of f' is all of X, so now f' yields the desired section of P. *)
-    exists (λ x, f' x (C'total x)).
-    (** Now show the section is guided by [rec]. *)
-    intros x. simple refine (C'guided x (C'total x) @ _).
-    apply maponpaths. apply funextsec; intros y; apply funextsec; intros lt.
-    apply maponpaths. apply proofirrelevance_hProp.
-  Defined.
-
-  Context (X:WellOrderedSet).
-
-  (** We prefer to use well founded induction, rather than the well founded condition on
-      the ordering, because the proof is simpler. *)
-
-  Let ind := WellOrderedSet_induction lem X.
-
-  (** *** The well founded recursion theorem for well ordered sets.  *)
-
-  Open Scope set.
-
-  Open Scope woset.
-
-  Open Scope subtype.
-
-  Theorem WellOrderedSet_recursion_guided : isRecursivelyOrdered_guided X.
-  Proof.
-    (** One might try also to prove this theorem by following the proof
-        of Theorem 3.11 in:
-                Well-ordering and choice in toposes
-                Mawanda Mbila-Mambu
-                Journal of Pure and Applied Algebra
-                Volume 50, Issue 2, February 1988, Pages 171-184
-                http://www.sciencedirect.com/science/article/pii/0022404988901132 *)
-    exact (OrderedSet_recursion_guided X ind).
-  Defined.
-
-  Corollary WellOrderedSet_recursion_unique : isRecursivelyOrdered_unique X.
-  Proof.
-    exact (isRecursivelyOrdered_guided_to_unique X ind WellOrderedSet_recursion_guided).
-  Defined.
-
-  Corollary WellOrderedSet_recursion : isRecursivelyOrdered X.
-  Proof.
-    intros P rec. exact (pr11 (WellOrderedSet_recursion_unique P rec)).
-  Defined.
-
-  Definition WellOrderedSet_recursion_eqn (P:X->hSet) (rec:recursiveHypothesis P)
-        (f := WellOrderedSet_recursion P rec)
-    : ∏ x, f x = rec x (λ y lt, f y)
-    := pr21 (WellOrderedSet_recursion_unique P rec).
 
 End Recursion.
 
@@ -2178,3 +1923,71 @@ Section PartialFunctions.
     := λ par, imagePartialFunction f,,isChainImagePartial f par.
 
 End PartialFunctions.
+
+Section LessThanOrEqual.
+
+  (** ** Decidable order relations *)
+
+  (* We may not need this for anything. *)
+
+  Definition lessthan_choice {X:Poset} (x y:X) : hProp.
+  Proof.
+    intros. apply (coprod_hProp (Poset_lessthan x y) (x = y))%set.
+    intros lt. exact (pr2 lt).
+  Defined.
+
+  Notation "m <∨= n" := (lessthan_choice m n) (at level 70, no associativity) :poset.
+
+  Lemma lessthan_choice_isrefl {X:Poset} (x:X) : lessthan_choice x x.
+  Proof.
+    exact (ii2 (idpath x)).
+  Defined.
+
+  Lemma lessthan_choice_to_le {X:Poset} (x y:X) : x <∨= y -> x ≤ y.
+  Proof.
+    intros [lt|eq].
+    - exact (pr1 lt).
+    - induction eq. apply isrefl_posetRelation.
+  Defined.
+
+  Lemma le_to_lessthan_choice {X:Poset} (x y:X) : LEM -> x ≤ y -> x <∨= y.
+  Proof.
+    intros lem le.
+    induction (lem (x=y)) as [eq|ne].
+    - exact (ii2 eq).
+    - exact (ii1 (le,,ne)).
+  Defined.
+
+  Lemma lessthan_choice_trans {X:Poset} (x y z:X) : LEM -> x ≤ y -> y <∨= z -> x <∨= z.
+  Proof.
+    intros lem lxy lyz.
+    use le_to_lessthan_choice.
+    - exact lem.
+    - use (istrans_posetRelation X x y z lxy _). now apply lessthan_choice_to_le.
+  Defined.
+
+  Lemma lessthan_choice_trans' {X:Poset} (x y z:X) :
+    LEM -> x <∨= y -> y ≤ z -> x <∨= z.
+  Proof.
+    intros lem lxy lyz.
+    use le_to_lessthan_choice.
+    - exact lem.
+    - use (istrans_posetRelation X x y z _ lyz). now apply lessthan_choice_to_le.
+  Defined.
+
+  Lemma lessthan_choice_trans_2 {X:Poset} (x y z:X) : x <∨= y -> y <∨= z -> x <∨= z.
+  Proof.
+    intros [[lxy nexy]|exy] [[lyz neyz]|eyz].
+    - apply ii1. now use (Poset_lt_istrans (y := y)).
+    - apply ii1. induction eyz. exact (lxy,,nexy).
+    - apply ii1. induction exy. exact (lyz,,neyz).
+    - apply ii2. now induction exy, eyz.
+  Defined.
+
+  Definition segment_lt_or_eq {X:Poset} (x:X) : LEM -> InitialSegment X.
+  Proof.
+    intros lem.
+    exists (λ y, y <∨= x). intros y z l m. exact (lessthan_choice_trans _ _ _ lem m l).
+  Defined.
+
+End LessThanOrEqual.
