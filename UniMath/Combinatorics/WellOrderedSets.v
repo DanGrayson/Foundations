@@ -1927,12 +1927,9 @@ Proof.
      use the axiom of choice, namely: consider the set K of well ordered sets for which there exists
      an inclusion into X.  Well order K by initial inclusion.  If there were an inclusion of K into
      X, then K would be an element of K. *)
-  intros ac.
-  induction (bigSet X (AC_to_LEM ac)) as [V n].
+  intros ac. induction (bigSet X (AC_to_LEM ac)) as [V n].
   apply (squash_to_hProp (ZermeloWellOrdering V ac)); intros [R wo].
-  apply hinhpr.
-  exists (V,,R,,wo).
-  exact n.
+  apply hinhpr. exists (V,,R,,wo). exact n.
 Defined.
 
 Definition isChain {X : Poset} (C : subtype_set X) : hProp := ∀ x y, C x ⇒ (C y ⇒ x ≤ y ∨ y ≤ x).
@@ -1966,8 +1963,6 @@ Section Zorn.
 
   Context (X : Poset).
 
-  Context (bounds : ∀ C : Chain X, hasUpperBound C).
-
   Section ConstantFamily.
 
     Context {W:OrderedSet}.
@@ -1976,11 +1971,32 @@ Section Zorn.
 
     Local Definition isInj {C:InitialSegment W} (f:PartialSection C _X) := ∀ v w Cv Cw, f v Cv = f w Cw ⇒ v = w.
 
+    Lemma isInj_sub {Y Z:InitialSegment W} (i : Y ⊆ Z) (f : PartialSection Z _X) :
+      isInj f -> isInj (restrictPartialSection Y Z _X i f).
+    Proof.
+      intros inj v w Yv Yw e. exact (inj v w (i v Yv) (i w Yw) e).
+    Defined.
+
     Local Definition im {C:InitialSegment W} (f:PartialSection C _X) : hsubtype X
       := λ (x:X), ∃ (w':W) (Cw':C w'), f w' Cw' = x.
 
     Local Definition im_upto {C:InitialSegment W} (f:PartialSection C _X) (w:W) : hsubtype X
       := λ (x:X), ∃ (w':W) (Cw':C w'), w' < w ∧ f w' Cw' = x.
+
+    Lemma im_upto_eqn {Y Z:InitialSegment W} (i : Y ⊆ Z) (f : PartialSection Z _X) (w : W) (Yw : Y w) :
+      im_upto f w = im_upto (restrictPartialSection Y Z (λ x : W, _X x) i f) w.
+    Proof.
+      apply funextfun; intros x. apply subtypeEquality.
+      - intros Q. apply isapropisaprop.
+      - apply propositionalUnivalenceAxiom.
+        + apply propproperty.
+        + apply propproperty.
+        + intros r. apply (squash_to_hProp r); clear r; intros [v [Zv [[le ne] eq]]].
+          apply hinhpr. exists v. exists (pr2 Y v w Yw le). exists (le,,ne).
+          simple refine (_ @ eq). change (f v (i v (pr2 Y v w Yw le)) = f v Zv).
+          apply maponpaths. apply propproperty.
+        + admit.
+    Admitted.
 
     Lemma im_upto_upto_sub {C D:InitialSegment W} (i:C⊆D) (f:PartialSection D _X) (w:W) :
       im_upto (restrictPartialSection _ _ _ i f) w ⊆ im_upto f w.
@@ -2017,6 +2033,8 @@ Section Zorn.
     : Chain X
     := im_upto f w ,, im_upto_isChain f w Cw ch.
 
+  Context (bounds : ∀ C : Chain X, hasUpperBound C).
+
   Lemma Zorn : ∃ x:X, isMaximal x.
   Proof.
     apply (proof_by_contradiction lem); intro nomax; change hfalse.
@@ -2048,10 +2066,11 @@ Section Zorn.
         use tpair.
         + exact (im_sub_isChain _ _ ch).
         + split.
-          * admit.              (* separate lemma *)
-          * intros w Cw. unfold restrictPartialSection at 1. simple refine (gui w (i w Cw) @ _).
-            apply (maponpaths (λ K, pr1 (bound K))).
-            admit.              (* separate lemma *)
+          * now apply isInj_sub.
+          * intros w Yw. unfold restrictPartialSection at 1. simple refine (gui w (i w Yw) @ _).
+            apply (maponpaths (λ K, pr1 (bound K))). apply subtypeEquality_prop.
+            change (im_upto f w = im_upto (restrictPartialSection Y Z _X i f) w).
+            exact (im_upto_eqn i f w Yw).
       - intros C f H.
         use tpair.
         + admit.
