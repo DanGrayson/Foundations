@@ -1574,12 +1574,16 @@ Section MutualRecursion.
   Defined.
 
   Definition segment_le_incl {X:Poset}
-             (Y : InitialSegment X) (y:X) (Yy:Y y) : segment_le y ⊆ Y
+             {Y : InitialSegment X} {y:X} (Yy:Y y) : segment_le y ⊆ Y
     := λ z le, pr2 Y z y Yy le.
+
+  Definition segment_lt_incl {X:Poset}
+             {Y : InitialSegment X} {y:X} (Yy:Y y) : segment_lt y ⊆ Y
+    := λ z lt, pr2 Y z y Yy (Poset_lt_to_le _ _ lt).
 
   Definition restrict_fun {X:Poset} {P : X -> UU} {Y : InitialSegment X}
              (f : PartialSection Y P) {y:X} (Yy:Y y) : PartialSection (segment_le y) P
-   := λ z zley, f z (segment_le_incl Y y Yy z zley).
+   := λ z zley, f z (segment_le_incl Yy z zley).
 
   Context (X:OrderedSet) (dec : isdeceq X).
 
@@ -1652,7 +1656,7 @@ Section MutualRecursion.
     - use Qunion. intros x Ux. apply (squash_to_hProp Ux); intros dUx.
       induction (ishinh_irrel dUx Ux), dUx as [i Yix].
       exact (Qres (segment_le x) (pr1 (F i))
-                  (segment_le_incl (pr1 (F i)) x Yix)
+                  (segment_le_incl Yix)
                   (pr12 (F i)) (pr22 (F i))).
   Defined.
 
@@ -1726,11 +1730,8 @@ Section Recursion.
   Open Scope set.
 
   Definition isGuidedPartialSection {X:OrderedSet} {P:X->hSet} (rec:recursiveHypothesis P)
-             (C:subtype_set X)
-             (f : (∏ (c:X) (Cc : C c), P c)%set)
-             (ini : hProp_to_hSet (isInitial C)) : hProp
-    := ∀ (x:X) (Cx:C x),
-      f x Cx = rec x (λ y lt, f y (ini y x Cx (Poset_lt_to_le _ _ lt))).
+             (C:InitialSegment X) (f : PartialSection C P) : hProp
+    := ∀ (x:X) (Cx:C x), f x Cx = rec x (λ y lt, f y (segment_lt_incl Cx y lt)).
 
   Context (lem:LEM).
 
@@ -1739,14 +1740,15 @@ Section Recursion.
     intros ind P rec.
     assert (dec := (λ x y, lem (x=y)) : isdeceq X).
     simple refine (mutualRecursion X dec P _ _ _ _ _ _).
-    - intros Cini f. exact (isGuidedPartialSection rec (pr1 Cini) f (pr2 Cini)).
+    - intros C f. exact (isGuidedPartialSection rec C f).
     - intros C D i f q x Cx. change (hProptoType (C x)) in Cx. simple refine (q x (i x Cx) @ _).
       apply maponpaths. apply funextsec; intro y; apply funextsec; intro lt.
       unfold restrictPartialSection. apply maponpaths. apply propproperty.
     - intros C f loc x Cx. assert (Q := loc x Cx x (isrefl_posetRelation _ _)). simpl in Q.
       unfold restrict_fun in Q.
-      induction (proofirrelevance_hProp (pr1 C x) (segment_le_incl C x Cx x (isrefl_posetRelation X x)) Cx).
-      simple refine (Q @ _). apply maponpaths. apply funextsec; intro y; apply funextsec; intro lt.
+            induction (proofirrelevance_hProp (C x)
+                   Cx (segment_le_incl Cx x (isrefl_posetRelation X x))).
+      simple refine (Q @ _). apply maponpaths; apply funextsec; intro y; apply funextsec; intro lt.
       apply maponpaths. apply propproperty.
     - intros C. apply invproofirrelevance. intros [f p] [g q]. assert (e : f = g).
       { change (@paths (∏ x Cx, P x)%set f g). apply funextsec.
