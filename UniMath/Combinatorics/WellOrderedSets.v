@@ -1483,6 +1483,71 @@ Proof.
   exact (K x Sx).
 Defined.
 
+
+Section LessThanOrEqual.
+
+  (** ** Decidable order relations *)
+
+  (* We may not need this for anything. *)
+
+  Definition lessthan_choice {X:Poset} (x y:X) : hProp.
+  Proof.
+    intros. apply (coprod_hProp (Poset_lessthan x y) (x = y))%set.
+    intros lt. exact (pr2 lt).
+  Defined.
+
+  Notation "m <∨= n" := (lessthan_choice m n) (at level 70, no associativity) :poset.
+
+  Lemma lessthan_choice_isrefl {X:Poset} (x:X) : lessthan_choice x x.
+  Proof.
+    exact (ii2 (idpath x)).
+  Defined.
+
+  Lemma lessthan_choice_to_le {X:Poset} (x y:X) : x <∨= y -> x ≤ y.
+  Proof.
+    intros [lt|eq].
+    - exact (pr1 lt).
+    - induction eq. apply isrefl_posetRelation.
+  Defined.
+
+  Lemma le_to_lessthan_choice {X:Poset} (x y:X) : LEM -> x ≤ y -> x <∨= y.
+  Proof.
+    intros lem le.
+    induction (lem (x=y)) as [eq|ne].
+    - exact (ii2 eq).
+    - exact (ii1 (le,,ne)).
+  Defined.
+
+  Lemma lessthan_choice_trans {X:Poset} (x y z:X) : LEM -> x ≤ y -> y <∨= z -> x <∨= z.
+  Proof.
+    intros lem lxy lyz.
+    use le_to_lessthan_choice.
+    - exact lem.
+    - use (istrans_posetRelation X x y z lxy _). now apply lessthan_choice_to_le.
+  Defined.
+
+  Lemma lessthan_choice_trans' {X:Poset} (x y z:X) :
+    LEM -> x <∨= y -> y ≤ z -> x <∨= z.
+  Proof.
+    intros lem lxy lyz.
+    use le_to_lessthan_choice.
+    - exact lem.
+    - use (istrans_posetRelation X x y z _ lyz). now apply lessthan_choice_to_le.
+  Defined.
+
+  Lemma lessthan_choice_trans_2 {X:Poset} (x y z:X) : x <∨= y -> y <∨= z -> x <∨= z.
+  Proof.
+    intros [[lxy nexy]|exy] [[lyz neyz]|eyz].
+    - apply ii1. now use (Poset_lt_istrans (y := y)).
+    - apply ii1. induction eyz. exact (lxy,,nexy).
+    - apply ii1. induction exy. exact (lyz,,neyz).
+    - apply ii2. now induction exy, eyz.
+  Defined.
+
+End LessThanOrEqual.
+
+Local Notation "m <∨= n" := (lessthan_choice m n) (at level 70, no associativity) :poset.
+
 (** ** Transfinite recursion *)
 
 Local Notation "p ## x" := (transportf _ p x) (right associativity, at level 65). (* for compact displays *)
@@ -1520,6 +1585,12 @@ Section MutualRecursion.
   Definition segment_le {X:Poset} (x:X) : InitialSegment X.
   Proof.
     exists (λ y, y ≤ x). intros y z l m. exact (istrans_posetRelation _ _ _ _ m l).
+  Defined.
+
+  Definition segment_lt_or_eq {X:Poset} (x:X) : LEM -> InitialSegment X.
+  Proof.
+    intros lem.
+    exists (λ y, y <∨= x). intros y z l m. exact (lessthan_choice_trans _ _ _ lem m l).
   Defined.
 
   Definition segment_intersect {X:Poset} (Y Z : InitialSegment X) : InitialSegment X.
@@ -1573,6 +1644,29 @@ Section MutualRecursion.
     - exact (transportb _ eq p).
   Defined.
 
+  Definition extendPartialSection_eqn_lt {X:Poset} (P : X -> UU) (x:X) (dec:isdeceq X)
+             (f : PartialSection (segment_lt x) P) (p : P x)
+             (y:X) (le:y≤x) (lt:y<x) :
+    extendPartialSection P x dec f p y le = f y lt.
+  Proof.
+    unfold extendPartialSection. induction (choose_lt_eq dec le) as [lt'|eq'].
+    - change (f y lt' = f y lt). apply maponpaths. apply propproperty.
+    - apply fromempty. exact (pr2 lt eq').
+  Defined.
+
+  Definition extendPartialSection_eqn_eq {X:Poset} (P : X -> UU) (x:X) (dec:isdeceq X)
+             (f : PartialSection (segment_lt x) P) (p : P x)
+             (y:X) (le:y≤x) (eq:y=x) :
+    extendPartialSection P x dec f p y le = transportb P eq p.
+  Proof.
+    unfold extendPartialSection. induction (choose_lt_eq dec le) as [lt'|eq'].
+    - apply fromempty. exact (pr2 lt' eq).
+    - change (transportb P eq' p = transportb P eq p).
+      assert (e : eq = eq').
+      { apply setproperty. }
+      now induction e.
+  Defined.
+
   Definition segment_le_incl {X:Poset}
              {Y : InitialSegment X} {y:X} (Yy:Y y) : segment_le y ⊆ Y
     := λ z le, pr2 Y z y Yy le.
@@ -1581,9 +1675,31 @@ Section MutualRecursion.
              {Y : InitialSegment X} {y:X} (Yy:Y y) : segment_lt y ⊆ Y
     := λ z lt, pr2 Y z y Yy (Poset_lt_to_le _ _ lt).
 
-  Definition restrict_fun {X:Poset} {P : X -> UU} {Y : InitialSegment X}
+  Definition restrictSection_le {X:Poset} {P : X -> UU} {Y : InitialSegment X}
              (f : PartialSection Y P) {y:X} (Yy:Y y) : PartialSection (segment_le y) P
    := λ z zley, f z (segment_le_incl Yy z zley).
+
+  Definition restrictSection_lt {X:Poset} {P : X -> UU} {Y : InitialSegment X}
+             (f : PartialSection Y P) {y:X} (Yy:Y y) : PartialSection (segment_lt y) P
+   := λ z zley, f z (segment_lt_incl Yy z zley).
+
+  Lemma restrict_extendPartialSection_eq {X:Poset} (P : X -> UU) (x:X) (dec:isdeceq X)
+        (f : PartialSection (segment_lt x) P) (p : P x) (le:x≤x) :
+    restrictSection_lt (extendPartialSection P x dec f p) le = f.
+  Proof.
+    apply funextsec; intros y; apply funextsec; intros lt.
+    unfold restrictSection_lt. apply extendPartialSection_eqn_lt.
+  Defined.
+
+  Lemma restrict_extendPartialSection_lt {X:Poset} (P : X -> UU) (x:X) (dec:isdeceq X)
+        (f : PartialSection (segment_lt x) P) (p : P x)
+        (y:X) (le:y≤x) (lt:y<x) :
+    restrictSection_lt (extendPartialSection P x dec f p) le =
+    restrictSection_lt f lt.
+  Proof.
+    apply funextsec; intros z; apply funextsec; intros lt'.
+    unfold restrictSection_lt. apply extendPartialSection_eqn_lt.
+  Defined.
 
   Context (X:OrderedSet) (dec : isdeceq X).
 
@@ -1593,7 +1709,10 @@ Section MutualRecursion.
   (** Q is a property of partial sections of P that are defined just on an initial segment of X,
    and the goal is to establish Q on all of X by mutual induction over initial segments while
    defining the section. *)
-  Context (Q : ∏ Y : InitialSegment X, PartialSection Y P -> hProp).
+
+  Definition GuidingProperty := (∏ Y : InitialSegment X, PartialSection Y P -> hProp)%type.
+
+  Context (Q : GuidingProperty).
 
   (** Now we need Q to satisfy two good properties, one allowing passage to smaller initial
   segments, and one allowing passage to larger initial segments.  To help the intuition, one may put
@@ -1605,7 +1724,7 @@ Section MutualRecursion.
               Q Z f ⇒ Q Y (restrictPartialSection Y Z P i f)).
 
   Context (Qunion : ∀ (Y:InitialSegment X) (f : PartialSection Y P),
-              (∀ y Yy, Q (segment_le y) (restrict_fun f Yy)) ⇒ Q Y f).
+              (∀ y Yy, Q (segment_le y) (restrictSection_le f Yy)) ⇒ Q Y f).
 
   (** Now we assume that Q is sufficiently strong to "guide" a partial section so that there is at
   most one partial section satisfying Q.  Any property not strong enough can be strengthened by
@@ -1681,7 +1800,9 @@ Section MutualRecursion.
     exact (pr2 k).
   Defined.
 
-  Lemma mutualRecursionPrinciple : iscontr (ForcedSection (segment_all X)).
+  Definition MutualRecursion := iscontr (ForcedSection (segment_all X)).
+
+  Lemma mutualRecursionPrinciple : MutualRecursion.
   Proof.
     apply iscontraprop1; [use Qprop|].
     set (I := pr1 : ForcedPartialSection -> InitialSegment X).
@@ -1729,9 +1850,10 @@ Section Recursion.
 
   Open Scope set.
 
-  Definition isGuidedPartialSection {X:OrderedSet} {P:X->hSet} (rec:recursiveHypothesis P)
-             (C:InitialSegment X) (f : PartialSection C P) : hProp
-    := ∀ (x:X) (Cx:C x), f x Cx = rec x (λ y lt, f y (segment_lt_incl Cx y lt)).
+  Definition isGuidedPartialSection {X:OrderedSet} {P:X->hSet} (rec:recursiveHypothesis P) :
+    GuidingProperty X P
+    := λ (C:InitialSegment X) (f : PartialSection C P),
+       ∀ (x:X) (Cx:C x), f x Cx = rec x (restrictSection_lt f Cx).
 
   Context (lem:LEM).
 
@@ -1740,16 +1862,17 @@ Section Recursion.
     intros ind P rec.
     assert (dec := (λ x y, lem (x=y)) : isdeceq X).
     simple refine (mutualRecursion X dec P _ _ _ _ _ _).
-    - intros C f. exact (isGuidedPartialSection rec C f).
+    - exact (isGuidedPartialSection rec).
     - intros C D i f q x Cx. change (hProptoType (C x)) in Cx. simple refine (q x (i x Cx) @ _).
       apply maponpaths. apply funextsec; intro y; apply funextsec; intro lt.
-      unfold restrictPartialSection. apply maponpaths. apply propproperty.
+      unfold restrictPartialSection,restrictSection_lt.
+      apply maponpaths. apply propproperty.
     - intros C f loc x Cx. assert (Q := loc x Cx x (isrefl_posetRelation _ _)). simpl in Q.
-      unfold restrict_fun in Q.
+      unfold restrictSection_le in Q.
             induction (proofirrelevance_hProp (C x)
                    Cx (segment_le_incl Cx x (isrefl_posetRelation X x))).
       simple refine (Q @ _). apply maponpaths; apply funextsec; intro y; apply funextsec; intro lt.
-      apply maponpaths. apply propproperty.
+      unfold restrictSection_lt. apply maponpaths. apply propproperty.
     - intros C. apply invproofirrelevance. intros [f p] [g q]. assert (e : f = g).
       { change (@paths (∏ x Cx, P x)%set f g). apply funextsec.
         change (∏ x, @eqset (∏ Cx, P x) (f x) (g x))%set. use ind. intros x H. apply funextsec; intros Cx.
@@ -1762,17 +1885,11 @@ Section Recursion.
     - intros x F. use tpair.
       + use rec. exact (pr1 F).
       + intros y le; change (hProptoType (y ≤ x)) in le.
-        unfold extendPartialSection. induction (choose_lt_eq dec le) as [lt|eq].
+        unfold extendPartialSection at 1. induction (choose_lt_eq dec le) as [lt|eq].
         * simpl. simple refine (pr2 F y lt @ _). apply maponpaths.
-          apply funextsec; intros z. apply funextsec; intros lt'.
-          match goal with |- _ = coprod_rect _ _ _ ?K => induction K as [lt''|eq''] end.
-          { simpl. apply maponpaths. apply propproperty. }
-          { simpl. induction eq''. apply fromempty. clear lt. exact (gt_to_nle _ _ lt' le). }
+          apply pathsinv0, restrict_extendPartialSection_lt.
         * simpl. induction eq. change (transportb _ (idpath y) _) with (rec y (pr1 F)).
-          apply maponpaths. apply funextsec; intros z. apply funextsec; intros lt.
-          match goal with |- _ = coprod_rect _ _ _ ?K => induction K as [lt''|eq''] end.
-          { simpl. apply maponpaths. apply propproperty. }
-          { apply fromempty. exact (pr2 lt eq''). }
+          apply maponpaths. apply pathsinv0, restrict_extendPartialSection_eq.
   Defined.
 
 End Recursion.
@@ -1925,71 +2042,3 @@ Section PartialFunctions.
     := λ par, imagePartialFunction f,,isChainImagePartial f par.
 
 End PartialFunctions.
-
-Section LessThanOrEqual.
-
-  (** ** Decidable order relations *)
-
-  (* We may not need this for anything. *)
-
-  Definition lessthan_choice {X:Poset} (x y:X) : hProp.
-  Proof.
-    intros. apply (coprod_hProp (Poset_lessthan x y) (x = y))%set.
-    intros lt. exact (pr2 lt).
-  Defined.
-
-  Notation "m <∨= n" := (lessthan_choice m n) (at level 70, no associativity) :poset.
-
-  Lemma lessthan_choice_isrefl {X:Poset} (x:X) : lessthan_choice x x.
-  Proof.
-    exact (ii2 (idpath x)).
-  Defined.
-
-  Lemma lessthan_choice_to_le {X:Poset} (x y:X) : x <∨= y -> x ≤ y.
-  Proof.
-    intros [lt|eq].
-    - exact (pr1 lt).
-    - induction eq. apply isrefl_posetRelation.
-  Defined.
-
-  Lemma le_to_lessthan_choice {X:Poset} (x y:X) : LEM -> x ≤ y -> x <∨= y.
-  Proof.
-    intros lem le.
-    induction (lem (x=y)) as [eq|ne].
-    - exact (ii2 eq).
-    - exact (ii1 (le,,ne)).
-  Defined.
-
-  Lemma lessthan_choice_trans {X:Poset} (x y z:X) : LEM -> x ≤ y -> y <∨= z -> x <∨= z.
-  Proof.
-    intros lem lxy lyz.
-    use le_to_lessthan_choice.
-    - exact lem.
-    - use (istrans_posetRelation X x y z lxy _). now apply lessthan_choice_to_le.
-  Defined.
-
-  Lemma lessthan_choice_trans' {X:Poset} (x y z:X) :
-    LEM -> x <∨= y -> y ≤ z -> x <∨= z.
-  Proof.
-    intros lem lxy lyz.
-    use le_to_lessthan_choice.
-    - exact lem.
-    - use (istrans_posetRelation X x y z _ lyz). now apply lessthan_choice_to_le.
-  Defined.
-
-  Lemma lessthan_choice_trans_2 {X:Poset} (x y z:X) : x <∨= y -> y <∨= z -> x <∨= z.
-  Proof.
-    intros [[lxy nexy]|exy] [[lyz neyz]|eyz].
-    - apply ii1. now use (Poset_lt_istrans (y := y)).
-    - apply ii1. induction eyz. exact (lxy,,nexy).
-    - apply ii1. induction exy. exact (lyz,,neyz).
-    - apply ii2. now induction exy, eyz.
-  Defined.
-
-  Definition segment_lt_or_eq {X:Poset} (x:X) : LEM -> InitialSegment X.
-  Proof.
-    intros lem.
-    exists (λ y, y <∨= x). intros y z l m. exact (lessthan_choice_trans _ _ _ lem m l).
-  Defined.
-
-End LessThanOrEqual.
