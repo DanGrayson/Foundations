@@ -1869,8 +1869,8 @@ Section Recursion.
       apply maponpaths. apply propproperty.
     - intros C f loc x Cx. assert (Q := loc x Cx x (isrefl_posetRelation _ _)). simpl in Q.
       unfold restrictSection_le in Q.
-            induction (proofirrelevance_hProp (C x)
-                   Cx (segment_le_incl Cx x (isrefl_posetRelation X x))).
+      induction (proofirrelevance_hProp
+                  (C x) Cx (segment_le_incl Cx x (isrefl_posetRelation X x))).
       simple refine (Q @ _). apply maponpaths; apply funextsec; intro y; apply funextsec; intro lt.
       unfold restrictSection_lt. apply maponpaths. apply propproperty.
     - intros C. apply invproofirrelevance. intros [f p] [g q]. assert (e : f = g).
@@ -1883,7 +1883,7 @@ Section Recursion.
       apply setproperty.
     - exact ind.
     - intros x F. use tpair.
-      + use rec. exact (pr1 F).
+      + exact (rec _ (pr1 F)).
       + intros y le; change (hProptoType (y ≤ x)) in le.
         unfold extendPartialSection at 1. induction (choose_lt_eq dec le) as [lt|eq].
         * simpl. simple refine (pr2 F y lt @ _). apply maponpaths.
