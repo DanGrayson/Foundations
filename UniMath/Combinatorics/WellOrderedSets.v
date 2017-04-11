@@ -1923,6 +1923,10 @@ Defined.
 
 Corollary bigWellOrderedSet (X:Type) : AxiomOfChoice ⇒ ∃ Y:WellOrderedSet, ∏ f : Y -> X, ¬ isincl f.
 Proof.
+  (* In this proof, we use the axiom of choice.  There is another proof due to Hartog, which doesn't
+     use the axiom of choice, namely: consider the set K of well ordered sets for which there exists
+     an inclusion into X.  Well order K by initial inclusion.  If there were an inclusion of K into
+     X, then K would be an element of K. *)
   intros ac.
   induction (bigSet X (AC_to_LEM ac)) as [V n].
   apply (squash_to_hProp (ZermeloWellOrdering V ac)); intros [R wo].
@@ -1933,69 +1937,148 @@ Defined.
 
 Definition isChain {X : Poset} (C : subtype_set X) : hProp := ∀ x y, C x ⇒ (C y ⇒ x ≤ y ∨ y ≤ x).
 
-Definition Chain (X:Poset) : hSet := ∑ C, @isChain X C.
+Lemma isChain_subset {X : Poset} {C D : subtype_set X} (i : C ⊆ D) : isChain D -> isChain C.
+Proof.
+  intros ch x y Cx Cy. exact (ch x y (i x Cx) (i y Cy)).
+Defined.
+
+Definition Chain (X:Poset) : UU := ∑ C, @isChain X C.
+
+Definition Chain_to_subset {X:Poset} (C:Chain X) : hsubtype X := pr1 C.
+
+Coercion Chain_to_subset : Chain >-> hsubtype.
 
 Section Zorn.
 
+  Context (ac : AxiomOfChoice).
+
+  Let lem := AC_to_LEM ac : LEM.
+
+  Section A.
+
+    Context {X : Poset}.
+
+    Definition hasUpperBound (C : subtype_set X) := ∃ x, ∀ y (Cy : C y), y ≤ x.
+
+    Definition hasStrictUpperBound (C : subtype_set X) := ∃ x, ∀ y (Cy : C y), y < x.
+
+  End A.
+
   Context (X : Poset).
 
-  Lemma imageIsChainUpto {T : OrderedSet} (f : posetmorphism T X) (t':T) :
-    isChain (λ x, ∃ t, t < t' × f t = x).
+  Context (bounds : ∀ C : Chain X, hasUpperBound C).
+
+  Section ConstantFamily.
+
+    Context {W:OrderedSet}.
+
+    Let _X := λ _:W, X : hSet.
+
+    Local Definition isInj {C:InitialSegment W} (f:PartialSection C _X) := ∀ v w Cv Cw, f v Cv = f w Cw ⇒ v = w.
+
+    Local Definition im {C:InitialSegment W} (f:PartialSection C _X) : hsubtype X
+      := λ (x:X), ∃ (w':W) (Cw':C w'), f w' Cw' = x.
+
+    Local Definition im_upto {C:InitialSegment W} (f:PartialSection C _X) (w:W) : hsubtype X
+      := λ (x:X), ∃ (w':W) (Cw':C w'), w' < w ∧ f w' Cw' = x.
+
+    Lemma im_upto_upto_sub {C D:InitialSegment W} (i:C⊆D) (f:PartialSection D _X) (w:W) :
+      im_upto (restrictPartialSection _ _ _ i f) w ⊆ im_upto f w.
+    Proof.
+      intros x Ix. apply (squash_to_hProp Ix); clear Ix; intros [v [Cv K]]. exact (hinhpr (v,,i v Cv,,K)).
+    Defined.
+
+    Lemma im_sub {C D:InitialSegment W} (i:C⊆D) (f:PartialSection D _X) : im (restrictPartialSection _ _ _ i f) ⊆ im f.
+    Proof.
+      intros x Ix. apply (squash_to_hProp Ix); clear Ix; intros [v [Cv K]]. exact (hinhpr (v,,i v Cv,,K)).
+    Defined.
+
+    Lemma im_sub_isChain {C D:InitialSegment W} (i:C⊆D) (f:PartialSection D _X) :
+      isChain (im f) -> isChain (im (restrictPartialSection C D _X i f)).
+    Proof.
+      exact (isChain_subset (im_sub i f)).
+    Defined.
+
+    Lemma im_upto_sub {C:InitialSegment W} (f:PartialSection C _X) (w:W) (Cw:C w) :
+      im_upto f w ⊆ im f.
+    Proof.
+      intros x Ix. apply (squash_to_hProp Ix); clear Ix; intros [v [Cv [lt eq]]]. apply hinhpr. exact (v,,Cv,,eq).
+    Defined.
+
+    Lemma im_upto_isChain {C:InitialSegment W} (f:PartialSection C _X) (w:W) (Cw:C w) :
+      isChain (im f) -> isChain (im_upto f w).
+    Proof.
+      exact (isChain_subset (im_upto_sub f w Cw)).
+    Defined.
+
+  End ConstantFamily.
+
+  Definition im_upto_Chain {W:OrderedSet} (C:InitialSegment W) (f:PartialSection C (λ _:W, X)) (w:W) (Cw:C w) (ch:isChain (im f))
+    : Chain X
+    := im_upto f w ,, im_upto_isChain f w Cw ch.
+
+  Lemma Zorn : ∃ x:X, isMaximal x.
   Proof.
-    intros x y Cx Cy.
-    apply (squash_to_hProp Cx); clear Cx; intros [t [p p']].
-    apply (squash_to_hProp Cy); clear Cy; intros [u [q q']].
-    apply (squash_to_hProp (OrderedSet_istotal t u)); intros [c|c].
-    - apply hinhpr, ii1. assert (Q := pr2 f _ _ c). induction p', q'. exact Q.
-    - apply hinhpr, ii2. assert (Q := pr2 f _ _ c). induction p', q'. exact Q.
-  Defined.
-
-  Definition imageChainUpto {T : OrderedSet} (f : posetmorphism T X) (u:T) : Chain X
-    := (λ x, ∃ t, t < u × f t = x) ,, imageIsChainUpto f u.
-
-  Lemma imageChainUpto_eqn {T : OrderedSet} (f g : posetmorphism T X) (u:T) :
-    ( ∀ t, t < u ⇒ f t = g t ) -> imageChainUpto f u = imageChainUpto g u.
-  Proof.
-    intros e. apply subtypeEquality_prop.
-    apply funextfun; intros x.
-    change ((∃ t, t < u × f t = x) = (∃ t, t < u × g t = x)).
-    apply hPropUnivalence.
-    - apply hinhfun; intros [t [lt eq]]. exact (t ,, lt ,, ! e t lt @ eq).
-    - apply hinhfun; intros [t [lt eq]]. exact (t ,, lt ,,   e t lt @ eq).
-  Defined.
-
-  Definition hasUpperBound (C : subtype_set X) := ∃ x, ∀ y (Cy : C y), y ≤ x.
-
-  Definition hasStrictUpperBound (C : subtype_set X) := ∃ x, ∀ y (Cy : C y), y < x.
-
-  Context (bounds : ∀ C : Chain X, hasUpperBound (pr1 C)).
-
-  Lemma Zorn : AxiomOfChoice ⇒ ∃ x:X, isMaximal x.
-  Proof.
-    intros ac.
-    assert (lem := AC_to_LEM ac).
-    assert (W := bigWellOrderedSet X ac). apply (squash_to_hProp W); clear W; intros [W noincl].
     apply (proof_by_contradiction lem); intro nomax; change hfalse.
+    assert (W := bigWellOrderedSet X ac). apply (squash_to_hProp W); clear W. intros [W noincl].
     assert (allnotmax := neghexisttoforallneg _ nomax); clear nomax.
     change (hProptoType (∀ x:X, ¬ isMaximal x)) in allnotmax.
     unfold isMaximal in allnotmax.
     assert (allbigger := (λ x, notMaximal_to_isSmaller _ lem (allnotmax x)) : ∀ x:X, ∃ y, x < y);
       clear allnotmax.
-    assert (bounds' : ∀ C:Chain X, hasStrictUpperBound (pr1 C)).
+    assert (bounds' : ∀ C:Chain X, hasStrictUpperBound C).
     { intros C. apply (squash_to_hProp (bounds C)); clear bounds; intros [y ge].
       apply (squash_to_hProp (allbigger y)); clear allbigger; intros [y' gt].
       apply hinhpr. exists y'. intros x Cx. exact (Poset_le_lt_istrans (ge x Cx) gt). }
-    clear bounds.
+    clear bounds allbigger.
     (** For each chain C, choose a strict upper bound. *)
-    apply (squash_to_hProp (ac _ _ bounds')); clear bounds'; intros bounds.
-    change (∏ C:Chain X, ∑ y, ∀ x, pr1 C x ⇒ x < y)%type in bounds.
-    (** We define a function [f : W -> X], but since we want to postpone the proof that it is well
-        defined, order preserving, and injective, for simplicity, we present it first as a partial
-        function.  *)
-
-  Abort.                        (* new strategy: use mutualRecursionPrinciple above *)
+    apply (squash_to_hProp (ac _ _ bounds')); clear bounds'; intros bound.
+    change (∏ C:Chain X, ∑ y, ∀ x, C x ⇒ x < y)%type in bound.
+    set (_X := λ _:W, X : hSet).
+    set (guided := (λ (C:InitialSegment W) (f:PartialSection C _X),
+                    ∑ ch : isChain (im f),
+                           isInj f ∧
+                           ∀ (w:W) (Cw:C w), f w Cw = pr1 (bound (im_upto_Chain C f w Cw ch)))%prop).
+    set (dec := λ v w : W, lem (v=w)).
+    (** We define an injective function [f : W -> X] by recursion. *)
+    assert (I : MutualRecursion W _X guided).
+    { use mutualRecursionPrinciple.
+      - exact dec.
+      - intros Y Z i f [ch [inj gui]].
+        use tpair.
+        + exact (im_sub_isChain _ _ ch).
+        + split.
+          * admit.              (* separate lemma *)
+          * intros w Cw. unfold restrictPartialSection at 1. simple refine (gui w (i w Cw) @ _).
+            apply (maponpaths (λ K, pr1 (bound K))).
+            admit.              (* separate lemma *)
+      - intros C f H.
+        use tpair.
+        + admit.
+        + split.
+          * admit.
+          * intros w Cw. admit.
+      - intros C. apply invproofirrelevance; intros f g. admit.
+      - now apply WellOrderedSet_induction.
+      - intros v [f [ch [inj gui]]]. exists (pr1 (bound (im f ,, ch))).
+        use tpair.
+        + change (isChain (im (extendPartialSection _X v dec f (pr1 (bound (im f,, ch)))))).
+          intros x y Ix Iy. admit.
+        + split.
+          * admit.
+          * intros w Cw. admit. }
+    induction I as [[f [ch [inj gui]]] J].
+    use noincl.
+    - intros w. exact (f w tt).
+    - apply isinclbetweensets.
+      + apply setproperty.
+      + apply setproperty.
+      + intros v w e. exact (inj v w tt tt e).
+  Admitted.
 
 End Zorn.
+
+Check Zorn.
 
 Section PartialFunctions.
 
