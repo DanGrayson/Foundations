@@ -1683,6 +1683,15 @@ Section MutualRecursion.
              (f : PartialSection Y P) {y:X} (Yy:Y y) : PartialSection (segment_lt y) P
    := λ z zley, f z (segment_lt_incl Yy z zley).
 
+  Lemma restrictSection_lt_trans {X:Poset} {P : X -> UU} {Y : InitialSegment X}
+        (f : PartialSection Y P) {y:X} (Yy:Y y) {z:X} (lt:z<y) :
+    restrictSection_lt (restrictSection_lt f Yy) lt =
+    restrictSection_lt f (pr2 Y z y Yy (pr1 lt)).
+  Proof.
+    apply funextsec; intros t; apply funextsec; intros l.
+    unfold restrictSection_lt. apply maponpaths. apply propproperty.
+  Defined.
+
   Lemma restrict_extendPartialSection_eq {X:Poset} (P : X -> UU) (x:X) (dec:isdeceq X)
         (f : PartialSection (segment_lt x) P) (p : P x) (le:x≤x) :
     restrictSection_lt (extendPartialSection P x dec f p) le = f.
@@ -1836,44 +1845,34 @@ Section GuidedRecursion.
   Definition GuidedSec (C:InitialSegment X) :=
     ∑ f : PartialSection C P, ∏ x Cx, f x Cx = rec x (restrictSection_lt f Cx).
 
+  Definition restrictGuidedSec' (C : InitialSegment X) (z : X) (Cz : C z) :
+    GuidedSec C → GuidedSec (segment_lt z).
+  Proof.
+    intros [f gui]. exists (restrictSection_lt f Cz).
+    intros x Cx. unfold restrictSection_lt at 1. assert (Q := gui x (pr2 C x z Cz (pr1 Cx))).
+    induction (proofirrelevance_hProp _ (pr2 C x z Cz (pr1 Cx)) (segment_lt_incl Cz x Cx)).
+    simple refine (Q @ _). apply maponpaths. exact (! restrictSection_lt_trans f Cz Cx).
+  Defined.
+
   Definition restrictGuidedSec (C : InitialSegment X) (z : X) (Cz : C z) :
     GuidedSec (segment_le z) → GuidedSec (segment_lt z).
   Proof.
-    intros [f gui]. exists (restrictSection_lt f (isrefl_posetRelation X z)).
-    intros x Cx. unfold restrictSection_lt at 1. assert (Q := gui x (pr1 Cx)).
-    match goal with |- f x ?K = _ => induction (proofirrelevance_hProp _ (pr1 Cx) K) end.
-    simple refine (Q @ _). apply maponpaths.
-    apply funextsec; intros y; apply funextsec; intros lt.
-    unfold restrictSection_lt. apply maponpaths.
-    apply propproperty.
+    intros f. exact (restrictGuidedSec' (segment_le z) _ (isrefl_posetRelation X z) f).
   Defined.
 
   Definition extendGuidedSec (C:InitialSegment X) (z:X) (Cz:C z) :
     GuidedSec (segment_lt z) -> GuidedSec (segment_le z).
   Proof.
-    intros [f gui].
-    { exists (extendPartialSection P z dec f (rec z f)).
-      intros x le; change (hProptoType (x ≤ z)) in le.
-      unfold extendPartialSection at 1.
-      induction (choose_lt_eq dec le) as [le'|eq'].
-      * change (f x le' = rec x (restrictSection_lt (extendPartialSection P z dec f (rec z f)) le)).
-        simple refine (gui x le' @ _).
-        apply maponpaths. apply funextsec; intros y; apply funextsec; intros lt''.
-        unfold restrictSection_lt, extendPartialSection.
-        match goal with |- _ = coprod_rect _ _ _ ?K => induction K as [lt3|eq3] end.
-        { change (f y (Poset_le_lt_istrans (Poset_lt_to_le y x lt'') le') = f y lt3).
-          apply maponpaths. apply propproperty. }
-        { apply fromempty. induction eq3. change (hProptoType (y < x)) in lt''.
-          exact (gt_to_nle _ _ lt'' le). }
-      * change (transportb P eq' (rec z f) =
-                rec x (restrictSection_lt (extendPartialSection P z dec f (rec z f)) le)).
-        induction eq'.
-        change (transportb P (idpath x) (rec x f)) with (rec x f).
-        apply maponpaths. apply funextsec; intros y; apply funextsec; intros lt.
-        unfold restrictSection_lt, extendPartialSection.
-        match goal with |- _ = coprod_rect _ _ _ ?K => induction K as [lt3|eq3] end.
-        { change (f y lt = f y lt3). apply maponpaths. apply propproperty. }
-        { apply fromempty. exact (pr2 lt eq3). } }
+    intros [f gui]. exists (extendPartialSection P z dec f (rec z f)).
+    intros x le; change (hProptoType (x ≤ z)) in le.
+    unfold extendPartialSection at 1. induction (choose_lt_eq dec le) as [le'|eq'].
+    * change (f x le' = rec x (restrictSection_lt (extendPartialSection P z dec f (rec z f)) le)).
+      simple refine (gui x le' @ _). apply maponpaths. apply pathsinv0.
+      apply restrict_extendPartialSection_lt.
+    * change (transportb P eq' (rec z f) =
+              rec x (restrictSection_lt (extendPartialSection P z dec f (rec z f)) le)).
+      induction eq'. change (transportb P (idpath x) (rec x f)) with (rec x f).
+      apply maponpaths. apply pathsinv0. apply restrict_extendPartialSection_eq.
   Defined.
 
   Lemma A (C:InitialSegment X) (z:X) (Cz:C z) :
@@ -1914,6 +1913,12 @@ Section GuidedRecursion.
   Definition glueGuidedSec (C:InitialSegment X) :
     (∏  (z:X) (Cz:C z), GuidedSec (segment_le z)) -> GuidedSec C.
   Proof.
+    intros H.
+    use tpair.
+    - intros x Cx. exact (pr1 (H x Cx) x (isrefl_posetRelation X x)).
+    - intros x Cx.
+
+
     admit.
     Fail idtac.
   Admitted.
@@ -1988,7 +1993,8 @@ Section Recursion.
       unfold restrictSection_le in Q.
       induction (proofirrelevance_hProp
                   (C x) Cx (segment_le_incl Cx x (isrefl_posetRelation X x))).
-      simple refine (Q @ _). apply maponpaths; apply funextsec; intro y; apply funextsec; intro lt.
+      simple refine (Q @ _). apply maponpaths.
+      apply funextsec; intro y; apply funextsec; intro lt.
       unfold restrictSection_lt. apply maponpaths. apply propproperty.
     - intros C. apply invproofirrelevance. intros [f p] [g q]. assert (e : f = g).
       { change (@paths (∏ x Cx, P x)%set f g). apply funextsec.
