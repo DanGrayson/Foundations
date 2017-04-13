@@ -1858,11 +1858,11 @@ Section GuidedRecursion.
 
   Definition restrictGuidedSec {C D : InitialSegment X} : C ⊆ D -> GuidedSec D → GuidedSec C.
   Proof.
-    intros i [f gui]. exists (restrictPartialSection i f).
-    intros x Cx. unfold restrictPartialSection at 1. simple refine (gui x (i x Cx) @ _).
+    intros i f. exists (restrictPartialSection i (pr1 f)).
+    intros x Cx. unfold restrictPartialSection at 1. simple refine (pr2 f x (i x Cx) @ _).
     apply maponpaths. unfold restrictSection_lt. apply pathsinv0.
     simple refine (restrictPartialSection_trans _ _ _ @ _).
-    apply (maponpaths (λ i, restrictPartialSection i f)). apply propproperty.
+    apply (maponpaths (λ i, restrictPartialSection i (pr1 f))). apply propproperty.
   Defined.
 
   Definition restrictGuidedSec'' (C : InitialSegment X) (z : X) (Cz : C z) :
@@ -1935,20 +1935,20 @@ Section GuidedRecursion.
     - intros x Cx. exact (pr1 (H x Cx) x (isrefl_posetRelation X x)).
     - intros x Cx. simple refine (pr2 (H x Cx) x (isrefl_posetRelation X x) @ _).
       apply maponpaths. apply funextsec; intro y; apply funextsec; intro lt.
-      set (f := restrictGuidedSec (C := segment_le y) (segment_le_incl' (pr1 lt)) (H x Cx)).
-      set (g := H y (pr2 C y x Cx (pr1 lt))).
-      assert (p : f=g).
-      { apply D. }
-      assert (p' : ∏ t l, pr1 f t l = pr1 g t l).
-      { now induction p. }
-      simple refine (_ @ p' y (isrefl_posetRelation _ y)).
-      apply pathsinv0.
-
-
-
-    admit.
-    Fail idtac.
-  Admitted.
+      change (hProptoType (y<x)) in lt.
+      unfold restrictSection_lt,restrictPartialSection.
+      generalize (segment_lt_incl Cx y lt); intro Cy.
+      generalize (isrefl_posetRelation X y); intro yley.
+      match goal with |- pr1 _ y ?K = _ => generalize K; intro ylex end;
+        change (hProptoType(y≤x)) in ylex; clear lt.
+      generalize (H x Cx); intro f.
+      generalize (H y Cy); intro g.
+      set (f' := restrictGuidedSec (segment_le_incl' ylex) f).
+      intermediate_path (pr1 f' y yley).
+      + change (pr1 f y ylex = pr1 f y (segment_le_incl' ylex y yley)); clear f'.
+        apply maponpaths, propproperty.
+      + apply (maponpaths (λ h:GuidedSec (segment_le y), pr1 h y yley)). apply D.
+  Defined.
 
   Lemma B' (C:InitialSegment X) :
     (∏ (z:X) (Cz:C z), iscontr (GuidedSec (segment_le z))) -> iscontr (GuidedSec C).
