@@ -556,7 +556,7 @@ Lemma wosub_le_isPartialOrder X : isPartialOrder (wosub_le X).
 Proof.
   repeat split.
   - intros S T U i j.
-    exists (pr11 (subtype_containment_isPartialOrder X) S T U (pr1 i) (pr1 j)).
+    exists (pr11 (subtype_containedIn_isPartialOrder X) S T U (pr1 i) (pr1 j)).
     split.
     + intros s s' l. exact (wosub_le_comp j _ _ (wosub_le_comp i _ _ l)).
     + intros s u Ss Uu l.
@@ -1620,11 +1620,47 @@ Section MutualRecursion.
   Definition PartialSection {X:Poset} (Y : InitialSegment X) (P : X -> UU)
     := (∏ x, Y x -> P x)%type.
 
-  Definition restrictPartialSection {X:Poset} (Y Z : InitialSegment X) (P : X -> UU) :
-    Y ⊆ Z -> PartialSection Z P -> PartialSection Y P.
+  Definition restrictPartialSection {X:Poset} {C D : InitialSegment X} {P : X -> UU} :
+    C ⊆ D -> PartialSection D P -> PartialSection C P.
   Proof.
-    intros i f y Yy.
-    exact (f y (i y Yy)).
+    intros i f y Cy. exact (f y (i y Cy)).
+  Defined.
+
+  Lemma restrictPartialSection_trans {X:Poset} {C D E : InitialSegment X} {P : X -> UU}
+        (i : C ⊆ D) (j : D ⊆ E) (f : PartialSection E P) :
+    restrictPartialSection i (restrictPartialSection j f) =
+    restrictPartialSection (subtype_containedIn_istrans i j) f.
+  Proof.
+    reflexivity.
+  Defined.
+
+  Definition segment_le_incl {X:Poset}
+             {Y : InitialSegment X} {y:X} (Yy:Y y) : segment_le y ⊆ Y
+    := λ z le, pr2 Y z y Yy le.
+
+  Definition segment_le_incl' {X:Poset} {x y:X} (le : x ≤ y) : segment_le x ⊆ segment_le y
+    := λ t le', istrans_posetRelation X t x y le' le.
+
+  Definition segment_lt_incl {X:Poset}
+             {Y : InitialSegment X} {y:X} (Yy:Y y) : segment_lt y ⊆ Y
+    := λ z lt, pr2 Y z y Yy (Poset_lt_to_le _ _ lt).
+
+  Definition restrictSection_le {X:Poset} {P : X -> UU} {Y : InitialSegment X}
+             (f : PartialSection Y P) {y:X} (Yy:Y y) : PartialSection (segment_le y) P
+   := restrictPartialSection (segment_le_incl Yy) f.
+
+  Definition restrictSection_lt {X:Poset} {P : X -> UU} {Y : InitialSegment X}
+             (f : PartialSection Y P) {y:X} (Yy:Y y) : PartialSection (segment_lt y) P
+   := restrictPartialSection (segment_lt_incl Yy) f.
+
+  Lemma restrictSection_lt_trans {X:Poset} {P : X -> UU} {Y : InitialSegment X}
+        (f : PartialSection Y P) {y:X} (Yy:Y y) {z:X} (lt:z<y) :
+    restrictSection_lt (restrictSection_lt f Yy) lt =
+    restrictSection_lt f (pr2 Y z y Yy (pr1 lt)).
+  Proof.
+    simple refine (restrictPartialSection_trans _ _ _ @ _).
+    unfold restrictSection_lt. apply (maponpaths (λ i, restrictPartialSection i f)).
+    apply funextsec; intro x; apply funextsec; intro lt'. apply propproperty.
   Defined.
 
   Definition choose_lt_eq {X:Poset} (dec:isdeceq X) {x y:X} (le : x ≤ y) :
@@ -1667,31 +1703,6 @@ Section MutualRecursion.
       now induction e.
   Defined.
 
-  Definition segment_le_incl {X:Poset}
-             {Y : InitialSegment X} {y:X} (Yy:Y y) : segment_le y ⊆ Y
-    := λ z le, pr2 Y z y Yy le.
-
-  Definition segment_lt_incl {X:Poset}
-             {Y : InitialSegment X} {y:X} (Yy:Y y) : segment_lt y ⊆ Y
-    := λ z lt, pr2 Y z y Yy (Poset_lt_to_le _ _ lt).
-
-  Definition restrictSection_le {X:Poset} {P : X -> UU} {Y : InitialSegment X}
-             (f : PartialSection Y P) {y:X} (Yy:Y y) : PartialSection (segment_le y) P
-   := λ z zley, f z (segment_le_incl Yy z zley).
-
-  Definition restrictSection_lt {X:Poset} {P : X -> UU} {Y : InitialSegment X}
-             (f : PartialSection Y P) {y:X} (Yy:Y y) : PartialSection (segment_lt y) P
-   := λ z zley, f z (segment_lt_incl Yy z zley).
-
-  Lemma restrictSection_lt_trans {X:Poset} {P : X -> UU} {Y : InitialSegment X}
-        (f : PartialSection Y P) {y:X} (Yy:Y y) {z:X} (lt:z<y) :
-    restrictSection_lt (restrictSection_lt f Yy) lt =
-    restrictSection_lt f (pr2 Y z y Yy (pr1 lt)).
-  Proof.
-    apply funextsec; intros t; apply funextsec; intros l.
-    unfold restrictSection_lt. apply maponpaths. apply propproperty.
-  Defined.
-
   Lemma restrict_extendPartialSection_eq {X:Poset} (P : X -> UU) (x:X) (dec:isdeceq X)
         (f : PartialSection (segment_lt x) P) (p : P x) (le:x≤x) :
     restrictSection_lt (extendPartialSection P x dec f p) le = f.
@@ -1707,7 +1718,7 @@ Section MutualRecursion.
     restrictSection_lt f lt.
   Proof.
     apply funextsec; intros z; apply funextsec; intros lt'.
-    unfold restrictSection_lt. apply extendPartialSection_eqn_lt.
+    unfold restrictSection_lt,restrictPartialSection. apply extendPartialSection_eqn_lt.
   Defined.
 
   Context (X:OrderedSet) (dec : isdeceq X).
@@ -1730,7 +1741,7 @@ Section MutualRecursion.
   [segment_le y] is the finest possible covering of Y. *)
 
   Context (Qres : ∀ (Y Z : InitialSegment X) (i : Y ⊆ Z) (f : PartialSection Z P),
-              Q Z f ⇒ Q Y (restrictPartialSection Y Z P i f)).
+              Q Z f ⇒ Q Y (restrictPartialSection i f)).
 
   Context (Qunion : ∀ (Y:InitialSegment X) (f : PartialSection Y P),
               (∀ y Yy, Q (segment_le y) (restrictSection_le f Yy)) ⇒ Q Y f).
@@ -1750,7 +1761,7 @@ Section MutualRecursion.
   Definition restrictForcedSection (Y Z:InitialSegment X) :
     Y ⊆ Z -> ForcedSection Z -> ForcedSection Y.
   Proof.
-    intros i [f q]. exists (restrictPartialSection Y Z P i f). exact (Qres Y Z i f q).
+    intros i [f q]. exists (restrictPartialSection i f). exact (Qres Y Z i f q).
   Defined.
 
   Context (Qprop : ∀ (Y:InitialSegment X), isaprop_hProp ( ForcedSection Y )).
@@ -1845,19 +1856,25 @@ Section GuidedRecursion.
   Definition GuidedSec (C:InitialSegment X) :=
     ∑ f : PartialSection C P, ∏ x Cx, f x Cx = rec x (restrictSection_lt f Cx).
 
-  Definition restrictGuidedSec' (C : InitialSegment X) (z : X) (Cz : C z) :
-    GuidedSec C → GuidedSec (segment_lt z).
+  Definition restrictGuidedSec {C D : InitialSegment X} : C ⊆ D -> GuidedSec D → GuidedSec C.
   Proof.
-    intros [f gui]. exists (restrictSection_lt f Cz).
-    intros x Cx. unfold restrictSection_lt at 1. assert (Q := gui x (pr2 C x z Cz (pr1 Cx))).
-    induction (proofirrelevance_hProp _ (pr2 C x z Cz (pr1 Cx)) (segment_lt_incl Cz x Cx)).
-    simple refine (Q @ _). apply maponpaths. exact (! restrictSection_lt_trans f Cz Cx).
+    intros i [f gui]. exists (restrictPartialSection i f).
+    intros x Cx. unfold restrictPartialSection at 1. simple refine (gui x (i x Cx) @ _).
+    apply maponpaths. unfold restrictSection_lt. apply pathsinv0.
+    simple refine (restrictPartialSection_trans _ _ _ @ _).
+    apply (maponpaths (λ i, restrictPartialSection i f)). apply propproperty.
   Defined.
 
-  Definition restrictGuidedSec (C : InitialSegment X) (z : X) (Cz : C z) :
+  Definition restrictGuidedSec'' (C : InitialSegment X) (z : X) (Cz : C z) :
+    GuidedSec C → GuidedSec (segment_lt z).
+  Proof.
+    exact (restrictGuidedSec (segment_lt_incl Cz)).
+  Defined.
+
+  Definition restrictGuidedSec' (C : InitialSegment X) (z : X) (Cz : C z) :
     GuidedSec (segment_le z) → GuidedSec (segment_lt z).
   Proof.
-    intros f. exact (restrictGuidedSec' (segment_le z) _ (isrefl_posetRelation X z) f).
+    simple refine (restrictGuidedSec _). intros x lt. exact (pr1 lt).
   Defined.
 
   Definition extendGuidedSec (C:InitialSegment X) (z:X) (Cz:C z) :
@@ -1879,7 +1896,7 @@ Section GuidedRecursion.
     isaprop (GuidedSec (segment_lt z)) -> isaprop (GuidedSec (segment_le z)).
   Proof.
     intros i.
-    simple refine (isapropretract i (restrictGuidedSec C z Cz) _ _).
+    simple refine (isapropretract i (restrictGuidedSec' C z Cz) _ _).
     - exact (extendGuidedSec C z Cz).
     - admit.
     Fail idtac.
@@ -1916,7 +1933,17 @@ Section GuidedRecursion.
     intros H.
     use tpair.
     - intros x Cx. exact (pr1 (H x Cx) x (isrefl_posetRelation X x)).
-    - intros x Cx.
+    - intros x Cx. simple refine (pr2 (H x Cx) x (isrefl_posetRelation X x) @ _).
+      apply maponpaths. apply funextsec; intro y; apply funextsec; intro lt.
+      set (f := restrictGuidedSec (C := segment_le y) (segment_le_incl' (pr1 lt)) (H x Cx)).
+      set (g := H y (pr2 C y x Cx (pr1 lt))).
+      assert (p : f=g).
+      { apply D. }
+      assert (p' : ∏ t l, pr1 f t l = pr1 g t l).
+      { now induction p. }
+      simple refine (_ @ p' y (isrefl_posetRelation _ y)).
+      apply pathsinv0.
+
 
 
     admit.
@@ -1987,15 +2014,15 @@ Section Recursion.
     - exact (isGuidedPartialSection rec).
     - intros C D i f q x Cx. change (hProptoType (C x)) in Cx. simple refine (q x (i x Cx) @ _).
       apply maponpaths. apply funextsec; intro y; apply funextsec; intro lt.
-      unfold restrictPartialSection,restrictSection_lt.
+      unfold restrictPartialSection,restrictSection_lt,restrictPartialSection.
       apply maponpaths. apply propproperty.
     - intros C f loc x Cx. assert (Q := loc x Cx x (isrefl_posetRelation _ _)). simpl in Q.
-      unfold restrictSection_le in Q.
+      unfold restrictSection_le,restrictPartialSection in Q.
       induction (proofirrelevance_hProp
                   (C x) Cx (segment_le_incl Cx x (isrefl_posetRelation X x))).
       simple refine (Q @ _). apply maponpaths.
       apply funextsec; intro y; apply funextsec; intro lt.
-      unfold restrictSection_lt. apply maponpaths. apply propproperty.
+      unfold restrictSection_lt,restrictPartialSection. apply maponpaths. apply propproperty.
     - intros C. apply invproofirrelevance. intros [f p] [g q]. assert (e : f = g).
       { change (@paths (∏ x Cx, P x)%set f g). apply funextsec.
         change (∏ x, @eqset (∏ Cx, P x) (f x) (g x))%set. use ind. intros x H. apply funextsec; intros Cx.
@@ -2095,7 +2122,7 @@ Section Zorn.
     Local Definition isInj {C:InitialSegment W} (f:PartialSection C _X) := ∀ v w Cv Cw, f v Cv = f w Cw ⇒ v = w.
 
     Lemma isInj_sub {Y Z:InitialSegment W} (i : Y ⊆ Z) (f : PartialSection Z _X) :
-      isInj f -> isInj (restrictPartialSection Y Z _X i f).
+      isInj f -> isInj (restrictPartialSection i f).
     Proof.
       intros inj v w Yv Yw e. exact (inj v w (i v Yv) (i w Yw) e).
     Defined.
@@ -2107,7 +2134,7 @@ Section Zorn.
       := λ (x:X), ∃ (w':W) (Cw':C w'), w' < w ∧ f w' Cw' = x.
 
     Lemma im_upto_eqn {Y Z:InitialSegment W} (i : Y ⊆ Z) (f : PartialSection Z _X) (w : W) (Yw : Y w) :
-      im_upto f w = im_upto (restrictPartialSection Y Z (λ x : W, _X x) i f) w.
+      im_upto f w = im_upto (restrictPartialSection i f) w.
     Proof.
       apply funextfun; intros x. apply subtypeEquality.
       - intros Q. apply isapropisaprop.
@@ -2122,18 +2149,18 @@ Section Zorn.
     Admitted.
 
     Lemma im_upto_upto_sub {C D:InitialSegment W} (i:C⊆D) (f:PartialSection D _X) (w:W) :
-      im_upto (restrictPartialSection _ _ _ i f) w ⊆ im_upto f w.
+      im_upto (restrictPartialSection i f) w ⊆ im_upto f w.
     Proof.
       intros x Ix. apply (squash_to_hProp Ix); clear Ix; intros [v [Cv K]]. exact (hinhpr (v,,i v Cv,,K)).
     Defined.
 
-    Lemma im_sub {C D:InitialSegment W} (i:C⊆D) (f:PartialSection D _X) : im (restrictPartialSection _ _ _ i f) ⊆ im f.
+    Lemma im_sub {C D:InitialSegment W} (i:C⊆D) (f:PartialSection D _X) : im (restrictPartialSection i f) ⊆ im f.
     Proof.
       intros x Ix. apply (squash_to_hProp Ix); clear Ix; intros [v [Cv K]]. exact (hinhpr (v,,i v Cv,,K)).
     Defined.
 
     Lemma im_sub_isChain {C D:InitialSegment W} (i:C⊆D) (f:PartialSection D _X) :
-      isChain (im f) -> isChain (im (restrictPartialSection C D _X i f)).
+      isChain (im f) -> isChain (im (restrictPartialSection i f)).
     Proof.
       exact (isChain_subset (im_sub i f)).
     Defined.
@@ -2192,7 +2219,7 @@ Section Zorn.
           * now apply isInj_sub.
           * intros w Yw. unfold restrictPartialSection at 1. simple refine (gui w (i w Yw) @ _).
             apply (maponpaths (λ K, pr1 (bound K))). apply subtypeEquality_prop.
-            change (im_upto f w = im_upto (restrictPartialSection Y Z _X i f) w).
+            change (im_upto f w = im_upto (restrictPartialSection i f) w).
             exact (im_upto_eqn i f w Yw).
       - intros C f H.
         use tpair.

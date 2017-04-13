@@ -129,10 +129,15 @@ Defined.
 
 Ltac hsubtype_induction f e := generalize f; apply hsubtype_rect; intro e; clear f.
 
-Lemma subtype_containment_isPartialOrder X : isPartialOrder (@subtype_containedIn X).
+Lemma subtype_containedIn_istrans {X} {S T U:hsubtype X} : S ⊆ T -> T ⊆ U -> S ⊆ U.
+Proof.
+  intros i j x. exact (j x ∘ i x).
+Defined.
+
+Lemma subtype_containedIn_isPartialOrder X : isPartialOrder (@subtype_containedIn X).
 Proof.
   repeat split.
-  - intros S T U i j x. exact (j x ∘ i x).
+  - intros S T U i j x Sx. exact (subtype_containedIn_istrans i j x Sx).
   - intros S x s. exact s.
   - intros S T i j. apply (invmap (hsubtype_univalence S T)). now apply subtype_equal_cond.
 Defined.
