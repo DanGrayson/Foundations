@@ -1848,11 +1848,9 @@ Section GuidedRecursion.
     apply propproperty.
   Defined.
 
-  Lemma A (C:InitialSegment X) (z:X) (Cz:C z) :
-    isaprop (GuidedSec (segment_lt z)) -> isaprop (GuidedSec (segment_le z)).
+  Definition extendGuidedSec (C:InitialSegment X) (z:X) (Cz:C z) :
+    GuidedSec (segment_lt z) -> GuidedSec (segment_le z).
   Proof.
-    intros i.
-    simple refine (isapropretract i (restrictGuidedSec C z Cz) _ _).
     intros [f gui].
     { exists (extendPartialSection P z dec f (rec z f)).
       intros x le; change (hProptoType (x ≤ z)) in le.
@@ -1876,9 +1874,17 @@ Section GuidedRecursion.
         match goal with |- _ = coprod_rect _ _ _ ?K => induction K as [lt3|eq3] end.
         { change (f y lt = f y lt3). apply maponpaths. apply propproperty. }
         { apply fromempty. exact (pr2 lt eq3). } }
-    admit.
+  Defined.
+
+  Lemma A (C:InitialSegment X) (z:X) (Cz:C z) :
+    isaprop (GuidedSec (segment_lt z)) -> isaprop (GuidedSec (segment_le z)).
+  Proof.
+    intros i.
+    simple refine (isapropretract i (restrictGuidedSec C z Cz) _ _).
+    - exact (extendGuidedSec C z Cz).
+    - admit.
     Fail idtac.
-  Abort.
+  Admitted.
 
   Lemma B (C:InitialSegment X) :
     (∏ (z:X) (Cz:C z), isaprop (GuidedSec (segment_le z))) -> isaprop (GuidedSec C).
@@ -1888,8 +1894,47 @@ Section GuidedRecursion.
 
     admit.
    Fail idtac.
-  Abort.
+  Admitted.
 
+  Lemma D : ∏ (C:InitialSegment X), isaprop (GuidedSec C).
+  Proof.
+    intros C. apply B. use (ind (λ z, C z ⇒ isaprop_hProp (GuidedSec (segment_le z)))).
+    intros x H Cx. use (A C x Cx). use B. intros y lt; change (hProptoType (y < x)) in lt.
+    simple refine (H y lt _). exact (pr2 C y x Cx (pr1 lt)).
+  Defined.
+
+  Lemma A' (C:InitialSegment X) (z:X) (Cz:C z) :
+    iscontr (GuidedSec (segment_lt z)) -> iscontr (GuidedSec (segment_le z)).
+  Proof.
+    intros H. apply iscontraprop1.
+    - apply D.
+    - exact (extendGuidedSec C z Cz (pr1 H)).
+  Defined.
+
+  Definition glueGuidedSec (C:InitialSegment X) :
+    (∏  (z:X) (Cz:C z), GuidedSec (segment_le z)) -> GuidedSec C.
+  Proof.
+    admit.
+    Fail idtac.
+  Admitted.
+
+  Lemma B' (C:InitialSegment X) :
+    (∏ (z:X) (Cz:C z), iscontr (GuidedSec (segment_le z))) -> iscontr (GuidedSec C).
+  Proof.
+    intros H. apply iscontraprop1.
+    - apply D.
+    - apply glueGuidedSec. intros y Cy. exact (pr1 (H y Cy)).
+  Defined.
+
+  Lemma D' : ∏ (C:InitialSegment X), iscontr (GuidedSec C).
+  Proof.
+    intros C. apply B'. use (ind (λ z, C z ⇒ iscontr_hProp (GuidedSec (segment_le z)))).
+    intros x H Cx. use (A' C x Cx). use B'. intros y lt; change (hProptoType (y < x)) in lt.
+    simple refine (H y lt _). exact (pr2 C y x Cx (pr1 lt)).
+  Defined.
+
+  Definition E : ∏ x, P x
+    := λ x, pr11 (D' (segment_all X)) x tt.
 
 End GuidedRecursion.
 
@@ -2168,8 +2213,6 @@ Section Zorn.
   Admitted.
 
 End Zorn.
-
-Check Zorn.
 
 Section PartialFunctions.
 
