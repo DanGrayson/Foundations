@@ -1593,12 +1593,6 @@ Section MutualRecursion.
     exists (λ y, y <∨= x). intros y z l m. exact (lessthan_choice_trans _ _ _ lem m l).
   Defined.
 
-  Definition segment_lt_le_incl {X:Poset} (x:X): segment_lt x ⊆ segment_le x.
-  Proof.
-    intros y lt.
-    exact (pr1 lt).
-  Defined.
-
   Definition segment_intersect {X:Poset} (Y Z : InitialSegment X) : InitialSegment X.
   Proof.
     use tpair.
@@ -1727,65 +1721,6 @@ Section MutualRecursion.
     unfold restrictSection_lt,restrictPartialSection. apply extendPartialSection_eqn_lt.
   Defined.
 
-  Definition extendPartialSection_eqn {X:Poset} (P : X -> UU) (z:X) (dec:isdeceq X)
-             (f : PartialSection (segment_le z) P) (y:X) (le:y≤z) :
-    extendPartialSection P z dec
-                         (restrictPartialSection (segment_lt_le_incl z) f)
-                         (f z (isrefl_posetRelation X z)) y le
-    = f y le.
-  Proof.
-    induction (choose_lt_eq dec le) as [lt|eq].
-    - simple refine (extendPartialSection_eqn_lt P z dec (restrictPartialSection (segment_lt_le_incl z) f) (f z (isrefl_posetRelation X z)) y le lt @ _).
-      change (f y (segment_lt_le_incl z y lt) = f y le).
-      apply maponpaths, propproperty.
-    - simple refine (extendPartialSection_eqn_eq _ _ _ _ _ _ _ eq @ _).
-      induction eq; change (f y (isrefl_posetRelation X y) = f y le).
-      apply maponpaths, propproperty.
-  Defined.
-
-  Definition restrict_extendPartialSection {X : Poset} (P : X → UU) (z : X)
-             (dec : isdeceq X) (f : PartialSection (segment_lt z) P) (p : P z) :
-    restrictPartialSection (segment_lt_le_incl z) (extendPartialSection P z dec f p)
-    = f.
-  Proof.
-    apply funextsec; intros y; apply funextsec; intros lt.
-    change (coprod_rect (λ _, P y) (f y)
-                        (λ eq, transportb P eq p) (choose_lt_eq dec (pr1 lt))
-            = f y lt).
-    induction (choose_lt_eq dec (pr1 lt)) as [lt'|eq'].
-    - change (f y lt' = f y lt). apply maponpaths, propproperty.
-    - apply fromempty. induction eq'. change (hProptoType(y<y)) in lt.
-      exact (pr2 lt (idpath y)).
-  Defined.
-
-  Lemma PartialSection_next_weq {X:Poset} (P : X -> UU) (z:X) (dec:isdeceq X) :
-    (PartialSection (segment_le z) P ≃ PartialSection (segment_lt z) P × P z)%type.
-  Proof.
-    use tpair.
-    - intros f.
-      exact (restrictPartialSection (segment_lt_le_incl z) f ,, f z (isrefl_posetRelation X z)).
-    - use gradth.
-      + intros f x le; change (hProptoType(x≤z)) in le.
-        exact (extendPartialSection P z dec (pr1 f) (pr2 f) x le).
-      + intros f. apply funextsec; intros y; apply funextsec; intros le.
-        change (extendPartialSection P z dec (restrictPartialSection (segment_lt_le_incl z) f)
-                                     (f z (isrefl_posetRelation X z)) y le = f y le).
-        apply extendPartialSection_eqn.
-      + intros [f p].
-        change (restrictPartialSection (segment_lt_le_incl z)
-                                       (λ x le, extendPartialSection P z dec f p x le),,
-                                       extendPartialSection P z dec f p z (isrefl_posetRelation X z)
-                = f,, p ).
-        apply dirprod_paths.
-        * simpl.
-          change (restrictPartialSection (segment_lt_le_incl z)
-                                         (extendPartialSection P z dec f p)
-                  = f).
-          apply restrict_extendPartialSection.
-        * change (extendPartialSection P z dec f p z (isrefl_posetRelation X z) = p).
-          exact (extendPartialSection_eqn_eq P z dec f p z (isrefl_posetRelation X z) (idpath z)).
-  Defined.
-
   Context (X:OrderedSet) (dec : isdeceq X).
 
   (** The goal is to get a section of P. *)
@@ -1906,48 +1841,6 @@ Section MutualRecursion.
 
 End MutualRecursion.
 
-Section Upstream.
-
-  Close Scope set.
-  Close Scope prop.
-
-  Theorem weqfuntoprodtoprod_dep {X:UU} (Y Z:X->UU) :
-    (∏ x, Y x × Z x) ≃ (∏ x, Y x) × (∏ x, Z x).
-  (* compare with weqfuntoprodtoprod, move upstream *)
-  Proof.
-    exists (λ f, (λ x, pr1 (f x)),,(λ x, pr2 (f x))).
-    use gradth.
-    { exact (λ fg x, pr1 fg x ,, pr2 fg x ). }
-    { reflexivity. }
-    { reflexivity. }
-  Defined.
-
-  Lemma weqfunpath {X:UU} {x:X} (P : ∏ y, y=x -> UU) :
-    (∏ y e, P y e) ≃ P x (idpath x).
-  Proof.
-    use tpair.
-    { intros p. exact (p x (idpath x)). }
-    simpl.
-    use gradth.
-    { intros p y e. induction e. exact p. }
-    { intros p. apply funextsec; intros y; apply funextsec; intros e.
-      induction e. reflexivity. }
-    { simpl. reflexivity. }
-  Defined.
-
-  Lemma weqpairpath {X:UU} {x:X} (P : ∏ y, y=x -> UU) :
-    (∑ y e, P y e) ≃ P x (idpath x).
-  Proof.
-    use tpair.
-    { intros [y [e p]]. induction e. exact p. }
-    simpl. use gradth.
-    { intros p. exact (x,,idpath x,,p). }
-    { simpl. intros [y [e p]]. now induction e. }
-    { reflexivity. }
-  Defined.
-
-End Upstream.
-
 Section GuidedRecursion.
 
   (** an experiment for inductive recursion into types that may not be sets *)
@@ -1959,8 +1852,6 @@ Section GuidedRecursion.
           (ind : isInductivelyOrdered X).
 
   Context (rec : ∏ x:X, PartialSection (segment_lt x) P -> P x).
-
-  Context (lem : LEM).
 
   Definition GuidedSec (C:InitialSegment X) :=
     ∑ f : PartialSection C P, ∏ x Cx, f x Cx = rec x (restrictSection_lt f Cx).
@@ -2001,126 +1892,14 @@ Section GuidedRecursion.
       apply maponpaths. apply pathsinv0. apply restrict_extendPartialSection_eq.
   Defined.
 
-  Lemma split_le (x y : X) : (x ≤ y) ≃ (x <∨= y).
-  Proof.
-    apply weqiff.
-    - split.
-      + intros le. induction (choose_lt_eq dec le) as [lt|eq].
-        * exact (ii1 lt).
-        * exact (ii2 eq).
-      + intros [lt|eq].
-        * exact (pr1 lt).
-        * exact (transportf (λ z, x ≤ z) eq (isrefl_posetRelation X x)).
-    - apply propproperty.
-    - apply propproperty.
-  Defined.
-
-  Lemma A' (C:InitialSegment X) (z:X) (Cz:C z) :
+  Lemma A (C:InitialSegment X) (z:X) (Cz:C z) :
     GuidedSec (segment_le z) ≃ GuidedSec (segment_lt z).
   Proof.
-    set (w := PartialSection_next_weq P z dec).
-    unfold GuidedSec at 1.
-    simple refine (weqcomp (invweq (weqfp (invweq w) (λ f, ∏ (x : X) (Cx : (segment_le z) x), f x Cx = rec x (restrictSection_lt f Cx)))) _);
-      change (
-          (∑ f : PartialSection (segment_lt z) P × P z,
-                 ∏ x Cx, invmap w f x Cx = rec x (restrictSection_lt (invmap w f) Cx))
-            ≃ GuidedSec (segment_lt z)).
-    unfold w; clear w;
-      change (invmap (PartialSection_next_weq P z dec))
-      with (λ (g : PartialSection (segment_lt z) P × P z) (x : X) (le : x <= z),
-            extendPartialSection P z dec (pr1 g) (pr2 g) x le).
-    simple refine (weqcomp (weqtotal2dirprodassoc _) _);
-      change (
-          (∑ (f : PartialSection (segment_lt z) P) p,
-           ∏ y (le:y≤z),
-           extendPartialSection P z dec f p y le =
-           rec y (restrictSection_lt (extendPartialSection P z dec f p) le))
-            ≃ GuidedSec (segment_lt z)).
-    intermediate_weq (
-          (∑ (f : PartialSection (segment_lt z) P) p,
-           ∏ y (le:y <∨= z),
-           extendPartialSection P z dec f p y (lessthan_choice_to_le _ _ le) =
-           rec y (restrictSection_lt (extendPartialSection P z dec f p) (lessthan_choice_to_le _ _ le)))
-           ).
-    { apply weqfibtototal; intros f; apply weqfibtototal; intros p.
-      apply weqonsecfibers; intros x.
-      simple refine (weqcomp (weqonsecbase _ (invweq (split_le x z))) _).
-      apply weqonsecfibers; intros [lt|eq].
-      { exact (idweq _). }
-      generalize ((invweq (split_le x z)) (ii2 eq)); intros le.
-      generalize (lessthan_choice_to_le x z (ii2 eq)); intros le'.
-      induction (proofirrelevance_hProp _ le le').
-      exact (idweq _). }
-    unfold lessthan_choice,coprod_hProp.
-    intermediate_weq (∑ (f : PartialSection (segment_lt z) P) (p : P z),
-                      ∏ y,
-                      (∏ lt : y<z,
-                              extendPartialSection P z dec f p y (pr1 lt) =
-                              rec y (restrictSection_lt (extendPartialSection P z dec f p) (pr1 lt)))
-                        ×
-                      (∏ eq : y=z,
-                              extendPartialSection P z dec f p y (lessthan_choice_to_le y z (ii2 eq)) =
-                              rec y (restrictSection_lt (extendPartialSection P z dec f p) (lessthan_choice_to_le y z (ii2 eq))))).
-    { apply weqfibtototal; intros f; apply weqfibtototal; intros p.
-      apply weqonsecfibers; intros x.
-      apply weqsecovercoprodtoprod. }
-    intermediate_weq (∑ (f : PartialSection (segment_lt z) P) (p : P z),
-                      (∏ y : X, ∏ lt : y < z,
-                                       extendPartialSection P z dec f p y (pr1 lt) =
-                                       rec y (restrictSection_lt (extendPartialSection P z dec f p) (pr1 lt)))
-                        × (∏ y : X, ∏ eq : y = z,
-                                           extendPartialSection P z dec f p y (lessthan_choice_to_le y z (ii2 eq)) =
-                                           rec y
-                                               (restrictSection_lt (extendPartialSection P z dec f p)
-                                                                   (lessthan_choice_to_le y z (ii2 eq))))).
-    { apply weqfibtototal; intros f; apply weqfibtototal; intros p.
-      apply weqfuntoprodtoprod_dep. }
-    intermediate_weq ((∑ (f : PartialSection (segment_lt z) P) (p : P z),
-                         (∏ (y : X) (lt : y < z),
-                          extendPartialSection P z dec f p y (pr1 lt) =
-                          rec y (restrictSection_lt (extendPartialSection P z dec f p) (pr1 lt)))
-                           × (
-                              extendPartialSection P z dec f p z (lessthan_choice_to_le z z (ii2 (idpath z))) =
-                              rec z
-                                  (restrictSection_lt (extendPartialSection P z dec f p)
-                                                      (lessthan_choice_to_le z z (ii2 (idpath z))))))).
-    { apply weqfibtototal; intros f; apply weqfibtototal; intros p.
-      apply weqdirprodf.
-      { exact (idweq _). }
-      { use weqfunpath. } }
-    intermediate_weq (∑ (f : PartialSection (segment_lt z) P) (p : P z),
-                        (∏ (y : X) (lt : y < z),
-                         f y lt = rec y (restrictSection_lt f lt))
-                          × p = rec z f).
-    { apply weqfibtototal; intros f; apply weqfibtototal; intros p; apply weqdirprodf.
-      { apply weqonsecfibers; intros y; apply weqonsecfibers; intros lt.
-        rewrite (restrict_extendPartialSection_lt P z dec f p y (pr1 lt) lt).
-        unfold extendPartialSection.
-        assert (q : ii1 lt = choose_lt_eq dec (pr1 lt)).
-        { induction (choose_lt_eq dec (pr1 lt)) as [lt'|eq'].
-          - apply maponpaths, propproperty.
-          - apply fromempty. induction eq'. exact (pr2 lt (idpath y)). }
-        induction q.
-        change (f y lt = rec y (restrictSection_lt f lt) ≃ f y lt = rec y (restrictSection_lt f lt)).
-        exact (idweq _). }
-      { simpl. rewrite restrict_extendPartialSection_eq.
-        rewrite (extendPartialSection_eqn_eq P z dec f p z (isrefl_posetRelation X z) (idpath z)).
-        exact (idweq _). } }
-    intermediate_weq (∑ (f : PartialSection (segment_lt z) P) (p : P z),
-                      p = rec z f × (∏ (y : X) (lt : y < z), f y lt = rec y (restrictSection_lt f lt))).
-    { apply weqfibtototal; intros f; apply weqfibtototal; intros p.
-      apply weqdirprodcomm. }
-    intermediate_weq (∑ (f : PartialSection (segment_lt z) P),
-                      (∏ (y : X) (lt : y < z), f y lt = rec y (restrictSection_lt f lt))).
-    { apply weqfibtototal; intros f. apply weqpairpath. }
-    exact (idweq _).
-  Defined.
+    exists (restrictGuidedSec' C z Cz).
 
-  Lemma A (C:InitialSegment X) (z:X) (Cz:C z) :
-    isaprop (GuidedSec (segment_lt z)) -> isaprop (GuidedSec (segment_le z)).
-  Proof.
-    exact (isofhlevelweqb 1 (A' C z Cz)).
-  Defined.
+    admit.
+    Fail idtac.
+  Admitted.
 
   Lemma B (C:InitialSegment X) :
     (∏ (z:X) (Cz:C z), isaprop (GuidedSec (segment_le z))) -> isaprop (GuidedSec C).
@@ -2135,11 +1914,11 @@ Section GuidedRecursion.
   Lemma D : ∏ (C:InitialSegment X), isaprop (GuidedSec C).
   Proof.
     intros C. apply B. use (ind (λ z, C z ⇒ isaprop_hProp (GuidedSec (segment_le z)))).
-    intros x H Cx. use (isofhlevelweqb 1 (A' C x Cx)). use B. intros y lt; change (hProptoType (y < x)) in lt.
+    intros x H Cx. use (isofhlevelweqb 1 (A C x Cx)). use B. intros y lt; change (hProptoType (y < x)) in lt.
     simple refine (H y lt _). exact (pr2 C y x Cx (pr1 lt)).
   Defined.
 
-  Lemma A'' (C:InitialSegment X) (z:X) (Cz:C z) :
+  Lemma A' (C:InitialSegment X) (z:X) (Cz:C z) :
     iscontr (GuidedSec (segment_lt z)) -> iscontr (GuidedSec (segment_le z)).
   Proof.
     intros H. apply iscontraprop1.
@@ -2181,7 +1960,7 @@ Section GuidedRecursion.
   Lemma D' : ∏ (C:InitialSegment X), iscontr (GuidedSec C).
   Proof.
     intros C. apply B'. use (ind (λ z, C z ⇒ iscontr_hProp (GuidedSec (segment_le z)))).
-    intros x H Cx. use (A'' C x Cx). use B'. intros y lt; change (hProptoType (y < x)) in lt.
+    intros x H Cx. use (A' C x Cx). use B'. intros y lt; change (hProptoType (y < x)) in lt.
     simple refine (H y lt _). exact (pr2 C y x Cx (pr1 lt)).
   Defined.
 
