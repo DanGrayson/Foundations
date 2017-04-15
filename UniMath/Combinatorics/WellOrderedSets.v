@@ -1550,8 +1550,6 @@ Local Notation "m <∨= n" := (lessthan_choice m n) (at level 70, no associativi
 
 (** ** Transfinite recursion *)
 
-Local Notation "p ## x" := (transportf _ p x) (right associativity, at level 65). (* for compact displays *)
-
 Section MutualRecursion.
 
   (** In this section, we develop a mutual recursion principle, to deal with the case where
@@ -1977,6 +1975,35 @@ Section Upstream.
     - now induction e.
   Defined.
 
+  Section Transport.
+
+    Open Scope transport.
+
+    Local Arguments funextsec {_ _ _ _} _.
+
+    Context {X:UU} {T:X->UU} {U : ∏ (f : ∏ x, T x) (x : X), UU}
+            (F G : ∑ (f : ∏ x, T x), ∏ x, U f x).
+
+    Definition K : F=G  ≃  ∑ h : pr1 F ~ pr1 G,
+                                 ∏ y, transportf (λ f, U f y) (funextsec h) (pr2 F y) = pr2 G y.
+    Proof.
+      intermediate_weq (F ╝ G); [use total2_paths_equiv|]. unfold PathPair.
+      intermediate_weq (∑ p : pr1 F = pr1 G, ∏ y, transportf (λ f, U f y) p (pr2 F y) = pr2 G y).
+      { apply weqfibtototal; intros p.
+        simple refine (weqcomp (weqtoforallpaths (U (pr1 G)) _ _) _).
+        unfold homot. apply weqonsecfibers; intros y. apply eqweqmap.
+        apply (maponpaths (λ l, l = pr2 G y)). induction p. reflexivity. }
+      simple refine (weqcomp _ (weqfp (weqtoforallpaths _ (pr1 F) (pr1 G))
+                                      (λ h, ∏ y, transportf (λ f, U f y) (funextsec h) (pr2 F y)
+                                                     = pr2 G y))).
+      apply weqfibtototal; intros p; apply weqonsecfibers; intros y.
+      apply eqweqmap. apply (maponpaths (λ l, l = pr2 G y)).
+      apply (maponpaths (λ p, transportf (λ f : ∏ x : X, T x, U f y) p (pr2 F y))).
+      apply pathsinv0, homotinvweqweq.
+    Defined.
+
+  End Transport.
+
 End Upstream.
 
 Section GuidedRecursion.
@@ -2162,24 +2189,64 @@ Section GuidedRecursion.
   Lemma B (C:InitialSegment X) :
     (∏ (z:X) (Cz:C z), isaprop (GuidedSec (segment_le z))) -> isaprop (GuidedSec C).
   Proof.
+    Local Arguments total2_paths_equiv {_ _} _ _.
+    Local Arguments transportf {_ _} _ _.
+    Local Arguments funextsec {_ _ _ _} _.
     intro ip. apply invproofirrelevance. intros f f'.
     unfold GuidedSec in f, f'.
-    assert (K : ∏ z (Cz:C z), restrictGuidedSec''' Cz f = restrictGuidedSec''' Cz f').
+    assert (L : ∏ z (Cz:C z), restrictGuidedSec''' Cz f = restrictGuidedSec''' Cz f').
     { intros z Cz. apply proofirrelevance. now apply ip. }
-    clear ip.
-    induction f as [f p], f' as [f' p'].
-    transparent assert (e : (f = f')).
-    { apply funextsec; intros y; apply funextsec; intros Cy.
-      simple refine (_ @ maponpaths (λ h, pr1 h y (isrefl_posetRelation X y)) (K y Cy) @ _).
-      - change (f y Cy = restrictPartialSection (segment_le_incl Cy) f y (isrefl_posetRelation X y)).
-        apply restrictSection_value.
-      - apply pathsinv0;
-          change (f' y Cy = restrictPartialSection (segment_le_incl Cy) f' y (isrefl_posetRelation X y)).
-        apply restrictSection_value. }
-    simple refine (total2_paths2_f e _).
-    apply funextsec; intros y; apply funextsec; intros Cy.
-    assert (Q := transportf_funextsec f f').
-    unfold e; clear e.
+    set (L' := λ y Cy, maponpaths (λ h, pr1 h y (isrefl_posetRelation X y)) (L y Cy)).
+    apply (invmap (K f f')).
+    use tpair.
+    { intros y. apply funextsec; intros Cy.
+      simple refine (_ @ L' y Cy @ _).
+      - apply restrictSection_value.
+      - apply pathsinv0, restrictSection_value. }
+    intros z. apply funextsec; intros Cz.
+    assert (Q := pr2 (total2_paths_equiv _ _ (L z Cz))).
+    change (
+       transportf (pr1 (restrictGuidedSec''' Cz f)) (pr1 (restrictGuidedSec''' Cz f'))
+        (pr1
+           ((total2_paths_equiv (restrictGuidedSec''' Cz f)
+                                (restrictGuidedSec''' Cz f'))
+              (L z Cz)))
+         (pr2 (restrictGuidedSec''' Cz f)) = pr2 (restrictGuidedSec''' Cz f')) in Q.
+    assert (Q' := eqtohomot (eqtohomot Q z) (isrefl_posetRelation X z)).
+
+    set (PA := @paths).
+    fold PA in Q'. simpl in Q'.
+
+
+    assert (e1 : (restrictPartialSection (segment_le_incl Cz) (pr1 f') z (isrefl_posetRelation X z))
+                 = (pr1 f' z Cz)).
+    { apply pathsinv0, restrictSection_value. }
+    assert (e2 : (rec z
+                      (restrictSection_lt (restrictPartialSection (segment_le_incl Cz) (pr1 f'))
+                                          (isrefl_posetRelation X z)))
+                 = (rec z (restrictSection_lt (pr1 f') Cz))).
+    {
+      apply maponpaths.
+      (* abstract this as a lemma later *)
+      assert (R := restrictPartialSection_trans
+                     (@segment_lt_incl _
+                                       (@segment_le (OrderedSet_to_Poset X) z)
+                                       z
+                                       (isrefl_posetRelation (OrderedSet_to_Poset X) z))
+                     (segment_le_incl Cz)
+             (pr1 f')).
+      simple refine (R @ _).
+      unfold restrictSection_lt.
+      apply (maponpaths (λ i, restrictPartialSection i (pr1 f'))).
+      apply propproperty. }
+
+
+    (* induction e1. *)
+    (* induction e2. *)
+
+
+
+
 
 
     admit.
