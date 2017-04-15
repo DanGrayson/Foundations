@@ -1659,6 +1659,14 @@ Section MutualRecursion.
              (f : PartialSection Y P) {y:X} (Yy:Y y) : PartialSection (segment_lt y) P
    := restrictPartialSection (segment_lt_incl Yy) f.
 
+  Definition restrictSection_value {X:Poset} {P : X -> UU} {C : InitialSegment X}
+             (f : PartialSection C P) (y : X) (Cy : C y) :
+    f y Cy = restrictPartialSection (segment_le_incl Cy) f y (isrefl_posetRelation X y).
+  Proof.
+    unfold restrictPartialSection.
+    apply maponpaths, propproperty.
+  Defined.
+
   Lemma restrictSection_lt_trans {X:Poset} {P : X -> UU} {Y : InitialSegment X}
         (f : PartialSection Y P) {y:X} (Yy:Y y) {z:X} (lt:z<y) :
     restrictSection_lt (restrictSection_lt f Yy) lt =
@@ -1946,6 +1954,29 @@ Section Upstream.
     { reflexivity. }
   Defined.
 
+  Lemma toforallpaths_induction {X : UU} {Y : X -> UU} (f g : ∏ x, Y x) (P : (∏ x, f x = g x) -> UU)
+        (H : ∏ e : f = g, P (toforallpaths _ _ _ e)) : ∏ i : (∏ x, f x = g x), P i.
+  (* improves toforallpaths_induction upstream *)
+  Proof.
+    intros i. rewrite <- (homotweqinvweq (weqtoforallpaths _ f g)). apply H.
+  Defined.
+
+  Definition transportf_funextsec {X : UU} {Y : X -> UU} (F F' : ∏ x, Y x) (H : ∏ (x : X), F x = F' x)
+             (x : X)  (P : Y x -> UU) (p : P (F x)) :
+    transportf (λ g : (∏ x, Y x), P (g x)) (funextsec _ F F' H) p = transportf P (H x) p.
+  (* improves transportf_funextfun *)
+  Proof.
+    simple refine (toforallpaths_induction F F'
+                     (fun H' : (∏ (x : X), F x = F' x) =>
+                        transportf (λ g, P (g x)) (funextsec Y F F' H') p =
+                        transportf P              (H' x)                p
+                     ) _ H);
+       clear H.
+    intro e. intermediate_path (transportf (λ g, P (g x)) e p).
+    - use transportf_paths. use homotinvweqweq.
+    - now induction e.
+  Defined.
+
 End Upstream.
 
 Section GuidedRecursion.
@@ -1978,6 +2009,12 @@ Section GuidedRecursion.
     GuidedSec C → GuidedSec (segment_lt z).
   Proof.
     exact (restrictGuidedSec (segment_lt_incl Cz)).
+  Defined.
+
+  Definition restrictGuidedSec''' {C : InitialSegment X} {z : X} (Cz : C z) :
+    GuidedSec C → GuidedSec (segment_le z).
+  Proof.
+    exact (restrictGuidedSec (segment_le_incl Cz)).
   Defined.
 
   Definition restrictGuidedSec' (C : InitialSegment X) (z : X) (Cz : C z) :
@@ -2125,8 +2162,25 @@ Section GuidedRecursion.
   Lemma B (C:InitialSegment X) :
     (∏ (z:X) (Cz:C z), isaprop (GuidedSec (segment_le z))) -> isaprop (GuidedSec C).
   Proof.
-    intro ip. apply invproofirrelevance. intros [f q] [f' q'].
-    unfold PartialSection in f, f'.
+    intro ip. apply invproofirrelevance. intros f f'.
+    unfold GuidedSec in f, f'.
+    assert (K : ∏ z (Cz:C z), restrictGuidedSec''' Cz f = restrictGuidedSec''' Cz f').
+    { intros z Cz. apply proofirrelevance. now apply ip. }
+    clear ip.
+    induction f as [f p], f' as [f' p'].
+    transparent assert (e : (f = f')).
+    { apply funextsec; intros y; apply funextsec; intros Cy.
+      simple refine (_ @ maponpaths (λ h, pr1 h y (isrefl_posetRelation X y)) (K y Cy) @ _).
+      - change (f y Cy = restrictPartialSection (segment_le_incl Cy) f y (isrefl_posetRelation X y)).
+        apply restrictSection_value.
+      - apply pathsinv0;
+          change (f' y Cy = restrictPartialSection (segment_le_incl Cy) f' y (isrefl_posetRelation X y)).
+        apply restrictSection_value. }
+    simple refine (total2_paths2_f e _).
+    apply funextsec; intros y; apply funextsec; intros Cy.
+    assert (Q := transportf_funextsec f f').
+    unfold e; clear e.
+
 
     admit.
    Fail idtac.
