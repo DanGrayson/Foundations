@@ -1657,8 +1657,8 @@ Section MutualRecursion.
              (f : PartialSection Y P) {y:X} (Yy:Y y) : PartialSection (segment_lt y) P
    := restrictPartialSection (segment_lt_incl Yy) f.
 
-  Definition restrictSection_value {X:Poset} {P : X -> UU} {C : InitialSegment X}
-             (f : PartialSection C P) (y : X) (Cy : C y) :
+  Definition res_val {X:Poset} {P : X -> UU} {C : InitialSegment X}
+             (f : PartialSection C P) {y : X} (Cy : C y) :
     f y Cy = restrictPartialSection (segment_le_incl Cy) f y (isrefl_posetRelation X y).
   Proof.
     unfold restrictPartialSection.
@@ -1959,15 +1959,17 @@ Section Upstream.
     intros i. rewrite <- (homotweqinvweq (weqtoforallpaths _ f g)). apply H.
   Defined.
 
-  Definition transportf_funextsec {X : UU} {Y : X -> UU} (F F' : ∏ x, Y x) (H : ∏ (x : X), F x = F' x)
+  Definition transportf_funextsec {X : UU} {Y : X -> UU} (F F' : ∏ x, Y x) (H : F ~ F')
              (x : X)  (P : Y x -> UU) (p : P (F x)) :
-    transportf (λ g : (∏ x, Y x), P (g x)) (funextsec _ F F' H) p = transportf P (H x) p.
-  (* improves transportf_funextfun *)
+    transportf (λ g : (∏ x, Y x), P (g x)) (funextsec _ _ _ H) p = transportf P (H x) p.
+  (* Improves transportf_funextfun. *)
+  (* This lemma concerns the special case where the type of the thing being
+     transported depends on just one value of the functions F, F'. *)
   Proof.
     simple refine (toforallpaths_induction F F'
                      (fun H' : (∏ (x : X), F x = F' x) =>
-                        transportf (λ g, P (g x)) (funextsec Y F F' H') p =
-                        transportf P              (H' x)                p
+                        transportf (λ g, P (g x)) (funextsec _ _ _ H') p =
+                        transportf P              (H' x)               p
                      ) _ H);
        clear H.
     intro e. intermediate_path (transportf (λ g, P (g x)) e p).
@@ -2004,7 +2006,37 @@ Section Upstream.
 
   End Transport.
 
+  Definition path_inverse_to_right {X} {x y:X} (p q:x = y) : p = q -> !q@p = idpath _.
+  (* also in Ktheory/Utilities *)
+  Proof. intros e. induction e. induction p. reflexivity. Defined.
+
+  Definition path_inverse_to_right' {X} {x y:X} (p q:x = y) : p = q -> p@!q = idpath _.
+  (* also in Ktheory/Utilities *)
+  Proof. intros e. induction e. induction p. reflexivity. Defined.
+
+  Definition path_cancel_1 {X:Type} {a b:X} (q:a=b) (p:b=b) : p = idpath _ -> q = q @ p.
+  Proof.
+    intros e. induction (!e). apply pathsinv0, pathscomp0rid.
+  Defined.
+
 End Upstream.
+
+Section Temp.
+
+  Context (X:Type) (a b c d:X) (p q:a=b) (r s:c=d) (u : r=s).
+
+  Context (l : a=c) (m : b=d) (e : p = l @ r @ ! m) (f : l @ s @ ! m = q).
+
+  Goal p=q.
+    (* exact (e @ maponpaths (λ k, l @ k @ !m) u @ f). *)
+    simple refine ((λ A B, A @ maponpaths (λ k, _ @ k @ _) u @ B) _ _).
+    - exact l.
+    - exact (!m).
+    - exact e.
+    - exact f.
+  Defined.
+
+End Temp.
 
 Section GuidedRecursion.
 
@@ -2038,7 +2070,7 @@ Section GuidedRecursion.
     exact (restrictGuidedSec (segment_lt_incl Cz)).
   Defined.
 
-  Definition restrictGuidedSec''' {C : InitialSegment X} {z : X} (Cz : C z) :
+  Definition restrict_le {C : InitialSegment X} {z : X} (Cz : C z) :
     GuidedSec C → GuidedSec (segment_le z).
   Proof.
     exact (restrictGuidedSec (segment_le_incl Cz)).
@@ -2063,6 +2095,20 @@ Section GuidedRecursion.
               rec x (restrictSection_lt (extendPartialSection P z dec f (rec z f)) le)).
       induction eq'. change (transportb P (idpath x) (rec x f)) with (rec x f).
       apply maponpaths. apply pathsinv0. apply restrict_extendPartialSection_eq.
+  Defined.
+
+  Definition res_res_eqn {C : InitialSegment X} (f : PartialSection C P)
+             (z : X) (Cz : C z) :
+    restrictSection_lt (restrictPartialSection (segment_le_incl Cz) f) (isrefl_posetRelation X z) =
+    restrictSection_lt f Cz.
+  Proof.
+      assert (R := restrictPartialSection_trans
+                     (@segment_lt_incl _ (@segment_le (OrderedSet_to_Poset X) z)
+                                       _ (isrefl_posetRelation (OrderedSet_to_Poset X) z))
+                     (segment_le_incl Cz)
+                     f).
+      simple refine (R @ _).
+      apply (maponpaths (λ i, restrictPartialSection i f)), propproperty.
   Defined.
 
   Lemma split_le (x y : X) : (x ≤ y) ≃ (x <∨= y).
@@ -2190,66 +2236,80 @@ Section GuidedRecursion.
     (∏ (z:X) (Cz:C z), isaprop (GuidedSec (segment_le z))) -> isaprop (GuidedSec C).
   Proof.
     Local Arguments total2_paths_equiv {_ _} _ _.
-    Local Arguments transportf {_ _} _ _.
+    Local Arguments transportf {_ _ _ _} _.
     Local Arguments funextsec {_ _ _ _} _.
+    Local Arguments isrefl_posetRelation {_} _.
     intro ip. apply invproofirrelevance. intros f f'.
-    unfold GuidedSec in f, f'.
-    assert (L : ∏ z (Cz:C z), restrictGuidedSec''' Cz f = restrictGuidedSec''' Cz f').
+    assert (L : ∏ z (Cz:C z), restrict_le Cz f = restrict_le Cz f').
     { intros z Cz. apply proofirrelevance. now apply ip. }
-    set (L' := λ y Cy, maponpaths (λ h, pr1 h y (isrefl_posetRelation X y)) (L y Cy)).
+    set (L' := λ y Cy, maponpaths (λ h, pr1 h y (isrefl_posetRelation y)) (L y Cy)).
     apply (invmap (K f f')).
     use tpair.
     { intros y. apply funextsec; intros Cy.
       simple refine (_ @ L' y Cy @ _).
-      - apply restrictSection_value.
-      - apply pathsinv0, restrictSection_value. }
+      - apply res_val.
+      - apply pathsinv0, res_val. }
     intros z. apply funextsec; intros Cz.
+    (* now the goal is to prove two paths in (P z) are equal *)
+    unfold L'; clear L'.
     assert (Q := pr2 (total2_paths_equiv _ _ (L z Cz))).
     change (
-       transportf (pr1 (restrictGuidedSec''' Cz f)) (pr1 (restrictGuidedSec''' Cz f'))
+       transportf
         (pr1
-           ((total2_paths_equiv (restrictGuidedSec''' Cz f)
-                                (restrictGuidedSec''' Cz f'))
+           ((total2_paths_equiv (restrict_le Cz f)
+                                (restrict_le Cz f'))
               (L z Cz)))
-         (pr2 (restrictGuidedSec''' Cz f)) = pr2 (restrictGuidedSec''' Cz f')) in Q.
-    assert (Q' := eqtohomot (eqtohomot Q z) (isrefl_posetRelation X z)).
-
-    set (PA := @paths).
-    fold PA in Q'. simpl in Q'.
-
-
-    assert (e1 : (restrictPartialSection (segment_le_incl Cz) (pr1 f') z (isrefl_posetRelation X z))
-                 = (pr1 f' z Cz)).
-    { apply pathsinv0, restrictSection_value. }
-    assert (e2 : (rec z
-                      (restrictSection_lt (restrictPartialSection (segment_le_incl Cz) (pr1 f'))
-                                          (isrefl_posetRelation X z)))
-                 = (rec z (restrictSection_lt (pr1 f') Cz))).
-    {
-      apply maponpaths.
-      (* abstract this as a lemma later *)
-      assert (R := restrictPartialSection_trans
-                     (@segment_lt_incl _
-                                       (@segment_le (OrderedSet_to_Poset X) z)
-                                       z
-                                       (isrefl_posetRelation (OrderedSet_to_Poset X) z))
-                     (segment_le_incl Cz)
-             (pr1 f')).
-      simple refine (R @ _).
-      unfold restrictSection_lt.
-      apply (maponpaths (λ i, restrictPartialSection i (pr1 f'))).
-      apply propproperty. }
-
-
-    (* induction e1. *)
-    (* induction e2. *)
+         (pr2 (restrict_le Cz f)) = pr2 (restrict_le Cz f')) in Q.
+    assert (Q' := eqtohomot (eqtohomot Q z) (isrefl_posetRelation z)).
+    (* this format for "refine" ensures that the goals are presented in the right order: *)
+    simple refine ((λ A B, A @ maponpaths (λ k, _ @ k @ _) Q' @ B) _ _).
+    { apply res_val. }
+    { apply maponpaths, res_res_eqn. }
+    { clear Q Q' ip lem dec ind.
 
 
 
 
+      set (PA := @paths).
 
 
-    admit.
+
+      admit. }
+    { clear Q Q' ip lem dec ind L f.
+      induction f' as [f gui].
+      unfold res_val.
+      unfold restrict_le.
+      unfold restrictGuidedSec.
+      unfold restrictPartialSection.
+      change (
+          maponpaths (f z)
+                     (pr1 (propproperty (C z) Cz (segment_le_incl Cz z (isrefl_posetRelation z)))) @
+                     (λ (Cx : (segment_le z) z),
+                      gui z (segment_le_incl Cz z Cx) @
+                          maponpaths (rec z)
+                          (! (restrictPartialSection_trans
+                                (segment_lt_incl Cx) (segment_le_incl Cz) (f) @
+                                maponpaths
+                                (λ (i : segment_lt z ⊆ C) (y : X) (Cy : (segment_lt z) y), f y (i y Cy))
+                                (pr1 (propproperty (segment_lt z ⊆ C)
+                                                   (subtype_containedIn_istrans (segment_lt_incl Cx) (segment_le_incl Cz))
+                                                   (segment_lt_incl (segment_le_incl Cz z Cx)))))))
+                     (isrefl_posetRelation z) @ maponpaths (rec z) (res_res_eqn (f) z Cz) =
+          gui z Cz
+        ).
+      induction (proofirrelevance_hProp (C z) Cz (segment_le_incl Cz z (isrefl_posetRelation z))).
+      induction (proofirrelevance_hProp
+                   (C z) Cz (segment_le_incl (y:=z) Cz z (isrefl_posetRelation z))).
+      apply pathsinv0.
+      (* now both sides involve [gui z Cz] *)
+      assert (e : idpath (f z Cz) = maponpaths (f z) (pr1 (propproperty (C z) Cz Cz))).
+      { generalize (pr1 (propproperty (C z) Cz Cz)); intros p.
+        change (idpath (f z Cz)) with (maponpaths (f z) (idpath Cz)).
+        apply maponpaths, isasetaprop, propproperty. }
+      induction e.
+      match goal with |- ?C = idpath _ @ ?A @ ?B => change (C=A@B) end.
+      rewrite <- path_assoc.
+      apply path_cancel_1. rewrite maponpathsinv0. apply path_inverse_to_right. reflexivity. }
    Fail idtac.
   Admitted.
 
@@ -2273,13 +2333,13 @@ Section GuidedRecursion.
   Proof.
     intros H.
     use tpair.
-    - intros x Cx. exact (pr1 (H x Cx) x (isrefl_posetRelation X x)).
-    - intros x Cx. simple refine (pr2 (H x Cx) x (isrefl_posetRelation X x) @ _).
+    - intros x Cx. exact (pr1 (H x Cx) x (isrefl_posetRelation x)).
+    - intros x Cx. simple refine (pr2 (H x Cx) x (isrefl_posetRelation x) @ _).
       apply maponpaths. apply funextsec; intro y; apply funextsec; intro lt.
       change (hProptoType (y<x)) in lt.
       unfold restrictSection_lt,restrictPartialSection.
       generalize (segment_lt_incl Cx y lt); intro Cy.
-      generalize (isrefl_posetRelation X y); intro yley.
+      generalize (isrefl_posetRelation y); intro yley.
       match goal with |- pr1 _ y ?K = _ => generalize K; intro ylex end;
         change (hProptoType(y≤x)) in ylex; clear lt.
       generalize (H x Cx); intro f.
