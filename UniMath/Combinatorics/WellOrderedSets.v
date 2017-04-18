@@ -1952,67 +1952,89 @@ Section Upstream.
     { reflexivity. }
   Defined.
 
-  Lemma toforallpaths_induction {X : UU} {Y : X -> UU} (f g : ∏ x, Y x) (P : (∏ x, f x = g x) -> UU)
-        (H : ∏ e : f = g, P (toforallpaths _ _ _ e)) : ∏ i : (∏ x, f x = g x), P i.
+  Lemma toforallpaths_induction {X : UU} {Y : X -> UU}
+        (f g : ∏ x, Y x) (P : f ~ g -> UU)
+        (H : ∏ e : f = g, P (toforallpaths _ _ _ e)) :
+    ∏ h : f ~ g, P h.
   (* improves toforallpaths_induction upstream *)
   Proof.
     intros i. rewrite <- (homotweqinvweq (weqtoforallpaths _ f g)). apply H.
   Defined.
 
-  Definition transportf_funextsec {X : UU} {Y : X -> UU} (F F' : ∏ x, Y x) (H : F ~ F')
-             (x : X)  (P : Y x -> UU) (p : P (F x)) :
-    transportf (λ g : (∏ x, Y x), P (g x)) (funextsec _ _ _ H) p = transportf P (H x) p.
-  (* Improves transportf_funextfun. *)
-  (* This lemma concerns the special case where the type of the thing being
-     transported depends on just one value of the functions F, F'. *)
+  Definition toforallpaths_2 {X : UU} {Y : X -> UU} {Z : ∏ x, Y x -> UU}
+             {f g : ∏ x y, Z x y} :
+    f = g -> ∏ x y, f x y = g x y.
   Proof.
-    simple refine (toforallpaths_induction F F'
-                     (fun H' : (∏ (x : X), F x = F' x) =>
-                        transportf (λ g, P (g x)) (funextsec _ _ _ H') p =
-                        transportf P              (H' x)               p
-                     ) _ H);
-       clear H.
-    intro e. intermediate_path (transportf (λ g, P (g x)) e p).
-    - use transportf_paths. use homotinvweqweq.
-    - now induction e.
+    intros e. intros x y. exact (toforallpaths _ _ _ ((toforallpaths _ _ _ e) x) y).
+  Defined.
+
+  Lemma weqtoforallpaths_2 {X : UU} {Y : X -> UU} {Z : ∏ x, Y x -> UU}
+        (f g : ∏ x y, Z x y) :
+    f = g ≃ ∏ x y, f x y = g x y.
+  Proof.
+    intermediate_weq (∏ x, f x = g x).
+    - apply weqtoforallpaths.
+    - apply weqonsecfibers; intros x. apply weqtoforallpaths.
+  Defined.
+
+  Lemma weqtoforallpaths_2_eqn {X : UU} {Y : X -> UU} {Z : ∏ x, Y x -> UU}
+        {f g : ∏ x y, Z x y} (p : f = g) :
+    weqtoforallpaths_2 f g p = toforallpaths_2 p.
+  Proof.
+    reflexivity.
+  Defined.
+
+  Lemma toforallpaths_induction_2 {X : UU} {Y : X -> UU} {Z : ∏ x, Y x -> UU}
+        (f g : ∏ x y, Z x y) (P : (∏ x y, f x y = g x y) -> UU)
+        (H : ∏ e : f = g, P (toforallpaths_2 e)) :
+    ∏ h : (∏ x y, f x y = g x y), P h.
+  Proof.
+    intros i. rewrite <- (homotweqinvweq (weqtoforallpaths_2 f g)). apply H.
   Defined.
 
   Section Transport.
 
     Open Scope transport.
 
+    Definition transportf_funextsec {X : UU} {Y : X -> UU} (F F' : ∏ x, Y x) (H : F ~ F')
+               (x : X)  (P : Y x -> UU) (p : P (F x)) :
+      transportf (λ g : (∏ x, Y x), P (g x)) (funextsec _ _ _ H) p = transportf P (H x) p.
+    (* Improves transportf_funextfun. *)
+    (* This lemma concerns the special case where the type of the thing being
+       transported depends on just one value of the functions F, F'. *)
+    Proof.
+      generalize H; clear H. use toforallpaths_induction; intros H.
+      intermediate_path (transportf (λ g : ∏ x0 : X, Y x0, P (g x)) H p).
+      { apply (maponpaths (λ H, transportf (λ g, P (g x)) H p)).
+        exact (homotinvweqweq (weqtoforallpaths _ F F') H). }
+      now induction H.
+    Defined.
+
+    Local Arguments transportf {_ _ _ _} _ _.
     Local Arguments funextsec {_ _ _ _} _.
 
     Context {X:UU} {T:X->UU} {U : ∏ (f : ∏ x, T x) (x : X), UU}
             (F G : ∑ (f : ∏ x, T x), ∏ x, U f x).
 
     Definition K : F=G  ≃  ∑ h : pr1 F ~ pr1 G,
-                                 ∏ y, transportf (λ f, U f y) (funextsec h) (pr2 F y) = pr2 G y.
+                                 ∏ y, transportf (P := λ f, U f y) (funextsec h) (pr2 F y) = pr2 G y.
     Proof.
       intermediate_weq (F ╝ G); [use total2_paths_equiv|]. unfold PathPair.
-      intermediate_weq (∑ p : pr1 F = pr1 G, ∏ y, transportf (λ f, U f y) p (pr2 F y) = pr2 G y).
+      intermediate_weq (∑ p : pr1 F = pr1 G, ∏ y, transportf (P := λ f, U f y) p (pr2 F y) = pr2 G y).
       { apply weqfibtototal; intros p.
         simple refine (weqcomp (weqtoforallpaths (U (pr1 G)) _ _) _).
         unfold homot. apply weqonsecfibers; intros y. apply eqweqmap.
         apply (maponpaths (λ l, l = pr2 G y)). induction p. reflexivity. }
       simple refine (weqcomp _ (weqfp (weqtoforallpaths _ (pr1 F) (pr1 G))
-                                      (λ h, ∏ y, transportf (λ f, U f y) (funextsec h) (pr2 F y)
+                                      (λ h, ∏ y, transportf (P := λ f, U f y) (funextsec h) (pr2 F y)
                                                      = pr2 G y))).
       apply weqfibtototal; intros p; apply weqonsecfibers; intros y.
       apply eqweqmap. apply (maponpaths (λ l, l = pr2 G y)).
-      apply (maponpaths (λ p, transportf (λ f : ∏ x : X, T x, U f y) p (pr2 F y))).
+      apply (maponpaths (λ p, transportf (P := λ f : ∏ x : X, T x, U f y) p (pr2 F y))).
       apply pathsinv0, homotinvweqweq.
     Defined.
 
   End Transport.
-
-  Definition path_inverse_to_right {X} {x y:X} (p q:x = y) : p = q -> !q@p = idpath _.
-  (* also in Ktheory/Utilities *)
-  Proof. intros e. induction e. induction p. reflexivity. Defined.
-
-  Definition path_inverse_to_right' {X} {x y:X} (p q:x = y) : p = q -> p@!q = idpath _.
-  (* also in Ktheory/Utilities *)
-  Proof. intros e. induction e. induction p. reflexivity. Defined.
 
   Definition path_cancel_1 {X:Type} {a b:X} (q:a=b) (p:b=b) : p = idpath _ -> q = q @ p.
   Proof.
@@ -2236,7 +2258,7 @@ Section GuidedRecursion.
     (∏ (z:X) (Cz:C z), isaprop (GuidedSec (segment_le z))) -> isaprop (GuidedSec C).
   Proof.
     Local Arguments total2_paths_equiv {_ _} _ _.
-    Local Arguments transportf {_ _ _ _} _.
+    Local Arguments transportf {_ _ _ _} _ _.
     Local Arguments funextsec {_ _ _ _} _.
     Local Arguments isrefl_posetRelation {_} _.
     intro ip. apply invproofirrelevance. intros f f'.
@@ -2266,21 +2288,17 @@ Section GuidedRecursion.
     { apply res_val. }
     { apply maponpaths, res_res_eqn. }
     { clear Q Q' ip lem dec ind.
+      match goal with |- _ = _ @ transportf ?K _ _ _ @ _ => change K with (maponpaths pr1 (L z Cz)) end.
+      generalize L; clear L.
+      use toforallpaths_induction_2.
+      intros e.
+      change ((λ x (Cx:C x), restrict_le Cx f) = (λ x (Cx:C x), restrict_le Cx f')) in e.
+      cbn beta.
 
-
-
-
-      set (PA := @paths).
-
-
-
-      admit. }
+      admit.
+    }
     { clear Q Q' ip lem dec ind L f.
       induction f' as [f gui].
-      unfold res_val.
-      unfold restrict_le.
-      unfold restrictGuidedSec.
-      unfold restrictPartialSection.
       change (
           maponpaths (f z)
                      (pr1 (propproperty (C z) Cz (segment_le_incl Cz z (isrefl_posetRelation z)))) @
@@ -2309,7 +2327,7 @@ Section GuidedRecursion.
       induction e.
       match goal with |- ?C = idpath _ @ ?A @ ?B => change (C=A@B) end.
       rewrite <- path_assoc.
-      apply path_cancel_1. rewrite maponpathsinv0. apply path_inverse_to_right. reflexivity. }
+      apply path_cancel_1. rewrite maponpathsinv0. apply pathsinv0l. }
    Fail idtac.
   Admitted.
 
