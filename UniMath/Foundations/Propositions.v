@@ -175,7 +175,8 @@ Section A.
   Definition change_universe_hProp@{} : weq@{l} hProp@{i j} hProp@{j l}.
   Proof.
     simple refine (weqpair _ (gradth _ _ _ _)).
-    - intro P. exact (@tpair Type@{j} isaprop (pr1 P) (pr2 P)).
+    - intro P. exact P.         (* the next line works, so why not this one? *)
+               exact (@tpair Type@{j} isaprop (pr1 P) (pr2 P)).
     - intro P. exact (@tpair Type@{i} isaprop (ResizeProp@{i j} (pr1 P) (pr2 P)) (pr2 P)).
     - reflexivity.
     - reflexivity.
