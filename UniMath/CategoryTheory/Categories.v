@@ -10,26 +10,25 @@ january 2013
 
 (** **********************************************************
 
-Contents :  Definition of
-		Precategories,
-	        Categories (aka saturated precategories)
-                Setcategories
+Contents :
+- precategories: homs are arbitrary types [precategory]
+- categories: hom-types are sets [category]
+- univalent categories: [idtoiso] is an equivalence
+   [univalent_category]
+- set-categories: objects and morphisms are sets [setcategory]
+- isomorphisms: [iso], [isiso f := isweq (precomp_with f)]
+- various lemmas:
+  - uniqueness of inverse, composition etc.
+  - stability under composition
+  - Analogue to [gradth]: [is_iso_qinv]
 
-                Isomorphisms I: [iso]
-                  Definition: [isiso f := isweq (precomp_with f)]
-                  various lemmas:
-                    uniqueness of inverse, composition etc.
-                    stability under composition
-                  Analogue to [gradth]: [is_iso_qinv]
-
-                Isomorphisms II: [z_iso]
-                  Definition: [is_z_iso f := ∑ g, ...]
-                  Relationship between [z_iso] and [iso]
-
-                Categories have groupoid as objects
-
-                Many lemmas about [idtoiso], [isotoid],
-                   interplay with composition, transport etc.
+- Alternative definition of isomorphisms: [z_iso]
+  - Definition: [is_z_iso f := ∑ g, ...]
+  - Relationship between [z_iso] and [iso]
+- Univalent categories have groupoid as objects
+  [univalent_category_has_groupoid_ob]
+- Many lemmas about [idtoiso], [isotoid],
+  interplay with composition, transport etc.
 
 
 ************************************************************)
@@ -63,7 +62,7 @@ Definition precategory_morphisms { C : precategory_ob_mor } :
 
 Delimit Scope cat with cat.     (* for precategories *)
 
-Delimit Scope cat with Cat.     (* a slight enhancement for Precategories *)
+Delimit Scope cat with Cat.     (* a slight enhancement for categories *)
 
 Delimit Scope cat_deprecated with cat_deprecated.
 
@@ -154,6 +153,7 @@ Definition precategory := total2 is_precategory.
 Definition mk_precategory (C : precategory_data) (H : is_precategory C) : precategory :=
   tpair _ C H.
 
+
 Definition hs_precategory := total2 (fun C : precategory_data =>
   dirprod (is_precategory C) (∏ a b : C, isaset (a --> b))).
 
@@ -179,11 +179,35 @@ Proof.
   apply isapropisaset.
 Qed.
 
-Definition Precategory := ∑ C:precategory, has_homsets C.
-Definition Precategory_pair C h : Precategory := C,,h.
-Definition Precategory_to_precategory : Precategory -> precategory := pr1.
-Coercion Precategory_to_precategory : Precategory >-> precategory.
-Definition homset_property (C : Precategory) : has_homsets C := pr2 C.
+Definition category := ∑ C:precategory, has_homsets C.
+Definition category_pair C h : category := C,,h.
+Definition category_to_precategory : category -> precategory := pr1.
+Coercion category_to_precategory : category >-> precategory.
+Definition homset_property (C : category) : has_homsets C := pr2 C.
+
+
+Definition precategory_pair (C:precategory_data) (i:is_precategory C)
+  : precategory := C,,i.
+
+Definition makecategory
+    (obj : UU)
+    (mor : obj -> obj -> UU)
+    (homsets : ∏ a b, isaset (mor a b))
+    (identity : ∏ i, mor i i)
+    (compose : ∏ i j k (f:mor i j) (g:mor j k), mor i k)
+    (right : ∏ i j (f:mor i j), compose _ _ _ (identity i) f = f)
+    (left  : ∏ i j (f:mor i j), compose _ _ _ f (identity j) = f)
+    (associativity : ∏ a b c d (f:mor a b) (g:mor b c) (h:mor c d),
+        compose _ _ _ f (compose _ _ _ g h) = compose _ _ _ (compose _ _ _ f g) h)
+  : category
+  := (precategory_pair
+           (precategory_data_pair
+              (precategory_ob_mor_pair
+                 obj
+                 (fun i j => mor i j))
+              identity compose)
+           ((right,,left),,associativity)),,homsets.
+
 
 Lemma isaprop_is_precategory (C : precategory_data)(hs: has_homsets C)
   : isaprop (is_precategory C).
@@ -868,7 +892,7 @@ Proof.
   exact H.
 Qed.
 
-Lemma z_iso_eq {C : Precategory} {a b : C} (i i' : z_iso a b) (e : z_iso_mor i = z_iso_mor i') :
+Lemma z_iso_eq {C : category} {a b : C} (i i' : z_iso a b) (e : z_iso_mor i = z_iso_mor i') :
   i = i'.
 Proof.
   use total2_paths_f.
@@ -876,7 +900,7 @@ Proof.
   - use proofirrelevance. apply isaprop_is_z_isomorphism. apply homset_property.
 Qed.
 
-Lemma z_iso_eq_inv {C : Precategory} {a b : C} (i i' : z_iso a b)
+Lemma z_iso_eq_inv {C : category} {a b : C} (i i' : z_iso a b)
       (e2 : z_iso_inv_mor i = z_iso_inv_mor i') : i = i'.
 Proof.
   use z_iso_eq.
@@ -1135,11 +1159,11 @@ Proof.
 Defined.
 
 (* use eta expanded version to force printing of object arguments *)
-Definition is_category (C : precategory) :=
+Definition is_univalent (C : precategory) :=
   (∏ (a b : ob C), isweq (fun p : a = b => idtoiso p)) × (has_homsets C).
 
-Definition mk_is_category {C : precategory} (H1 : ∏ (a b : ob C), isweq (fun p : a = b => idtoiso p))
-           (H2 : has_homsets C) : is_category C := dirprodpair H1 H2.
+Definition mk_is_univalent {C : precategory} (H1 : ∏ (a b : ob C), isweq (fun p : a = b => idtoiso p))
+           (H2 : has_homsets C) : is_univalent C := dirprodpair H1 H2.
 
 Lemma eq_idtoiso_idtomor {C:precategory} (a b:ob C) (e:a = b) :
     pr1 (idtoiso e) = idtomor _ _ e.
@@ -1147,7 +1171,7 @@ Proof.
   destruct e; reflexivity.
 Defined.
 
-Lemma isaprop_is_category (C : precategory) : isaprop (is_category C).
+Lemma isaprop_is_univalent (C : precategory) : isaprop (is_univalent C).
 Proof.
   apply isapropdirprod.
   - apply impred.
@@ -1162,23 +1186,25 @@ Proof.
     apply isapropisaset.
 Qed.
 
-Definition category : UU := total2 (fun C : precategory => is_category C).
+Definition univalent_category : UU := total2 (fun C : precategory => is_univalent C).
 
-Definition mk_category (C : precategory) (H : is_category C) : category := tpair _ C H.
+Definition mk_category (C : precategory) (H : is_univalent C) : univalent_category := tpair _ C H.
 
-Definition category_to_Precategory (C : category) : Precategory.
+Definition univalent_category_to_category (C : univalent_category) : category.
 Proof.
   exists (pr1 C).
   exact (pr2 (pr2 C)).
 Defined.
-Coercion category_to_Precategory : category >-> Precategory.
+Coercion univalent_category_to_category : univalent_category >-> category.
+
+Definition univalent_category_pair (C:precategory) (i:is_univalent C) : univalent_category := C,,i.
 
 
-Definition category_has_homsets (C : category) := pr2 (pr2 C).
+Definition univalent_category_has_homsets (C : univalent_category) := pr2 (pr2 C).
 
-Definition category_is_category (C : category) : is_category C := pr2 C.
+Definition univalent_category_is_univalent (C : univalent_category) : is_univalent C := pr2 C.
 
-Lemma category_has_groupoid_ob (C : category): isofhlevel 3 (ob C).
+Lemma univalent_category_has_groupoid_ob (C : univalent_category): isofhlevel 3 (ob C).
 Proof.
   change (isofhlevel 3 C) with
         (∏ a b : C, isofhlevel 2 (a = b)).
@@ -1190,10 +1216,10 @@ Qed.
 
 (** ** Definition of [isotoid] *)
 
-Definition isotoid (C : precategory) (H : is_category C) {a b : ob C}:
+Definition isotoid (C : precategory) (H : is_univalent C) {a b : ob C}:
       iso a b -> a = b := invmap (weqpair _ (pr1 H a b)).
 
-Lemma idtoiso_isotoid (C : precategory) (H : is_category C) (a b : ob C)
+Lemma idtoiso_isotoid (C : precategory) (H : is_univalent C) (a b : ob C)
     (f : iso a b) : idtoiso (isotoid _ H f) = f.
 Proof.
   unfold isotoid.
@@ -1202,7 +1228,7 @@ Proof.
   apply Hw.
 Qed.
 
-Lemma isotoid_idtoiso (C : precategory) (H : is_category C) (a b : ob C)
+Lemma isotoid_idtoiso (C : precategory) (H : is_univalent C) (a b : ob C)
     (p : a = b) : isotoid _ H (idtoiso p) = p.
 Proof.
   unfold isotoid.
@@ -1280,7 +1306,7 @@ Proof.
   simpl; apply pathsinv0, id_left.
 Qed.
 
-Lemma idtoiso_inj (C : precategory) (H : is_category C) (a a' : ob C)
+Lemma idtoiso_inj (C : precategory) (H : is_univalent C) (a a' : ob C)
    (p p' : a = a') : idtoiso p = idtoiso p' -> p = p'.
 Proof.
   apply invmaponpathsincl.
@@ -1288,7 +1314,7 @@ Proof.
   apply H.
 Qed.
 
-Lemma isotoid_inj (C : precategory) (H : is_category C) (a a' : ob C)
+Lemma isotoid_inj (C : precategory) (H : is_univalent C) (a a' : ob C)
    (f f' : iso a a') : isotoid _ H f = isotoid _ H f' -> f = f'.
 Proof.
   apply invmaponpathsincl.
@@ -1296,7 +1322,7 @@ Proof.
   apply isweqinvmap.
 Qed.
 
-Lemma isotoid_comp (C : precategory) (H : is_category C) (a b c : ob C)
+Lemma isotoid_comp (C : precategory) (H : is_univalent C) (a b c : ob C)
   (e : iso a b) (f : iso b c) :
   isotoid _ H (iso_comp e f) = isotoid _ H e @ isotoid _ H f.
 Proof.
@@ -1307,7 +1333,7 @@ Proof.
   apply idpath.
 Qed.
 
-Lemma isotoid_identity_iso (C : precategory) (H : is_category C) (a : C) :
+Lemma isotoid_identity_iso (C : precategory) (H : is_univalent C) (a : C) :
   isotoid _ H (identity_iso a) = idpath _ .
 Proof.
   apply idtoiso_inj; try assumption.
@@ -1315,7 +1341,7 @@ Proof.
   apply idpath.
 Qed.
 
-Lemma inv_isotoid (C : precategory) (H : is_category C) (a b : C)
+Lemma inv_isotoid (C : precategory) (H : is_univalent C) (a b : C)
     (f : iso a b) : ! isotoid _ H f = isotoid _ H (iso_inv_from_iso f).
 Proof.
   apply idtoiso_inj; try assumption.
@@ -1325,7 +1351,7 @@ Proof.
   apply idpath.
 Qed.
 
-Lemma transportf_isotoid (C : precategory) (H : is_category C)
+Lemma transportf_isotoid (C : precategory) (H : is_univalent C)
    (a a' b : ob C) (p : iso a a') (f : a --> b) :
  transportf (fun a0 : C => a0 --> b) (isotoid C H p) f = inv_from_iso p · f.
 Proof.
@@ -1335,7 +1361,7 @@ Proof.
   apply idpath.
 Qed.
 
-Lemma transportf_isotoid' (C : precategory) (H : is_category C)
+Lemma transportf_isotoid' (C : precategory) (H : is_univalent C)
    (a b b' : ob C) (p : iso b b') (f : a --> b) :
  transportf (fun a0 : C => a --> a0) (isotoid C H p) f = f · p.
 Proof.

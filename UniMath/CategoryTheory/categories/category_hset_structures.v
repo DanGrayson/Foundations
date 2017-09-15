@@ -21,8 +21,9 @@ Contents:
 - Products in Set/X ([Products_HSET_slice])
 - Forgetful functor Set/X to Set is left adjoint
   ([is_left_adjoint_slicecat_to_cat])
-- kernel pairs
-- effective epis
+- Kernel pairs ([kernel_pair_HSET])
+- Effective epis ([EffectiveEpis_HSET])
+- Split epis with axiom of choice ([SplitEpis_HSET])
 
 Written by: Benedikt Ahrens, Anders Mörtberg
 
@@ -35,10 +36,11 @@ Require Import UniMath.Foundations.Propositions.
 Require Import UniMath.Foundations.Sets.
 
 Require Import UniMath.MoreFoundations.Tactics.
+Require Import UniMath.MoreFoundations.AxiomOfChoice.
 
-Require Import UniMath.CategoryTheory.precategories.
+Require Import UniMath.CategoryTheory.Categories.
 Require Import UniMath.CategoryTheory.functor_categories.
-Require Import UniMath.CategoryTheory.category_hset.
+Require Import UniMath.CategoryTheory.categories.category_hset.
 Require Import UniMath.CategoryTheory.limits.graphs.colimits.
 Require Import UniMath.CategoryTheory.limits.graphs.limits.
 Require Import UniMath.CategoryTheory.limits.bincoproducts.
@@ -53,6 +55,7 @@ Require Import UniMath.CategoryTheory.Adjunctions.
 Require Import UniMath.CategoryTheory.exponentials.
 Require Import UniMath.CategoryTheory.covyoneda.
 Require Import UniMath.CategoryTheory.slicecat.
+Require Import UniMath.CategoryTheory.Epis.
 Require Import UniMath.CategoryTheory.EpiFacts.
 
 Local Open Scope cat.
@@ -245,6 +248,37 @@ Lemma ColimsHSET_of_shape (g : graph) :
 Proof.
 now intros d; apply ColimCoconeHSET.
 Defined.
+
+
+(* rules for coproducts in HSET *)
+Lemma BinCoproductIn1CommutesHSET (A B : HSET) (CC : BinCoproductCocone HSET A B)(C : HSET)
+      (f : A --> C)(g: B --> C) (a:pr1 A):
+  BinCoproductArrow HSET CC f g (BinCoproductIn1 HSET CC a)  = f a.
+Proof.
+  set (H1 := BinCoproductIn1Commutes _ _ _ CC _ f g).
+  apply toforallpaths in H1.
+  now apply H1.
+Qed.
+
+Lemma BinCoproductIn2CommutesHSET (A B : HSET) (CC : BinCoproductCocone HSET A B)(C : HSET)
+      (f : A --> C)(g: B --> C) (b:pr1 B):
+  BinCoproductArrow HSET CC f g (BinCoproductIn2 HSET CC b)  = g b.
+Proof.
+  set (H1 := BinCoproductIn2Commutes _ _ _ CC _ f g).
+  apply toforallpaths in H1.
+  now apply H1.
+Qed.
+
+Lemma postcompWithBinCoproductArrowHSET {A B : HSET} (CCAB : BinCoproductCocone HSET A B) {C : HSET}
+    (f : A --> C) (g : B --> C) {X : HSET} (k : C --> X) z:
+       k (BinCoproductArrow _ CCAB f g z) = BinCoproductArrow _ CCAB (f · k) (g · k) z.
+Proof.
+  set (H1 := postcompWithBinCoproductArrow _ CCAB f g k).
+  apply toforallpaths in H1.
+  now apply H1.
+Qed.
+
+
 
 (* Direct construction of binary coproducts in HSET *)
 Lemma BinCoproductsHSET : BinCoproducts HSET.
@@ -723,7 +757,7 @@ End exponentials_functor_cat.
 (** * Various results on Set/X *)
 Section set_slicecat.
 
-Local Notation "HSET / X" := (slice_precat HSET X has_homsets_HSET).
+Local Notation "HSET / X" := (slice_precat HSET X has_homsets_HSET) (only parsing).
 
 Lemma Terminal_HSET_slice X : Terminal (HSET / X).
 Proof.
@@ -848,7 +882,7 @@ Section products_set_slice.
    should be from the one in [X,Set] using the equivalence between Set/X
    and [X,Set] *)
 (* Require Import UniMath.CategoryTheory.set_slice_fam_equiv. *)
-(* Require Import UniMath.CategoryTheory.DiscretePrecategory. *)
+(* Require Import UniMath.CategoryTheory.DiscreteCategory. *)
 
 (* Lemma Products_HSET_slice I X : Products I (HSET / X). *)
 (* Proof. *)
@@ -901,37 +935,7 @@ End products_set_slice.
 Lemma is_left_adjoint_slicecat_to_cat_HSET (X : HSET) :
   is_left_adjoint (slicecat_to_cat has_homsets_HSET X).
 Proof.
-mkpair.
-- use mk_functor.
-  + mkpair.
-    * intro Y.
-      exists (X × Y)%set; simpl.
-      apply pr1.
-    * intros A B f.
-      exists (λ xa, pr1 xa,,f (pr2 xa)).
-      abstract (now apply funextsec).
-  + abstract (split;
-    [ intros A; simpl; apply subtypeEquality; [intros x; apply setproperty|];
-      now apply funextsec; intros [x a]
-    | intros A B C f g; apply subtypeEquality; [intros x; apply setproperty|];
-      now apply funextsec; intros [x a]]).
-- use mk_are_adjoints.
-  + use mk_nat_trans.
-    * simpl; intros F.
-      exists (λ f, (pr2 F f,,f)).
-      abstract (now apply funextsec).
-    * abstract (intros Y Z F; apply (eq_mor_slicecat has_homsets_HSET);
-                apply funextsec; intro y;
-                use total2_paths2_f; [apply (toforallpaths _ _ _ (!pr2 F) y)|];
-                cbn in *; induction (toforallpaths _ _ _ _ _);
-                now rewrite idpath_transportf).
-  + use mk_nat_trans.
-    * intros Y xy; apply (pr2 xy).
-    * now intros Y Z f.
-  + split.
-    * now intros.
-    * intros Y; apply eq_mor_slicecat; simpl.
-      now apply funextsec; intros f; cbn; rewrite tppr.
+apply is_left_adjoint_slicecat_to_cat, BinProductsHSET.
 Defined.
 
 End set_slicecat.
@@ -1026,6 +1030,15 @@ enjoyed by surjections (univ_surj)
   Qed.
 End kernel_pair_Set.
 
+Lemma EpisAreSurjective_HSET {A B : HSET} (f: HSET ⟦ A, B ⟧) (epif : isEpi f)
+  : issurjective f.
+Proof.
+  apply epiissurjectiontosets; [apply setproperty|].
+  intros C g1 g2 h .
+  apply toforallpaths.
+  apply (epif C g1 g2).
+  now apply funextfun.
+Qed.
 
 Lemma EffectiveEpis_HSET : EpisAreEffective HSET.
 Proof.
@@ -1034,9 +1047,16 @@ Proof.
   intros A B f epif.
   exists (kernel_pair_HSET f).
   apply isCoeqKernelPairSet.
-  apply epiissurjectiontosets; [apply setproperty|].
-  intros C g1 g2 h .
-  apply toforallpaths.
-  apply (epif C g1 g2).
-  now apply funextfun.
+  now apply EpisAreSurjective_HSET.
+Qed.
+
+Lemma SplitEpis_HSET : AxiomOfChoice_surj -> EpisAreSplit HSET.
+Proof.
+  intros axC A B f epif.
+  apply EpisAreSurjective_HSET,axC in epif.
+  unshelve eapply (hinhfun _ epif).
+  intro h.
+  exists (pr1 h).
+  apply funextfun.
+  exact (pr2 h).
 Qed.

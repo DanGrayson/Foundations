@@ -15,4 +15,5 @@ Require Export
         UniMath.MoreFoundations.Tactics
         UniMath.MoreFoundations.StructureIdentity
         UniMath.MoreFoundations.AlternativeProofs
+        UniMath.MoreFoundations.PartA
 .

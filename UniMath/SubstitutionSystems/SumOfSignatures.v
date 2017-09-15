@@ -16,7 +16,7 @@ Adapted from the binary case
 
 Require Import UniMath.Foundations.PartD.
 
-Require Import UniMath.CategoryTheory.precategories.
+Require Import UniMath.CategoryTheory.Categories.
 Require Import UniMath.CategoryTheory.functor_categories.
 Local Open Scope cat.
 Require Import UniMath.CategoryTheory.whiskering.
@@ -129,8 +129,7 @@ mkpair.
 Defined.
 
 Lemma is_omega_cocont_Sum_of_Signatures (S : I -> Signature C hsC D hsD)
-  (h : ∏ i, is_omega_cocont (S i)) (PC : Products I C) :
-  is_omega_cocont (Sum_of_Signatures S).
+  (h : ∏ i, is_omega_cocont (S i)) : is_omega_cocont (Sum_of_Signatures S).
 Proof.
 apply is_omega_cocont_coproduct_of_functors; try assumption.
 - apply functor_category_has_homsets.

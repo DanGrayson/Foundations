@@ -28,17 +28,17 @@ Require Import UniMath.Foundations.PartD.
 
 Require Import UniMath.MoreFoundations.Tactics.
 
-Require Import UniMath.CategoryTheory.precategories.
+Require Import UniMath.CategoryTheory.Categories.
 Require Import UniMath.CategoryTheory.functor_categories.
 Require Import UniMath.CategoryTheory.whiskering.
-Require Import UniMath.CategoryTheory.Monads.
+Require Import UniMath.CategoryTheory.Monads.Monads.
 Require Import UniMath.CategoryTheory.limits.binproducts.
 Require Import UniMath.CategoryTheory.limits.bincoproducts.
 Require Import UniMath.CategoryTheory.limits.initial.
 Require Import UniMath.CategoryTheory.FunctorAlgebras.
 Require Import UniMath.CategoryTheory.opp_precat.
 Require Import UniMath.CategoryTheory.yoneda.
-Require Import UniMath.CategoryTheory.category_hset.
+Require Import UniMath.CategoryTheory.categories.category_hset.
 Require Import UniMath.CategoryTheory.PointedFunctors.
 Require Import UniMath.CategoryTheory.PrecategoryBinProduct.
 Require Import UniMath.CategoryTheory.HorizontalComposition.
@@ -55,7 +55,7 @@ Local Open Scope cat.
 
 Local Coercion alg_carrier : algebra_ob >-> ob.
 
-Section Precategory_Algebra.
+Section category_Algebra.
 
 Variable C : precategory.
 Variable hs : has_homsets C.
@@ -882,4 +882,4 @@ Proof.
 Defined.
 
 
-End Precategory_Algebra.
+End category_Algebra.
