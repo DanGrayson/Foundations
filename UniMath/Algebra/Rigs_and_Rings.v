@@ -8,12 +8,14 @@
   - Subobjects
   - Quotient objects
   - Direct products
+  - Opposite rigs
  - Commutative rigs
   - General definitions
   - Relations similar to "greater" on commutative rigs
   - Subobjects
   - Quotient objects
   - Direct products
+  - Opposite commutative rigs
  - Rings
   - General definitions
   - Homomorphisms of rings
@@ -26,6 +28,7 @@
   - Subobjects
   - Quotient objects
   - Direct products
+  - Opposite rings
   - Ring of differences associated with a rig
   - Canonical homomorphism to the ring associated with a rig (ring of
     differences)
@@ -39,6 +42,7 @@
   - Subobjects
   - Quotient objects
   - Direct products
+  - Opposite commutative rings
   - Commutative rigs to commutative rings
   - Rings of fractions
   - Canonical homomorphism to the ring of fractions
@@ -72,13 +76,13 @@ Require Export UniMath.Algebra.Monoids_and_Groups.
 
 (** **** General definitions *)
 
-Definition rig : UU := total2 (fun X : setwith2binop => isrigops (@op1 X) (@op2 X)).
+Definition rig : UU := total2 (λ X : setwith2binop, isrigops (@op1 X) (@op2 X)).
 
 Definition rigpair {X : setwith2binop} (is : isrigops (@op1 X) (@op2 X)) : rig :=
-  tpair (fun X : setwith2binop => isrigops (@op1 X) (@op2 X)) X is.
+  tpair (λ X : setwith2binop, isrigops (@op1 X) (@op2 X)) X is.
 
 Definition pr1rig : rig -> setwith2binop :=
-  @pr1 _ (fun X : setwith2binop => isrigops (@op1 X) (@op2 X)).
+  @pr1 _ (λ X : setwith2binop, isrigops (@op1 X) (@op2 X)).
 Coercion pr1rig : rig >-> setwith2binop.
 
 Definition rigaxs (X : rig) : isrigops (@op1 X) (@op2 X) := pr2 X.
@@ -141,13 +145,43 @@ Notation "1" := (rigunel2) : rig_scope.
 
 Delimit Scope rig_scope with rig.
 
+
 (** **** Homomorphisms of rigs (rig functions) *)
 
 Definition isrigfun {X Y : rig} (f : X -> Y) : UU :=
   dirprod (@ismonoidfun (rigaddabmonoid X) (rigaddabmonoid Y) f)
           (@ismonoidfun (rigmultmonoid X) (rigmultmonoid Y) f).
 
+Definition mk_isrigfun {X Y : rig} {f : X -> Y}
+           (H1 : @ismonoidfun (rigaddabmonoid X) (rigaddabmonoid Y) f)
+           (H2 : @ismonoidfun (rigmultmonoid X) (rigmultmonoid Y) f) : isrigfun f :=
+  dirprodpair H1 H2.
+
+Definition isrigfunisaddmonoidfun {X Y : rig} {f : X -> Y} (H : isrigfun f) :
+  @ismonoidfun (rigaddabmonoid X) (rigaddabmonoid Y) f := dirprod_pr1 H.
+
+Definition isrigfunismultmonoidfun {X Y : rig} {f : X -> Y} (H : isrigfun f) :
+  @ismonoidfun (rigmultmonoid X) (rigmultmonoid Y) f := dirprod_pr2 H.
+
+Lemma isapropisrigfun {X Y : rig} (f : X -> Y) : isaprop (isrigfun f).
+Proof.
+  intros X Y f.
+  use isapropdirprod.
+  - use isapropismonoidfun.
+  - use isapropismonoidfun.
+Defined.
+Opaque isapropisrigfun.
+
 Definition rigfun (X Y : rig) : UU := total2 (fun f : X -> Y => isrigfun f).
+
+Definition isasetrigfun (X Y : rig) : isaset (rigfun X Y).
+Proof.
+  intros X Y.
+  use isaset_total2.
+  - use isaset_set_fun_space.
+  - intros x. use isasetaprop. use isapropisrigfun.
+Defined.
+Opaque isasetrigfun.
 
 Definition rigfunconstr {X Y : rig} {f : X -> Y} (is : isrigfun f) : rigfun X Y := tpair _ f is.
 
@@ -160,12 +194,36 @@ Definition rigaddfun {X Y : rig} (f : rigfun X Y) :
 Definition rigmultfun {X Y : rig} (f : rigfun X Y) :
   monoidfun (rigmultmonoid X) (rigmultmonoid Y) := monoidfunconstr (pr2 (pr2 f)).
 
-Definition rigiso (X Y : rig) : UU := total2 (fun f : weq X Y => isrigfun f).
+Definition rigfun_to_unel_rigaddmonoid {X Y : rig} (f : rigfun X Y) : f (0%rig) = 0%rig :=
+  pr2 (pr1 (pr2 f)).
 
-Definition rigisopair {X Y : rig} (f : weq X Y) (is : isrigfun f) : rigiso X Y := tpair _  f is.
+Definition rigfuncomp {X Y Z : rig} (f : rigfun X Y) (g : rigfun Y Z) : rigfun X Z.
+Proof.
+  intros X Y Z f g.
+  use rigfunconstr.
+  - exact (g ∘ f).
+  - use mk_isrigfun.
+    + exact (pr2 (monoidfuncomp (rigaddfun f) (rigaddfun g))).
+    + exact (pr2 (monoidfuncomp (rigmultfun f) (rigmultfun g))).
+Defined.
 
-Definition pr1rigiso (X Y : rig) : rigiso X Y -> weq X Y := @pr1 _ _.
+Lemma rigfun_paths {X Y : rig} (f g : rigfun X Y) (e : pr1 f = pr1 g) : f = g.
+Proof.
+  intros X Y f g e.
+  use total2_paths_f.
+  - exact e.
+  - use proofirrelevance. use isapropisrigfun.
+Defined.
+Opaque rigfun_paths.
+
+Definition rigiso (X Y : rig) : UU := total2 (λ f : X ≃ Y, isrigfun f).
+
+Definition rigisopair {X Y : rig} (f : X ≃ Y) (is : isrigfun f) : rigiso X Y := tpair _  f is.
+
+Definition pr1rigiso (X Y : rig) : rigiso X Y -> X ≃ Y := @pr1 _ _.
 Coercion pr1rigiso : rigiso >-> weq.
+
+Definition rigisoisrigfun {X Y : rig} (f : rigiso X Y) : isrigfun f := pr2 f.
 
 Definition rigaddiso {X Y : rig} (f : rigiso X Y) :
   monoidiso (rigaddabmonoid X) (rigaddabmonoid Y) :=
@@ -175,12 +233,140 @@ Definition rigmultiso {X Y : rig} (f : rigiso X Y) :
   monoidiso (rigmultmonoid X) (rigmultmonoid Y) :=
   @monoidisopair (rigmultmonoid X) (rigmultmonoid Y) (pr1 f) (pr2 (pr2 f)).
 
+Definition rigiso_paths {X Y : rig} (f g : rigiso X Y) (e : pr1 f = pr1 g) : f = g.
+Proof.
+  intros X Y f g e.
+  use total2_paths_f.
+  - exact e.
+  - use proofirrelevance. use isapropisrigfun.
+Defined.
+Opaque rigiso_paths.
+
+Definition rigisotorigfun {X Y : rig} (f : rigiso X Y) : rigfun X Y := rigfunconstr (pr2 f).
+
 Lemma isrigfuninvmap {X Y : rig} (f : rigiso X Y) : isrigfun (invmap f).
 Proof.
   intros. split.
   - apply (ismonoidfuninvmap (rigaddiso f)).
   - apply  (ismonoidfuninvmap (rigmultiso f)).
 Defined.
+
+Definition invrigiso {X Y : rig} (f : rigiso X Y) : rigiso Y X :=
+  rigisopair (invweq f) (isrigfuninvmap f).
+
+Definition idrigiso (X : rig) : rigiso X X.
+Proof.
+  intros X.
+  use rigisopair.
+  - exact (idweq X).
+  - use mk_isrigfun.
+    + use mk_ismonoidfun.
+      * use mk_isbinopfun.
+        intros x x'. use idpath.
+      * use idpath.
+    + use mk_ismonoidfun.
+      * use mk_isbinopfun.
+        intros x x'. use idpath.
+      * use idpath.
+Defined.
+
+
+(** **** (X = Y) ≃ (rigiso X Y)
+    We use the following composition
+
+                              (X = Y) ≃ (X ╝ Y)
+                                      ≃ (rigiso' X Y)
+                                      ≃ (rigiso X Y)
+
+    where the second weak equivalence is given by univalence for setwith2binop,
+    [setwith2binop_univalence]. The reason to define rigiso' is that it allows us to use
+    [setwith2binop_univalence].
+*)
+
+Local Definition rigiso' (X Y : rig) : UU :=
+  ∑ D : (∑ w : X ≃ Y, istwobinopfun w),
+        ((pr1 D) (@rigunel1 X) = @rigunel1 Y) × ((pr1 D) (@rigunel2 X) = @rigunel2 Y).
+
+Local Definition mk_rigiso' (X Y : rig) (w : X ≃ Y) (H1 : istwobinopfun w)
+           (H2 : w (@rigunel1 X) = @rigunel1 Y) (H3 : w (@rigunel2 X) = @rigunel2 Y) :
+  rigiso' X Y := tpair _ (tpair _ w H1) (dirprodpair H2 H3).
+
+Definition rig_univalence_weq1 (X Y : rig) : (X = Y) ≃ (X ╝ Y) :=
+  total2_paths_equiv _ _ _.
+
+Definition rig_univalence_weq2 (X Y : rig) : (X ╝ Y) ≃ (rigiso' X Y).
+Proof.
+  intros X Y.
+  use weqbandf.
+  - exact (setwith2binop_univalence X Y).
+  - intros e. cbn. use invweq. induction X as [X Xop]. induction Y as [Y Yop]. cbn in e.
+    cbn. induction e. use weqimplimpl.
+    + intros i. use proofirrelevance. use isapropisrigops.
+    + intros i. use dirprodpair.
+      * induction i. use idpath.
+      * induction i. use idpath.
+    + use isapropdirprod.
+      * use setproperty.
+      * use setproperty.
+    + use isapropifcontr. exact (@isapropisrigops X op1 op2 Xop Yop).
+Defined.
+Opaque rig_univalence_weq2.
+
+Definition rig_univalence_weq3 (X Y : rig) : (rigiso' X Y) ≃ (rigiso X Y).
+Proof.
+  intros X Y.
+  use weqpair.
+  - intros i'.
+    use rigisopair.
+    + exact (pr1 (pr1 i')).
+    + use mk_isrigfun.
+      * use mk_ismonoidfun.
+        -- use mk_isbinopfun.
+           exact (dirprod_pr1 (pr2 (pr1 i'))).
+        -- exact (dirprod_pr1 (pr2 i')).
+      *  use mk_ismonoidfun.
+        -- use mk_isbinopfun.
+           exact (dirprod_pr2 (pr2 (pr1 i'))).
+        -- exact (dirprod_pr2 (pr2 i')).
+  - use isweq_iso.
+    + intros i. use mk_rigiso'.
+      * exact (pr1rigiso _ _ i).
+      * use mk_istwobinopfun.
+        -- exact (ismonoidfunisbinopfun (isrigfunisaddmonoidfun (rigisoisrigfun i))).
+        -- exact (ismonoidfunisbinopfun (isrigfunismultmonoidfun (rigisoisrigfun i))).
+      * exact (ismonoidfununel (isrigfunisaddmonoidfun (rigisoisrigfun i))).
+      * exact (ismonoidfununel (isrigfunismultmonoidfun (rigisoisrigfun i))).
+    + intros x. use idpath.
+    + intros x. use idpath.
+Defined.
+Opaque rig_univalence_weq3.
+
+Definition rig_univlalence_map (X Y : rig) : X = Y → rigiso X Y.
+Proof.
+  intros X Y e. induction e. exact (idrigiso X).
+Defined.
+
+Lemma rig_univalence_isweq (X Y : rig) : isweq (rig_univlalence_map X Y).
+Proof.
+  intros X Y.
+  use isweqhomot.
+  - exact (weqcomp (rig_univalence_weq1 X Y)
+                   (weqcomp (rig_univalence_weq2 X Y) (rig_univalence_weq3 X Y))).
+  - intros e. induction e.
+    use (pathscomp0 weqcomp_to_funcomp_app).
+    use weqcomp_to_funcomp_app.
+  - use weqproperty.
+Defined.
+Opaque rig_univalence_isweq.
+
+Definition rig_univalence (X Y : rig) : (X = Y) ≃ (rigiso X Y).
+Proof.
+  intros X Y.
+  use weqpair.
+  - exact (rig_univlalence_map X Y).
+  - exact (rig_univalence_isweq X Y).
+Defined.
+Opaque rig_univalence.
 
 
 (** **** Relations similar to "greater" or "greater or equal" on rigs *)
@@ -205,24 +391,24 @@ Proof.
   - apply isapropissubmonoid.
 Defined.
 
-Definition subrig (X : rig) : UU := total2 (fun  A : hsubtype X => issubrig A).
+Definition subrig (X : rig) : UU := total2 (λ  A : hsubtype X, issubrig A).
 
 Definition subrigpair {X : rig} :
   ∏ (t : hsubtype X), (λ A : hsubtype X, issubrig A) t → ∑ A : hsubtype X, issubrig A :=
-  tpair (fun  A : hsubtype X => issubrig A).
+  tpair (λ  A : hsubtype X, issubrig A).
 
 Definition pr1subrig (X : rig) : @subrig X -> hsubtype X :=
-  @pr1 _ (fun  A : hsubtype X => issubrig A).
+  @pr1 _ (λ  A : hsubtype X, issubrig A).
 
 Definition subrigtosubsetswith2binop (X : rig) : subrig X -> @subsetswith2binop X :=
-  fun A : _ => subsetswith2binoppair (pr1 A) (dirprodpair (pr1 (pr1 (pr2 A))) (pr1 (pr2 (pr2 A)))).
+  λ A : _, subsetswith2binoppair (pr1 A) (dirprodpair (pr1 (pr1 (pr2 A))) (pr1 (pr2 (pr2 A)))).
 Coercion subrigtosubsetswith2binop : subrig >-> subsetswith2binop.
 
 Definition rigaddsubmonoid {X : rig} : subrig X -> @subabmonoid (rigaddabmonoid X) :=
-  fun A : _ => @submonoidpair (rigaddabmonoid X) (pr1 A) (pr1 (pr2 A)).
+  λ A : _, @submonoidpair (rigaddabmonoid X) (pr1 A) (pr1 (pr2 A)).
 
 Definition rigmultsubmonoid {X : rig} : subrig X -> @submonoid (rigmultmonoid X) :=
-  fun A : _ => @submonoidpair (rigmultmonoid X) (pr1 A) (pr2 (pr2 A)).
+  λ A : _, @submonoidpair (rigmultmonoid X) (pr1 A) (pr2 (pr2 A)).
 
 Lemma isrigcarrier {X : rig} (A : subrig X) : isrigops (@op1 A) (@op2 A).
 Proof.
@@ -268,23 +454,23 @@ Proof.
     set (zr := setquotpr R (@rigunel1 X)).
     split.
     + apply (setquotunivprop
-               R (fun x  => hProppair _ (setproperty (setwith2binopquot R) (opp2 zr x) zr))).
+               R (λ x , hProppair _ (setproperty (setwith2binopquot R) (opp2 zr x) zr))).
       intro x. apply (maponpaths (setquotpr R) (rigmult0x X x)).
     + apply (setquotunivprop
-               R (fun x  => hProppair _ (setproperty (setwith2binopquot R) (opp2 x zr) zr))).
+               R (λ x , hProppair _ (setproperty (setwith2binopquot R) (opp2 x zr) zr))).
       intro x. apply (maponpaths (setquotpr R) (rigmultx0 X x)).
   - set (opp1 := @op1 (setwith2binopquot R)).
     set (opp2 := @op2 (setwith2binopquot R)).
     split.
     + unfold isldistr.
       apply (setquotuniv3prop
-               R (fun x x' x'' =>
+               R (λ x x' x'',
                     hProppair _ (setproperty (setwith2binopquot R) (opp2  x'' (opp1 x x'))
                                              (opp1 (opp2 x'' x) (opp2 x'' x'))))).
       intros x x' x''. apply (maponpaths (setquotpr R) (rigldistr X x x' x'')).
     + unfold isrdistr.
       apply (setquotuniv3prop
-               R (fun x x' x'' =>
+               R (λ x x' x'',
                     hProppair _ (setproperty (setwith2binopquot R) (opp2  (opp1 x x') x'')
                                              (opp1 (opp2 x x'') (opp2 x' x''))))).
       intros x x' x''. apply (maponpaths (setquotpr R) (rigrdistr X x x' x'')).
@@ -319,15 +505,53 @@ Defined.
 
 Definition rigdirprod (X Y : rig) : rig := @rigpair (setwith2binopdirprod X Y) (isrigdirprod X Y).
 
+(** **** Opposite rigs *)
+
+Local Open Scope rig.
+
+(** Following Bourbaki's Algebra, I, §8.3, Example V *)
+Definition opposite_rig (X : rig) : rig.
+Proof.
+  intros X.
+
+  (* Use the same underlying set and addition, flip the multiplication *)
+  refine (setwith2binoppair (pr1 (pr1rig X))
+                            (dirprodpair (pr1 (pr2 (pr1rig X)))
+                                         (fun x y => y * x)%rig),, _).
+
+  unfold op2; cbn; fold (@op1 X) (@op2 X).
+  apply (mk_isrigops (rigop1axs X)).
+
+  (* For these proofs, we just have to switch some arguments around *)
+  - apply mk_ismonoidop.
+    * exact (fun x y z => !(rigassoc2 _ z y x)).
+    * refine (1,, _). (* same unit, opposite proofs *)
+      exact (dirprodpair (rigrunax2 _) (riglunax2 _)).
+  - exact (rigmultx0 _).
+  - exact (rigmult0x _).
+  - exact (dirprodpair (rigrdistr _) (rigldistr _)).
+Defined.
+
+(** In Emacs, use the function insert-char and choose SUPERSCRIPT ZERO *)
+Notation "X ⁰" := (opposite_rig X) (at level 12) : rig_scope.
+
+Definition opposite_opposite_rig (X : rig) : rigiso X ((X⁰)⁰).
+Proof.
+  intros X.
+  refine ((idfun X,, idisweq X),, _).
+  easy.
+Defined.
+
+Local Close Scope rig.
 
 (** *** Commutative rigs *)
 
 (** **** General definitions *)
 
-Definition commrig : UU := total2 (fun X : setwith2binop => iscommrigops (@op1 X) (@op2 X)).
+Definition commrig : UU := total2 (λ X : setwith2binop, iscommrigops (@op1 X) (@op2 X)).
 
 Definition commrigpair (X : setwith2binop) (is : iscommrigops (@op1 X) (@op2 X)) : commrig :=
-  tpair (fun X : setwith2binop => iscommrigops (@op1 X) (@op2 X)) X is.
+  tpair (λ X : setwith2binop, iscommrigops (@op1 X) (@op2 X)) X is.
 
 Definition commrigconstr {X : hSet} (opp1 opp2 : binop X)
            (ax11 : ismonoidop opp1) (ax12 : iscomm opp1)
@@ -345,7 +569,7 @@ Proof.
   - apply ax22.
 Defined.
 
-Definition commrigtorig : commrig -> rig := fun X : _ => @rigpair (pr1 X) (pr1 (pr2 X)).
+Definition commrigtorig : commrig -> rig := λ X : _, @rigpair (pr1 X) (pr1 (pr2 X)).
 Coercion commrigtorig : commrig >-> rig.
 
 Definition rigcomm2 (X : commrig) : iscomm (@op2 X) := pr2 (pr2 X).
@@ -355,6 +579,72 @@ Definition commrigop2axs (X : commrig) : isabmonoidop (@op2 X) :=
 
 Definition commrigmultabmonoid (X : commrig) : abmonoid :=
   abmonoidpair (setwithbinoppair X op2) (dirprodpair (rigop2axs X) (rigcomm2 X)).
+
+
+(** **** (X = Y) ≃ (rigiso X Y)
+    We use the following composition
+
+                          (X = Y) ≃ (mk_commrig' X = mk_commrig' Y)
+                                  ≃ ((pr1 (mk_commrig' X)) = (pr1 (mk_commrig' Y)))
+                                  ≃ (rigiso X Y)
+
+    where the third weak equivalence uses univalence for rigs, [rig_univalence]. We define
+    [commrig'] to be able to apply it.
+ *)
+
+Local Definition commrig' : UU :=
+  ∑ D : (∑ X : setwith2binop, isrigops (@op1 X) (@op2 X)), iscomm (@op2 (pr1 D)).
+
+Local Definition mk_commrig' (CR : commrig) : commrig' :=
+  tpair _ (tpair _ (pr1 CR) (dirprod_pr1 (pr2 CR))) (dirprod_pr2 (pr2 CR)).
+
+Definition commrig_univalence_weq1 : commrig ≃ commrig' :=
+  weqtotal2asstol
+    (λ X : setwith2binop, isrigops (@op1 X) (@op2 X))
+    (fun y : (∑ (X : setwith2binop), isrigops (@op1 X) (@op2 X)) => iscomm (@op2 (pr1 y))).
+
+Definition commrig_univalence_weq1' (X Y : commrig) : (X = Y) ≃ (mk_commrig' X = mk_commrig' Y) :=
+  weqpair _ (@isweqmaponpaths commrig commrig' commrig_univalence_weq1 X Y).
+
+Definition commrig_univalence_weq2 (X Y : commrig) :
+  ((mk_commrig' X) = (mk_commrig' Y)) ≃ ((pr1 (mk_commrig' X)) = (pr1 (mk_commrig' Y))).
+Proof.
+  intros X Y.
+  use subtypeInjectivity.
+  intros w. use isapropiscomm.
+Defined.
+Opaque commrig_univalence_weq2.
+
+Definition commrig_univalence_weq3 (X Y : commrig) :
+  ((pr1 (mk_commrig' X)) = (pr1 (mk_commrig' Y))) ≃ (rigiso X Y) :=
+  rig_univalence (pr1 (mk_commrig' X)) (pr1 (mk_commrig' Y)).
+
+Definition commrig_univalence_map (X Y : commrig) : (X = Y) -> (rigiso X Y).
+Proof.
+  intros X Y e. induction e. exact (idrigiso X).
+Defined.
+
+Lemma commrig_univalence_isweq (X Y : commrig) : isweq (commrig_univalence_map X Y).
+Proof.
+  intros X Y.
+  use isweqhomot.
+  - exact (weqcomp (commrig_univalence_weq1' X Y)
+                   (weqcomp (commrig_univalence_weq2 X Y) (commrig_univalence_weq3 X Y))).
+  - intros e. induction e.
+    use (pathscomp0 weqcomp_to_funcomp_app).
+    use weqcomp_to_funcomp_app.
+  - use weqproperty.
+Defined.
+Opaque commrig_univalence_isweq.
+
+Definition commrig_univalence (X Y : commrig) : (X = Y) ≃ (rigiso X Y).
+Proof.
+  intros X Y.
+  use weqpair.
+  - exact (commrig_univalence_map X Y).
+  - exact (commrig_univalence_isweq X Y).
+Defined.
+Opaque commrig_univalence.
 
 
 (** **** Relations similar to "greater" on commutative rigs *)
@@ -415,19 +705,39 @@ Defined.
 Definition commrigdirprod (X Y : commrig) : commrig :=
   commrigpair (setwith2binopdirprod X Y) (iscommrigdirprod X Y).
 
+(** **** Opposite commutative rigs *)
+
+Local Open Scope rig.
+
+(** We reuse much of the proof for general rigs *)
+Definition opposite_commrig (X : commrig) : commrig :=
+  ((pr1 (X⁰)),, (dirprodpair (pr2 (X⁰)) (fun x y => @rigcomm2 X y x))).
+
+(** Commutativity makes taking the opposite trivial *)
+Definition iso_commrig_opposite (X : commrig) : rigiso X (opposite_commrig X).
+Proof.
+  intros X.
+  refine ((idfun X,, idisweq X),, _).
+  do 2 (split; try easy).
+  unfold isbinopfun.
+  exact (fun x y => @rigcomm2 X x y).
+Defined.
+
+Local Close Scope rig.
+
 
 (** *** Rings *)
 
 
 (** **** General definitions *)
 
-Definition rng : UU := total2 (fun X : setwith2binop => isrngops (@op1 X) (@op2 X)).
+Definition rng : UU := total2 (λ X : setwith2binop, isrngops (@op1 X) (@op2 X)).
 
 Definition rngpair {X : setwith2binop} (is : isrngops (@op1 X) (@op2 X)) : rng :=
-  tpair (fun X : setwith2binop =>  isrngops (@op1 X) (@op2 X)) X is.
+  tpair (λ X : setwith2binop,  isrngops (@op1 X) (@op2 X)) X is.
 
 Definition pr1rng : rng -> setwith2binop :=
-  @pr1 _ (fun X : setwith2binop => isrngops (@op1 X) (@op2 X)).
+  @pr1 _ (λ X : setwith2binop, isrngops (@op1 X) (@op2 X)).
 Coercion pr1rng : rng >-> setwith2binop.
 
 Definition rngaxs (X : rng) : isrngops (@op1 X) (@op2 X) := pr2 X.
@@ -473,10 +783,10 @@ Definition rngconstr {X : hSet} (opp1 opp2 : binop X) (ax11 : isgrop opp1) (ax12
   @rngpair (setwith2binoppair X (dirprodpair opp1 opp2))
            (dirprodpair (dirprodpair (dirprodpair ax11 ax12) ax2) dax).
 
-Definition rngmultx0 (X : rng) : ∏ x : X, paths (op2 x rngunel1) rngunel1 :=
+Definition rngmultx0 (X : rng) : ∏ x : X, (op2 x rngunel1) = rngunel1 :=
   rngmultx0_is (rngaxs X).
 
-Definition rngmult0x (X : rng) : ∏ x : X, paths (op2 rngunel1 x) rngunel1 :=
+Definition rngmult0x (X : rng) : ∏ x : X, (op2 rngunel1 x) = rngunel1 :=
   rngmult0x_is (rngaxs X).
 
 Definition rngminus1 {X : rng} : X := rngminus1_is (rngaxs X).
@@ -508,6 +818,15 @@ Definition isrngfun {X Y : rng} (f : X -> Y) := @isrigfun X Y f.
 
 Definition rngfun (X Y : rng) := rigfun X Y.
 
+Lemma isaset_rngfun (X Y : rng) : isaset (rngfun X Y).
+Proof.
+   intros X Y. apply (isofhleveltotal2 2).
+   - use impred_isaset. intro x.
+     apply setproperty.
+   - intro f. apply isasetaprop.
+     apply isapropisrigfun.
+Defined.
+
 Definition rngfunconstr {X Y : rng} {f : X -> Y} (is : isrngfun f) : rngfun X Y := rigfunconstr is.
 Identity Coercion id_rngfun : rngfun >-> rigfun.
 
@@ -518,10 +837,120 @@ Definition rngmultfun {X Y : rng} (f : rngfun X Y) :
 
 Definition rngiso (X Y : rng) := rigiso X Y.
 
-Definition rngisopair {X Y : rng} (f : weq X Y) (is : isrngfun f) : rngiso X Y := tpair _  f is.
+Definition rngisopair {X Y : rng} (f : X ≃ Y) (is : isrngfun f) : rngiso X Y := tpair _  f is.
 Identity Coercion id_rngiso : rngiso >-> rigiso.
 
 Definition isrngfuninvmap {X Y : rng} (f : rngiso X Y) : isrngfun (invmap f) := isrigfuninvmap f.
+
+
+(** **** (X = Y) ≃ (rngiso X Y)
+    We use the following composition
+
+                           (X = Y) ≃ (mk_rng' X = mk_rng' Y)
+                                   ≃ ((pr1 (mk_rng' X)) = (pr1 (mk_rng' Y)))
+                                   ≃ (rngiso X Y)
+
+    where the third weak equivalence is given by univalence for rigs, [rig_univalence]. We define
+    rng' to be able to apply [rig_univalence].
+ *)
+
+Local Definition rng' : UU :=
+  ∑ D : (∑ X : setwith2binop, isrigops (@op1 X) (@op2 X)),
+        invstruct (@op1 (pr1 D)) (dirprod_pr1 (dirprod_pr1 (pr1 (pr1 (pr2 D))))).
+
+Local Definition mk_rng' (R : rng) : rng'.
+Proof.
+  intros R.
+  use tpair.
+  - use tpair.
+    + exact (pr1 R).
+    + use mk_isrigops.
+      * use mk_isabmonoidop.
+        -- exact (pr1 (dirprod_pr1 (dirprod_pr1 (dirprod_pr1 (pr2 R))))).
+        -- exact (dirprod_pr2 (dirprod_pr1 (dirprod_pr1 (pr2 R)))).
+      * exact (dirprod_pr2 (dirprod_pr1 (pr2 R))).
+      * exact (@mult0x_is_l (pr1 R) (@op1 (pr1 R)) (@op2 (pr1 R))
+                            (dirprod_pr1 (dirprod_pr1 (dirprod_pr1 (pr2 R))))
+                            (dirprod_pr2 (dirprod_pr1 (pr2 R))) (dirprod_pr2 (pr2 R))).
+      * exact (@multx0_is_l (pr1 R) (@op1 (pr1 R)) (@op2 (pr1 R))
+                            (dirprod_pr1 (dirprod_pr1 (dirprod_pr1 (pr2 R))))
+                            (dirprod_pr2 (dirprod_pr1 (pr2 R))) (dirprod_pr2 (pr2 R))).
+      * exact (dirprod_pr2 (pr2 R)).
+  - exact (pr2 (dirprod_pr1 (dirprod_pr1 (dirprod_pr1 (pr2 R))))).
+Defined.
+
+Local Definition mk_rng_from_rng' (R : rng') : rng.
+Proof.
+  intros R'.
+  use rngpair.
+  - exact (pr1 (pr1 R')).
+  - use mk_isrngops.
+    + use mk_isabgrop.
+      * use mk_isgrop.
+        -- exact (dirprod_pr1 (dirprod_pr1 (pr1 (dirprod_pr1 (pr2 (pr1 R')))))).
+        -- exact (pr2 R').
+      * exact (dirprod_pr2 (dirprod_pr1 (pr1 (dirprod_pr1 (pr2 (pr1 R')))))).
+    + exact (dirprod_pr2 (pr1 (dirprod_pr1 (pr2 (pr1 R'))))).
+    + exact (dirprod_pr2 (pr2 (pr1 R'))).
+Defined.
+
+Definition rng_univalence_weq1 : rng ≃ rng'.
+Proof.
+  use weqpair.
+  - intros R. exact (mk_rng' R).
+  - use isweq_iso.
+    + intros R'. exact (mk_rng_from_rng' R').
+    + intros R. use idpath.
+    + intros R'.
+      use total2_paths_f.
+      * use total2_paths_f.
+        -- use idpath.
+        -- use proofirrelevance. use isapropisrigops.
+      * use proofirrelevance. use isapropinvstruct.
+Defined.
+
+Definition rng_univalence_weq1' (X Y : rng) : (X = Y) ≃ (mk_rng' X = mk_rng' Y) :=
+  weqpair _ (@isweqmaponpaths rng rng' rng_univalence_weq1 X Y).
+
+Definition rng_univalence_weq2 (X Y : rng) :
+  ((mk_rng' X) = (mk_rng' Y)) ≃ ((pr1 (mk_rng' X)) = (pr1 (mk_rng' Y))).
+Proof.
+  intros X Y.
+  use subtypeInjectivity.
+  intros w. use isapropinvstruct.
+Defined.
+Opaque rng_univalence_weq2.
+
+Definition rng_univalence_weq3 (X Y : rng) :
+  ((pr1 (mk_rng' X)) = (pr1 (mk_rng' Y))) ≃ (rigiso X Y) :=
+  rig_univalence (pr1 (mk_rng' X)) (pr1 (mk_rng' Y)).
+
+Definition rng_univalence_map (X Y : rng) : (X = Y) -> (rngiso X Y).
+Proof.
+  intros X Y e. induction e. exact (idrigiso X).
+Defined.
+
+Lemma rng_univalence_isweq (X Y : rng) : isweq (rng_univalence_map X Y).
+Proof.
+  intros X Y.
+  use isweqhomot.
+  - exact (weqcomp (rng_univalence_weq1' X Y)
+                   (weqcomp (rng_univalence_weq2 X Y) (rng_univalence_weq3 X Y))).
+  - intros e. induction e.
+    use (pathscomp0 weqcomp_to_funcomp_app).
+    use weqcomp_to_funcomp_app.
+  - use weqproperty.
+Defined.
+Opaque rng_univalence_isweq.
+
+Definition rng_univalence (X Y : rng) : (X = Y) ≃ (rngiso X Y).
+Proof.
+  intros X Y.
+  use weqpair.
+  - exact (rng_univalence_map X Y).
+  - exact (rng_univalence_isweq X Y).
+Defined.
+Opaque rng_univalence.
 
 
 (** **** Computation lemmas for rings *)
@@ -530,7 +959,7 @@ Open Scope rng_scope.
 
 Definition rnginvunel1 (X : rng) : -0 = 0 := grinvunel X.
 
-Lemma rngismultlcancelableif (X : rng) (x : X) (isl : ∏ y, paths (x * y) 0 -> paths y 0) :
+Lemma rngismultlcancelableif (X : rng) (x : X) (isl : ∏ y, paths (x * y) 0 -> y = 0) :
   islcancelable op2 x.
 Proof.
   intros.
@@ -538,13 +967,13 @@ Proof.
   - apply setproperty.
   - apply setproperty.
   - intros x1 x2 e.
-    set (e' := maponpaths (fun a => a + (x * (-x2))) e). simpl in e'.
+    set (e' := maponpaths (λ a, a + (x * (-x2))) e). simpl in e'.
     rewrite (pathsinv0 (rngldistr X _ _ x)) in e'.
     rewrite (pathsinv0 (rngldistr X _ _ x)) in e'.
     rewrite (rngrinvax1 X x2) in e'.
     rewrite (rngmultx0 X _) in e'.
     set (e'' := isl (x1 - x2) e').
-    set (e''' := maponpaths (fun a => a + x2) e''). simpl in e'''.
+    set (e''' := maponpaths (λ a, a + x2) e''). simpl in e'''.
     rewrite (rngassoc1 X _ _ x2) in e'''.
     rewrite (rnglinvax1 X x2) in e'''.
     rewrite (rnglunax1 X _) in e'''.
@@ -553,20 +982,20 @@ Proof.
 Defined.
 Opaque  rngismultlcancelableif.
 
-Lemma rngismultrcancelableif (X : rng) (x : X) (isr : ∏ y, paths (y * x) 0 -> paths y 0) :
+Lemma rngismultrcancelableif (X : rng) (x : X) (isr : ∏ y, paths (y * x) 0 -> y = 0) :
   isrcancelable op2 x.
 Proof.
   intros. apply (@isinclbetweensets X X).
   - apply setproperty.
   - apply setproperty.
   - intros x1 x2 e.
-    set (e' := maponpaths (fun a => a + ((-x2) * x)) e).  simpl in e'.
+    set (e' := maponpaths (λ a, a + ((-x2) * x)) e).  simpl in e'.
     rewrite (pathsinv0 (rngrdistr X _ _ x)) in e'.
     rewrite (pathsinv0 (rngrdistr X _ _ x)) in e'.
     rewrite (rngrinvax1 X x2) in e'.
     rewrite (rngmult0x X _) in e'.
     set (e'' := isr (x1 - x2) e').
-    set (e''' := maponpaths (fun a => a + x2) e''). simpl in e'''.
+    set (e''' := maponpaths (λ a, a + x2) e''). simpl in e'''.
     rewrite (rngassoc1 X _ _ x2) in e'''.
     rewrite (rnglinvax1 X x2) in e'''.
     rewrite (rnglunax1 X _) in e'''.
@@ -575,8 +1004,8 @@ Proof.
 Defined.
 Opaque rngismultrcancelableif.
 
-Lemma rngismultcancelableif (X : rng) (x : X) (isl : ∏ y, paths (x * y) 0 -> paths y 0)
-      (isr : ∏ y, paths (y * x) 0 -> paths y 0) : iscancelable op2 x.
+Lemma rngismultcancelableif (X : rng) (x : X) (isl : ∏ y, paths (x * y) 0 -> y = 0)
+      (isr : ∏ y, paths (y * x) 0 -> y = 0) : iscancelable op2 x.
 Proof.
   intros.
   apply (dirprodpair (rngismultlcancelableif X x isl) (rngismultrcancelableif X x isr)).
@@ -737,7 +1166,7 @@ Defined.
 Opaque isrrngmultgttoisrngmultgt.
 
 Lemma isrngmultgtaspartbinophrel (X : rng) (R : hrel X) (is0 : @isbinophrel X R) :
-  (isrngmultgt X R) <-> (@ispartbinophrel (rngmultmonoid X) (fun a => R a 0) R).
+  (isrngmultgt X R) <-> (@ispartbinophrel (rngmultmonoid X) (λ a, R a 0) R).
 Proof.
   intros. split.
   - intro ism. split.
@@ -852,7 +1281,7 @@ Defined.
 Opaque islrinvrngmultgttoisinvrngmultgt.
 
 Lemma isinvrngmultgtaspartinvbinophrel (X : rng) (R : hrel X) (is0 : @isbinophrel X R) :
-  (isinvrngmultgt X R) <-> (@ispartinvbinophrel (rngmultmonoid X) (fun a => R a 0) R).
+  (isinvrngmultgt X R) <-> (@ispartinvbinophrel (rngmultmonoid X) (λ a, R a 0) R).
 Proof.
   intros. split.
   - intro ism. split.
@@ -927,14 +1356,14 @@ Opaque isinvrngmultgttoisinvrigmultgt.
 (** **** Relations on rings and ring homomorphisms *)
 
 Lemma rngaddhrelandfun {X Y : rng} (f : rngfun X Y) (R : hrel Y) (isr : @isbinophrel Y R) :
-  @isbinophrel X (fun x x' => R (f x) (f x')).
+  @isbinophrel X (λ x x', R (f x) (f x')).
 Proof. intros. apply (binophrelandfun (rngaddfun f) R isr). Defined.
 
 Lemma rngmultgtandfun {X Y : rng} (f : rngfun X Y) (R : hrel Y) (isr : isrngmultgt Y R) :
-  isrngmultgt X (fun x x' => R (f x) (f x')).
+  isrngmultgt X (λ x x', R (f x) (f x')).
 Proof.
   intros. intros a b ra rb.
-  set (ax0 := (pr2 (pr1 (pr2 f))) : paths (f 0) 0).
+  set (ax0 := (pr2 (pr1 (pr2 f))) : (f 0) = 0).
   set (ax1 := (pr1 (pr2 (pr2 f))) : ∏ a b, paths (f (a * b)) ((f a) * (f b))).
   rewrite ax0 in ra. rewrite ax0 in rb.
   rewrite ax0. rewrite (ax1 _ _).
@@ -942,10 +1371,10 @@ Proof.
 Defined.
 
 Lemma rnginvmultgtandfun {X Y : rng} (f : rngfun X Y) (R : hrel Y) (isr : isinvrngmultgt Y R) :
-  isinvrngmultgt X (fun x x' => R (f x) (f x')).
+  isinvrngmultgt X (λ x x', R (f x) (f x')).
 Proof.
   intros.
-  set (ax0 := (pr2 (pr1 (pr2 f))) : paths (f 0) 0).
+  set (ax0 := (pr2 (pr1 (pr2 f))) : (f 0) = 0).
   set (ax1 := (pr1 (pr2 (pr2 f))) : ∏ a b, paths (f (a * b)) ((f a) * (f b))).
   split.
   - intros a b rab ra.
@@ -973,25 +1402,25 @@ Proof.
   - apply isapropissubmonoid.
 Defined.
 
-Definition subrng (X : rng) : UU := total2 (fun A : hsubtype X => issubrng A).
+Definition subrng (X : rng) : UU := total2 (λ A : hsubtype X, issubrng A).
 
 Definition subrngpair {X : rng} :
   ∏ (t : hsubtype X), (λ A : hsubtype X, issubrng A) t → ∑ A : hsubtype X, issubrng A :=
-  tpair (fun A : hsubtype X => issubrng A).
+  tpair (λ A : hsubtype X, issubrng A).
 
 Definition pr1subrng (X : rng) : @subrng X -> hsubtype X :=
-  @pr1 _ (fun A : hsubtype X => issubrng A).
+  @pr1 _ (λ A : hsubtype X, issubrng A).
 
 Definition subrngtosubsetswith2binop (X : rng) : subrng X -> @subsetswith2binop X :=
-  fun A : _ => subsetswith2binoppair
+  λ A : _, subsetswith2binoppair
               (pr1 A) (dirprodpair (pr1 (pr1 (pr1 (pr2 A)))) (pr1 (pr2 (pr2 A)))).
 Coercion subrngtosubsetswith2binop : subrng >-> subsetswith2binop.
 
 Definition addsubgr {X : rng} : subrng X -> @subgr X :=
-  fun A : _ => @subgrpair X (pr1 A) (pr1 (pr2 A)).
+  λ A : _, @subgrpair X (pr1 A) (pr1 (pr2 A)).
 
 Definition multsubmonoid {X : rng} : subrng X -> @submonoid (rngmultmonoid X) :=
-  fun A : _ => @submonoidpair (rngmultmonoid X) (pr1 A) (pr2 (pr2 A)).
+  λ A : _, @submonoidpair (rngmultmonoid X) (pr1 A) (pr2 (pr2 A)).
 
 Lemma isrngcarrier {X : rng} (A : subrng X) : isrngops (@op1 A) (@op2 A).
 Proof.
@@ -1033,12 +1462,12 @@ Proof.
   split.
   - unfold isldistr.
     apply (setquotuniv3prop
-             R (fun x x' x'' => hProppair _ (setproperty (setwith2binopquot R) (opp2  x'' (opp1 x x'))
+             R (λ x x' x'', hProppair _ (setproperty (setwith2binopquot R) (opp2  x'' (opp1 x x'))
                                                       (opp1 (opp2 x'' x) (opp2 x'' x'))))).
     intros x x' x''. apply (maponpaths (setquotpr R) (rngldistr X x x' x'')).
   - unfold isrdistr.
     apply (setquotuniv3prop
-             R (fun x x' x'' => hProppair _ (setproperty (setwith2binopquot R) (opp2  (opp1 x x') x'')
+             R (λ x x' x'', hProppair _ (setproperty (setwith2binopquot R) (opp2  (opp1 x x') x'')
                                                       (opp1 (opp2 x x'') (opp2 x' x''))))).
     intros x x' x''. apply (maponpaths (setquotpr R) (rngrdistr X x x' x'')).
 Defined.
@@ -1070,6 +1499,27 @@ Defined.
 
 Definition rngdirprod (X Y : rng) : rng := @rngpair (setwith2binopdirprod X Y) (isrngdirprod X Y).
 
+(** **** Opposite rings *)
+
+Local Open Scope rig.
+
+(** We just need to reuse and rearrange the opposite rig *)
+Definition opposite_rng (X : rng) : rng.
+Proof.
+  intros X.
+  refine (pr1 (X⁰),, _).
+  split.
+  - split.
+    apply mk_isabgrop.
+    * exact (pr1 (rigop1axs (X⁰)),, pr2 (pr1 (rngop1axs X))).
+    * exact (pr2 (rngop1axs X)).
+    * exact (rigop2axs (X⁰)).
+  - exact (rigdistraxs (X⁰)).
+Defined.
+
+Notation "X ⁰" := (opposite_rng X) (at level 12) : rng_scope.
+
+Local Close Scope rig.
 
 (** **** Ring of differences associated with a rig *)
 
@@ -1079,8 +1529,8 @@ Definition rigtorngaddabgr (X : rig) : abgr := abgrdiff (rigaddabmonoid X).
 
 Definition rigtorngcarrier (X : rig) : hSet := pr1 (pr1 (rigtorngaddabgr X)).
 
-Definition rigtorngop1int (X : rig) : binop (dirprod X X) :=
-  fun x x' => dirprodpair ((pr1 x) + (pr1 x')) ((pr2 x) + (pr2 x')).
+Definition rigtorngop1int (X : rig) : binop (X × X) :=
+  λ x x', dirprodpair ((pr1 x) + (pr1 x')) ((pr2 x) + (pr2 x')).
 
 Definition rigtorngop1 (X : rig) : binop (rigtorngcarrier X) := @op (rigtorngaddabgr X).
 
@@ -1088,10 +1538,10 @@ Definition rigtorngop1axs (X : rig) : isabgrop (rigtorngop1 X) := pr2 (rigtornga
 
 Definition rigtorngunel1 (X : rig) : rigtorngcarrier X := unel (rigtorngaddabgr X).
 
-Definition eqrelrigtorng (X : rig) : eqrel (dirprod X X) := eqrelabgrdiff (rigaddabmonoid X).
+Definition eqrelrigtorng (X : rig) : eqrel (X × X) := eqrelabgrdiff (rigaddabmonoid X).
 
-Definition rigtorngop2int (X : rig) : binop (dirprod X X) :=
-  fun xx xx' : dirprod X X =>
+Definition rigtorngop2int (X : rig) : binop (X × X) :=
+  λ xx xx' : dirprod X X,
     dirprodpair (pr1 xx * pr1 xx' + pr2 xx * pr2 xx') (pr1 xx * pr2 xx' + pr2 xx * pr1 xx').
 
 Definition rigtorngunel2int (X : rig) : dirprod X X := dirprodpair 1 0.
@@ -1158,7 +1608,7 @@ Lemma rigtorngassoc2 (X : rig) : isassoc (rigtorngop2 X).
 Proof.
   intro. unfold isassoc.
   apply (setquotuniv3prop (eqrelrigtorng X)
-                          (fun x x' x'' : rigtorngcarrier X =>
+                          (λ x x' x'' : rigtorngcarrier X,
                              eqset (rigtorngop2 X (rigtorngop2 X x x') x'')
                                    (rigtorngop2 X x (rigtorngop2 X x' x'')))).
   intros x x' x''.
@@ -1200,7 +1650,7 @@ Lemma rigtornglunit2 (X : rig) : islunit (rigtorngop2 X) (rigtorngunel2 X).
 Proof.
   intro. unfold islunit.
   apply (setquotunivprop
-           (eqrelrigtorng X) (fun x : rigtorngcarrier X =>
+           (eqrelrigtorng X) (λ x : rigtorngcarrier X,
                                 eqset (rigtorngop2 X (rigtorngunel2 X) x) x)).
   intro x.
   change (paths (setquotpr (eqrelrigtorng X) (rigtorngop2int X (rigtorngunel2int X) x))
@@ -1218,7 +1668,7 @@ Lemma rigtorngrunit2 (X : rig) : isrunit (rigtorngop2 X) (rigtorngunel2 X).
 Proof.
   intro. unfold isrunit.
   apply (setquotunivprop
-           (eqrelrigtorng X) (fun x : rigtorngcarrier X =>
+           (eqrelrigtorng X) (λ x : rigtorngcarrier X,
                                 eqset (rigtorngop2 X x (rigtorngunel2 X)) x)).
   intro x.
   change (paths (setquotpr (eqrelrigtorng X) (rigtorngop2int X x (rigtorngunel2int X)))
@@ -1246,7 +1696,7 @@ Lemma rigtorngldistr (X : rig) : isldistr (rigtorngop1 X) (rigtorngop2 X).
 Proof.
   intro. unfold isldistr.
   apply (setquotuniv3prop
-           (eqrelrigtorng X) (fun x x' x'' : rigtorngcarrier X =>
+           (eqrelrigtorng X) (λ x x' x'' : rigtorngcarrier X,
                                 eqset (rigtorngop2 X x'' (rigtorngop1 X x x'))
                                       (rigtorngop1 X (rigtorngop2 X x'' x)
                                                    (rigtorngop2 X x'' x')))).
@@ -1270,7 +1720,7 @@ Lemma rigtorngrdistr (X : rig) : isrdistr (rigtorngop1 X) (rigtorngop2 X).
 Proof.
   intro. unfold isrdistr.
   apply (setquotuniv3prop
-           (eqrelrigtorng X) (fun x x' x'' : rigtorngcarrier X =>
+           (eqrelrigtorng X) (λ x x' x'' : rigtorngcarrier X,
                                 eqset (rigtorngop2 X (rigtorngop1 X x x') x'')
                                       (rigtorngop1 X (rigtorngop2 X x x'')
                                                    (rigtorngop2 X x' x'')))).
@@ -1314,7 +1764,7 @@ Proof.
 Defined.
 Opaque isbinop1funtorngdiff.
 
-Lemma isunital1funtorngdiff (X : rig) : paths (torngdiff X 0) 0%rng.
+Lemma isunital1funtorngdiff (X : rig) : (torngdiff X 0) = 0%rng.
 Proof. intro. apply idpath. Defined.
 Opaque isunital1funtorngdiff.
 
@@ -1336,7 +1786,7 @@ Proof.
     apply idpath.
 Defined.
 
-Lemma isunital2funtorngdiff  (X : rig) : paths (torngdiff X 1) 1%rng.
+Lemma isunital2funtorngdiff  (X : rig) : (torngdiff X 1) = 1%rng.
 Proof. intro. apply idpath. Defined.
 Opaque isunital2funtorngdiff.
 
@@ -1373,7 +1823,7 @@ Proof.
     apply (pr2 _).
   }
   unfold isrngmultgt.
-  apply (setquotuniv2prop _ (fun a b => hProppair _ (int a b))).
+  apply (setquotuniv2prop _ (λ a b, hProppair _ (int a b))).
 
   intros xa1 xa2.
   change ((abgrdiffrelint (rigaddabmonoid X) R) xa1 (dirprodpair (@rigunel1 X) (@rigunel1 X)) ->
@@ -1434,7 +1884,7 @@ Proof.
     apply impred. intro.
     apply impred. intro.
     apply (pr2 _).
-    apply (setquotuniv2prop _ (fun a b => hProppair _ (int a b))).
+    apply (setquotuniv2prop _ (λ a b, hProppair _ (int a b))).
 
     intros xa1 xa2.
     change ((abgrdiffrelint (rigaddabmonoid X) R (@rigtorngop2int X xa1 xa2)
@@ -1464,7 +1914,7 @@ Proof.
     apply impred. intro.
     apply impred. intro.
     apply (pr2 _).
-    apply (setquotuniv2prop _ (fun a b => hProppair _ (int a b))).
+    apply (setquotuniv2prop _ (λ a b, hProppair _ (int a b))).
 
     intros xa1 xa2.
     change ((abgrdiffrelint (rigaddabmonoid X) R (@rigtorngop2int X xa1 xa2)
@@ -1506,11 +1956,11 @@ Close Scope rig_scope.
 
 Definition iscommrng (X : setwith2binop) : UU := iscommrngops (@op1 X) (@op2 X).
 
-Definition commrng : UU := total2 (fun X : setwith2binop => iscommrngops (@op1 X) (@op2 X)).
+Definition commrng : UU := total2 (λ X : setwith2binop, iscommrngops (@op1 X) (@op2 X)).
 
 Definition commrngpair (X : setwith2binop) (is : iscommrngops (@op1 X) (@op2 X)) :
   ∑ X0 : setwith2binop, iscommrngops op1 op2 :=
-  tpair (fun X : setwith2binop => iscommrngops (@op1 X) (@op2 X)) X is.
+  tpair (λ X : setwith2binop, iscommrngops (@op1 X) (@op2 X)) X is.
 
 Definition commrngconstr {X : hSet} (opp1 opp2 : binop X)
            (ax11 : isgrop opp1) (ax12 : iscomm opp1)
@@ -1519,7 +1969,7 @@ Definition commrngconstr {X : hSet} (opp1 opp2 : binop X)
   @commrngpair (setwith2binoppair X (dirprodpair opp1 opp2))
                (dirprodpair (dirprodpair (dirprodpair (dirprodpair ax11 ax12) ax21) dax) ax22).
 
-Definition commrngtorng : commrng -> rng := fun X : _ => @rngpair (pr1 X) (pr1 (pr2 X)).
+Definition commrngtorng : commrng -> rng := λ X : _, @rngpair (pr1 X) (pr1 (pr2 X)).
 Coercion commrngtorng : commrng >-> rng.
 
 Definition rngcomm2 (X : commrng) : iscomm (@op2 X) := pr2 (pr2 X).
@@ -1534,16 +1984,82 @@ Definition commrngtocommrig (X : commrng) : commrig := commrigpair _ (pr2 X).
 Coercion commrngtocommrig : commrng >-> commrig.
 
 
+(** **** (X = Y) ≃ (rngiso X Y)
+    We use the following composition
+
+                          (X = Y) ≃ (mk_commrng' X = mk_commrng' Y)
+                                  ≃ ((pr1 (mk_commrng' X)) = (pr1 (mk_commrng' Y)))
+                                  ≃ (rngiso X Y)
+
+    where the third weak equivalence is given by univalence for rng, [rng_univalence]. We define
+    [commrng'] to be able to use [rng_univalence].
+ *)
+
+Local Definition commrng' : UU :=
+  ∑ D : (∑ X : setwith2binop, isrngops (@op1 X) (@op2 X)), iscomm (@op2 (pr1 D)).
+
+Local Definition mk_commrng' (CR : commrng) : commrng' :=
+  tpair _ (tpair _ (pr1 CR) (dirprod_pr1 (pr2 CR))) (dirprod_pr2 (pr2 CR)).
+
+Definition commrng_univalence_weq1 : commrng ≃ commrng' :=
+  weqtotal2asstol
+    (λ X : setwith2binop, isrngops (@op1 X) (@op2 X))
+    (fun y : (∑ (X : setwith2binop), isrngops (@op1 X) (@op2 X)) => iscomm (@op2 (pr1 y))).
+
+Definition commrng_univalence_weq1' (X Y : commrng) : (X = Y) ≃ (mk_commrng' X = mk_commrng' Y) :=
+  weqpair _ (@isweqmaponpaths commrng commrng' commrng_univalence_weq1 X Y).
+
+Definition commrng_univalence_weq2 (X Y : commrng) :
+  ((mk_commrng' X) = (mk_commrng' Y)) ≃ ((pr1 (mk_commrng' X)) = (pr1 (mk_commrng' Y))).
+Proof.
+  intros X Y.
+  use subtypeInjectivity.
+  intros w. use isapropiscomm.
+Defined.
+Opaque commrng_univalence_weq2.
+
+Definition commrng_univalence_weq3 (X Y : commrng) :
+  ((pr1 (mk_commrng' X)) = (pr1 (mk_commrng' Y))) ≃ (rngiso X Y) :=
+  rng_univalence (pr1 (mk_commrng' X)) (pr1 (mk_commrng' Y)).
+
+Definition commrng_univalence_map (X Y : commrng) : (X = Y) -> (rngiso X Y).
+Proof.
+  intros X Y e. induction e. exact (idrigiso X).
+Defined.
+
+Lemma commrng_univalence_isweq (X Y : commrng) : isweq (commrng_univalence_map X Y).
+Proof.
+  intros X Y.
+  use isweqhomot.
+  - exact (weqcomp (commrng_univalence_weq1' X Y)
+                   (weqcomp (commrng_univalence_weq2 X Y) (commrng_univalence_weq3 X Y))).
+  - intros e. induction e.
+    use (pathscomp0 weqcomp_to_funcomp_app).
+    use weqcomp_to_funcomp_app.
+  - use weqproperty.
+Defined.
+Opaque commrng_univalence_isweq.
+
+Definition commrng_univalence (X Y : commrng) : (X = Y) ≃ (rngiso X Y).
+Proof.
+  intros X Y.
+  use weqpair.
+  - exact (commrng_univalence_map X Y).
+  - exact (commrng_univalence_isweq X Y).
+Defined.
+Opaque commrng_univalence.
+
+
 (** **** Computational lemmas for commutative rings *)
 
 Open Scope rng_scope.
 
-Lemma commrngismultcancelableif (X : commrng) (x : X) (isl : ∏ y, paths (x * y) 0 -> paths y 0) :
+Lemma commrngismultcancelableif (X : commrng) (x : X) (isl : ∏ y, paths (x * y) 0 -> y = 0) :
   iscancelable op2 x.
 Proof.
   intros. split.
   - apply (rngismultlcancelableif X x isl).
-  - assert (isr : ∏ y, paths (y * x) 0 -> paths y 0).
+  - assert (isr : ∏ y, paths (y * x) 0 -> y = 0).
     intros y e. rewrite (rngcomm2 X _ _) in e. apply (isl y e).
     apply (rngismultrcancelableif X x isr).
 Defined.
@@ -1589,8 +2105,21 @@ Defined.
 Definition commrngdirprod (X Y : commrng) : commrng :=
   commrngpair (setwith2binopdirprod X Y) (iscommrngdirprod X Y).
 
+(** **** Opposite commutative rings *)
 
-(** **** Commutative rigs to commuttaive rings *)
+Local Open Scope rng.
+
+(** We reuse much of the proof for general rigs *)
+Definition opposite_commrng (X : commrng) : commrng :=
+  ((pr1 (X⁰)),, (dirprodpair (pr2 (X⁰)) (fun x y => @rngcomm2 X y x))).
+
+(** Commutativity makes taking the opposite trivial *)
+Definition iso_commrng_opposite (X : commrng) : rigiso X (opposite_commrng X) :=
+  iso_commrig_opposite X.
+
+Local Close Scope rig.
+
+(** **** Commutative rigs to commutative rings *)
 
 Open Scope rig_scope.
 
@@ -1599,7 +2128,7 @@ Proof.
   intro. unfold iscomm.
   apply (setquotuniv2prop
            (eqrelrigtorng X)
-           (fun x x' : rigtorngcarrier X =>  eqset (rigtorngop2 X x x') (rigtorngop2 X x' x))).
+           (λ x x' : rigtorngcarrier X,  eqset (rigtorngop2 X x x') (rigtorngop2 X x' x))).
   intros x x'.
   change (paths (setquotpr (eqrelrigtorng X) (rigtorngop2int X x x'))
                 (setquotpr (eqrelrigtorng X) (rigtorngop2int X x' x))).
@@ -1629,13 +2158,13 @@ Close Scope rig_scope.
 Open Scope rng_scope.
 
 Definition commrngfracop1int (X : commrng) (S : @subabmonoid (rngmultabmonoid X)) :
-  binop (dirprod X S) := fun x1s1 x2s2 : dirprod X S =>
+  binop (X × S) := λ x1s1 x2s2 : dirprod X S,
                            @dirprodpair X S (((pr1 (pr2 x2s2)) * (pr1 x1s1)) +
                                              ((pr1 (pr2 x1s1)) * (pr1 x2s2)))
                                         (@op S (pr2 x1s1) (pr2 x2s2)).
 
 Definition commrngfracop2int (X : commrng) (S : @subabmonoid (rngmultabmonoid X)) :
-  binop (dirprod X S) := abmonoidfracopint (rngmultabmonoid X) S.
+  binop (X × S) := abmonoidfracopint (rngmultabmonoid X) S.
 
 Definition commrngfracunel1int (X : commrng) (S : @subabmonoid (rngmultabmonoid X)) :
   dirprod X S := dirprodpair 0 (unel S).
@@ -1644,10 +2173,10 @@ Definition commrngfracunel2int (X : commrng) (S : @subabmonoid (rngmultabmonoid 
   dirprod X S := dirprodpair 1 (unel S).
 
 Definition commrngfracinv1int (X : commrng) (S : @subabmonoid (rngmultabmonoid X)) :
-  dirprod X S -> dirprod X S := fun xs : _ => dirprodpair ((-1) * (pr1 xs)) (pr2 xs).
+  dirprod X S -> dirprod X S := λ xs : _, dirprodpair ((-1) * (pr1 xs)) (pr2 xs).
 
 Definition eqrelcommrngfrac (X : commrng) (S : @subabmonoid (rngmultabmonoid X)) :
-  eqrel (dirprod X S) := eqrelabmonoidfrac (rngmultabmonoid X) S.
+  eqrel (X × S) := eqrelabmonoidfrac (rngmultabmonoid X) S.
 
 Lemma commrngfracl1 (X : commrng) (x1 x2 x3 x4 a1 a2 s1 s2 s3 s4 : X)
       (eq1 : paths ((x1 * s2) * a1) ((x2 * s1) * a1))
@@ -1754,7 +2283,7 @@ Proof.
   - apply (invmaponpathsincl _ (isinclpr1carrier (pr1 S))).
     unfold pr1carrier. simpl. set (assoc2 := rngassoc2 X).
     apply (assoc2 (pr1 (pr2 xs)) (pr1 (pr2 xs')) (pr1 (pr2 xs''))).
-  - apply (setquotuniv3prop R (fun x x' x'' : setquotinset R =>
+  - apply (setquotuniv3prop R (λ x x' x'' : setquotinset R,
                                  @eqset (setquotinset R) (add1 (add1 x x') x'')
                                         (add1 x (add1 x' x''))) int).
 Defined.
@@ -1768,7 +2297,7 @@ Proof.
   set (add1int := commrngfracop1int X S).
   set (add1 := commrngfracop1 X S).
   unfold iscomm.
-  apply (setquotuniv2prop R (fun x x' : setquotinset R  =>
+  apply (setquotuniv2prop R (λ x x' : setquotinset R ,
                                @eqset (setquotinset R) (add1 x x') (add1 x' x))).
   intros xs xs'.
   apply (@maponpaths _ _ (setquotpr R) (add1int xs xs') (add1int xs' xs)).
@@ -1803,7 +2332,7 @@ Proof.
   change (paths (-1 * x * s' * a0) (-1 * x' * s * a0)).
   rewrite (assoc2 -1 x s'). rewrite (assoc2 -1 x' s).
   rewrite (assoc2 -1 (x * s') a0). rewrite (assoc2 -1 (x' * s) a0).
-  apply (maponpaths (fun x0 : X => -1 * x0) (pr2 tt0)).
+  apply (maponpaths (λ x0 : X, -1 * x0) (pr2 tt0)).
 Defined.
 
 Definition commrngfracinv1 (X : commrng) (S : @subabmonoid (rngmultabmonoid X)) :
@@ -1827,7 +2356,7 @@ Proof.
     set (assoc2 := rngassoc2 X).
     unfold islinv.
     apply (setquotunivprop
-             R (fun x : setquotinset R => @eqset (setquotinset R) (add1 (inv1 x) x) qunel1)).
+             R (λ x : setquotinset R, @eqset (setquotinset R) (add1 (inv1 x) x) qunel1)).
     intro xs.
     apply (iscompsetquotpr R  (add1int (inv1int xs) xs) qunel1int).
     simpl. apply hinhpr. split with (unel S).
@@ -1851,7 +2380,7 @@ Proof.
   set (R := eqrelcommrngfrac X S). set (add1int := commrngfracop1int X S).
   set (add1 := commrngfracop1 X S). set (un1 := commrngfracunel1 X S).
   unfold islunit.
-  apply (setquotunivprop R (fun x : _ => @eqset (setquotinset R) (add1 un1 x) x)).
+  apply (setquotunivprop R (λ x : _, @eqset (setquotinset R) (add1 un1 x) x)).
   intro xs.
   assert (e0 : paths (add1int (commrngfracunel1int X S) xs) xs).
   {
@@ -1904,7 +2433,7 @@ Proof.
   set (add1 := commrngfracop1 X S).
   unfold isldistr.
   apply (setquotuniv3prop
-           R (fun x x' x'' : setquotinset R =>
+           R (λ x x' x'' : setquotinset R,
                 @eqset (setquotinset R) (mult1 x'' (add1 x x'))
                        (add1 (mult1 x'' x) (mult1  x'' x')))).
   intros xs xs' xs''.
@@ -1988,7 +2517,7 @@ Proof.
 Defined.
 
 Definition prcommrngfrac (X : commrng) (S : @subabmonoid (rngmultabmonoid X)) :
-  X -> S -> commrngfrac X S := fun x s => setquotpr _ (dirprodpair x s).
+  X -> S -> commrngfrac X S := λ x s, setquotpr _ (dirprodpair x s).
 
 Lemma invertibilityincommrngfrac (X : commrng) (S : @subabmonoid (rngmultabmonoid X)) :
   ∏ a a' : S, isinvertible (@op2 (commrngfrac X S)) (prcommrngfrac X S (pr1 a) a').
@@ -2020,7 +2549,7 @@ Defined.
 Opaque isbinop1funtocommrngfrac.
 
 Lemma isunital1funtocommrngfrac (X : commrng) (S : @subabmonoid (rngmultabmonoid X)) :
-  paths (tocommrngfrac X S 0) 0.
+  (tocommrngfrac X S 0) = 0.
 Proof. intros. apply idpath. Defined.
 Opaque isunital1funtocommrngfrac.
 
@@ -2050,7 +2579,7 @@ Definition isbinop2funtocommrngfrac (X : commrng) (S : @subabmonoid (rngmultabmo
 Opaque isbinop2funtocommrngfrac.
 
 Lemma isunital2funtocommrngfrac (X : commrng) (S : @subabmonoid (rngmultabmonoid X)) :
-  paths (tocommrngfrac X S 1) 1.
+  (tocommrngfrac X S 1) = 1.
 Proof. intros. apply idpath. Defined.
 Opaque isunital2funtocommrngfrac.
 
@@ -2066,12 +2595,12 @@ Definition isrngfuntocommrngfrac (X : commrng) (S : @subabmonoid (rngmultabmonoi
 (** **** Ring of fractions in the case when all elements which are being inverted are cancelable *)
 
 Definition hrelcommrngfrac0 (X : commrng) (S : @submonoid (rngmultabmonoid X)) :
-  hrel (dirprod X S) :=
-  fun xa yb : setdirprod X S => eqset ((pr1 xa) * (pr1 (pr2 yb))) ((pr1 yb) * (pr1 (pr2 xa))).
+  hrel (X × S) :=
+  λ xa yb : setdirprod X S, eqset ((pr1 xa) * (pr1 (pr2 yb))) ((pr1 yb) * (pr1 (pr2 xa))).
 
 Lemma weqhrelhrel0commrngfrac (X : commrng) (S : @submonoid (rngmultabmonoid X))
       (iscanc : ∏ a : S, isrcancelable (@op2 X) (pr1carrier _ a)) (xa xa' : dirprod X S) :
-  weq (eqrelcommrngfrac X S xa xa') (hrelcommrngfrac0 X S xa xa').
+  (eqrelcommrngfrac X S xa xa') ≃ (hrelcommrngfrac0 X S xa xa').
 Proof.
   intros. unfold eqrelabmonoidfrac. unfold hrelabmonoidfrac. simpl.
   apply weqimplimpl.
@@ -2088,7 +2617,7 @@ Opaque weqhrelhrel0abmonoidfrac.
 
 Lemma isinclprcommrngfrac (X : commrng) (S : @submonoid (rngmultabmonoid X))
       (iscanc : ∏ a : S, isrcancelable (@op2 X) (pr1carrier _ a)) :
-  ∏ a' : S, isincl (fun x => prcommrngfrac X S x a').
+  ∏ a' : S, isincl (λ x, prcommrngfrac X S x a').
 Proof.
   intros. apply isinclbetweensets.
   apply (setproperty X). apply (setproperty (commrngfrac X S)).
@@ -2153,7 +2682,7 @@ Proof.
     apply impred. intro.
     apply (pr2 _).
   }
-  apply (setquotuniv3prop _ (fun a b c => hProppair _ (int a b c))).
+  apply (setquotuniv3prop _ (λ a b c, hProppair _ (int a b c))).
   intros xa1 xa2 xa3.
   change (abmonoidfracrelint (rngmultabmonoid X) S R xa3 (dirprodpair 0 (unel S)) ->
           abmonoidfracrelint (rngmultabmonoid X) S R xa1 xa2 ->
@@ -2211,7 +2740,7 @@ Proof.
     apply impred. intro.
     apply (pr2 _).
   }
-  apply (setquotuniv3prop _ (fun a b c => hProppair _ (int a b c))).
+  apply (setquotuniv3prop _ (λ a b c, hProppair _ (int a b c))).
   intros xa1 xa2 xa3.
   change (abmonoidfracrelint (rngmultabmonoid X) S R xa1 xa2 ->
           abmonoidfracrelint (rngmultabmonoid X) S R

@@ -15,6 +15,8 @@ Require Export UniMath.Foundations.Sets.
 Require Export UniMath.Algebra.Rigs_and_Rings.
 Require Export UniMath.Algebra.Domains_and_Fields.
 
+Require Import UniMath.MoreFoundations.Tactics.
+
 (** ** Definition of a DivRig *)
 
 Definition isnonzerorig (X : rig) : UU := (1%rig : X) != 0%rig.
@@ -77,7 +79,7 @@ Definition oneDivRig {F : DivRig} : F := isDivRig_one (pr2 F).
 Definition plusDivRig {F : DivRig} : binop F := isDivRig_plus (pr2 F).
 Definition multDivRig {F : DivRig} : binop F := isDivRig_mult (pr2 F).
 Definition invDivRig {F : DivRig} : (∑ x : F, x != zeroDivRig) -> F := isDivRig_inv (pr2 F).
-Definition divDivRig {F : DivRig} : F -> (∑ x : F, x != zeroDivRig) -> F := fun x y => multDivRig x (invDivRig y).
+Definition divDivRig {F : DivRig} : F -> (∑ x : F, x != zeroDivRig) -> F := λ x y, multDivRig x (invDivRig y).
 
 Definition DivRig_isDivRig (F : DivRig) :
   isDivRig (pr1 F) := (pr2 F).

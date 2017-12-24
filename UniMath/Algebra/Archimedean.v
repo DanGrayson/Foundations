@@ -17,6 +17,8 @@ Require Import UniMath.Algebra.DivisionRig .
 Require Import UniMath.Algebra.Domains_and_Fields .
 Require Import UniMath.Algebra.ConstructiveStructures.
 
+Require Import UniMath.MoreFoundations.Tactics.
+
 (** ** The standard function from the natural numbers to a monoid *)
 
 Fixpoint natmult {X : monoid} (n : nat) (x : X) : X :=
@@ -532,13 +534,9 @@ Proof.
     intros n.
     exists (pr1 n).
     abstract (
-        tryif primitive_projections
-        then pattern x at 1
-        else pattern x at 2;
+        pattern x at 1;
         rewrite <- (riglunax1 X x) ;
-        tryif primitive_projections
-        then pattern (0%rig : X) at 1
-        else pattern (0%rig : X) at 2 ;
+        pattern (0%rig : X) at 1;
         rewrite <- (rigmultx0 X (nattorig (pr1 n))) ;
         rewrite nattorig_natmult ;
         exact (pr2 n)).
@@ -548,9 +546,7 @@ Proof.
     intros n.
     exists (pr1 n).
     abstract (
-        tryif primitive_projections
-        then pattern (0%rig : X) at 1
-        else pattern (0%rig : X) at 2;
+        pattern (0%rig : X) at 1;
         rewrite <- (rigmultx0 X (nattorig (pr1 n))), nattorig_natmult ;
         exact (pr2 n)).
 Defined.
@@ -752,7 +748,7 @@ Proof.
     exact Hc2.*)
 Defined.
 
-Lemma natmult_commrngfrac {X : commrng} {S : subabmonoid} :
+Lemma natmult_commrngfrac {X : commrng} {S : subabmonoid _} :
   ∏ n (x : X × S), natmult (X := commrngfrac X S) n (setquotpr (eqrelcommrngfrac X S) x) = setquotpr (eqrelcommrngfrac X S) (natmult (X := X) n (pr1 x) ,, (pr2 x)).
 Proof.
   simpl ; intros X S n x.
@@ -772,7 +768,7 @@ Proof.
     reflexivity.
 Qed.
 
-Lemma isarchcommrngfrac {X : commrng} {S : subabmonoid} (R : hrel X) Hop1 Hop2 Hs:
+Lemma isarchcommrngfrac {X : commrng} {S : subabmonoid _} (R : hrel X) Hop1 Hop2 Hs:
   R 1%rng 0%rng ->
   istrans R ->
   isarchrng R -> isarchrng (X := commrngfrac X S) (commrngfracgt X S (R := R) Hop1 Hop2 Hs).

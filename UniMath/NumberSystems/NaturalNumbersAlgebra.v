@@ -3,9 +3,10 @@
 Require Export UniMath.Algebra.Archimedean.
 Require Export UniMath.Algebra.Domains_and_Fields.
 Require Export UniMath.Foundations.NaturalNumbers.
+Require Import UniMath.MoreFoundations.Tactics.
 
 Definition nataddabmonoid : abmonoid :=
-  abmonoidpair (setwithbinoppair natset (fun n m : nat => n + m))
+  abmonoidpair (setwithbinoppair natset (λ n m : nat, n + m))
                (dirprodpair
                   (dirprodpair natplusassoc
                                (@isunitalpair natset _ 0 (dirprodpair natplusl0 natplusr0)))
@@ -14,7 +15,7 @@ Definition nataddabmonoid : abmonoid :=
 
 Definition natmultabmonoid : abmonoid :=
   abmonoidpair
-    (setwithbinoppair natset (fun n m : nat => n * m))
+    (setwithbinoppair natset (λ n m : nat, n * m))
     (dirprodpair
        (dirprodpair natmultassoc (@isunitalpair natset _ 1 (dirprodpair natmultl1 natmultr1)))
        natmultcomm).
@@ -41,7 +42,7 @@ Defined.
 
 Definition natcommrig : commrig.
 Proof.
-  split with (setwith2binoppair natset (dirprodpair (fun n m : nat => n + m) (fun n m : nat => n * m))).
+  split with (setwith2binoppair natset (dirprodpair (λ n m : nat, n + m) (λ n m : nat, n * m))).
   split.
   - split.
     + split with

@@ -6,18 +6,20 @@ tree functor.
 Written by: Anders Mörtberg (2016)
 
 *)
+
 Require Import UniMath.Foundations.PartD.
 Require Import UniMath.Foundations.Propositions.
 Require Import UniMath.Foundations.Sets.
 Require Import UniMath.Foundations.NaturalNumbers.
 
+Require Import UniMath.MoreFoundations.Tactics.
+
 Require Import UniMath.CategoryTheory.total2_paths.
-Require Import UniMath.CategoryTheory.precategories.
+Require Import UniMath.CategoryTheory.Categories.
 Require Import UniMath.CategoryTheory.functor_categories.
-Local Open Scope cat.
 Require Import UniMath.CategoryTheory.limits.graphs.colimits.
-Require Import UniMath.CategoryTheory.category_hset.
-Require Import UniMath.CategoryTheory.category_hset_structures.
+Require Import UniMath.CategoryTheory.categories.category_hset.
+Require Import UniMath.CategoryTheory.categories.category_hset_structures.
 Require Import UniMath.CategoryTheory.limits.initial.
 Require Import UniMath.CategoryTheory.FunctorAlgebras.
 Require Import UniMath.CategoryTheory.limits.binproducts.
@@ -26,6 +28,8 @@ Require Import UniMath.CategoryTheory.CocontFunctors.
 Require Import UniMath.CategoryTheory.exponentials.
 Require Import UniMath.CategoryTheory.limits.bincoproducts.
 Require Import UniMath.CategoryTheory.Inductives.Lists.
+
+Local Open Scope cat.
 
 (** * Binary trees *)
 Section bintrees.
@@ -59,7 +63,7 @@ Let Tree_alg : algebra_ob treeFunctor :=
 Definition leaf_map : HSET⟦unitHSET,Tree⟧.
 Proof.
 simpl; intro x.
-simple refine (Tree_mor _).
+use Tree_mor.
 apply inl, x.
 Defined.
 
@@ -68,7 +72,7 @@ Definition leaf : pr1 Tree := leaf_map tt.
 Definition node_map : HSET⟦(A × (Tree × Tree))%set,Tree⟧.
 Proof.
 intros xs.
-simple refine (Tree_mor _).
+use Tree_mor.
 exact (inr xs).
 Defined.
 
@@ -103,7 +107,7 @@ Defined.
 (* Maybe quantify over "λ _ : unit, x" instead of nil? *)
 Lemma foldr_leaf (X : hSet) (x : X) (f : pr1 A × X × X -> X) : foldr X x f leaf = x.
 Proof.
-assert (F := maponpaths (fun x => BinCoproductIn1 _ (BinCoproductsHSET _ _) · x)
+assert (F := maponpaths (λ x, BinCoproductIn1 _ (BinCoproductsHSET _ _) · x)
                         (algebra_mor_commutes _ _ _ (foldr_map X x f))).
 apply (toforallpaths _ _ _ F tt).
 Qed.
@@ -112,7 +116,7 @@ Lemma foldr_node (X : hSet) (x : X) (f : pr1 A × X × X -> X)
                  (a : pr1 A) (l1 l2 : pr1 Tree) :
   foldr X x f (node (a,,l1,,l2)) = f (a,,foldr X x f l1,,foldr X x f l2).
 Proof.
-assert (F := maponpaths (fun x => BinCoproductIn2 _ (BinCoproductsHSET _ _)· x)
+assert (F := maponpaths (λ x, BinCoproductIn2 _ (BinCoproductsHSET _ _)· x)
                         (algebra_mor_commutes _ _ _ (foldr_map X x f))).
 assert (Fal := toforallpaths _ _ _ F (a,,l1,,l2)).
 clear F.
@@ -151,10 +155,11 @@ Defined.
 Opaque is_omega_cocont_treeFunctor.
 
 Lemma isalghom_pr1foldr :
-  is_algebra_mor _ Tree_alg Tree_alg (fun l => pr1 (foldr P'HSET P0' Pc' l)).
+  is_algebra_mor _ Tree_alg Tree_alg (λ l, pr1 (foldr P'HSET P0' Pc' l)).
 Proof.
 apply BinCoproductArrow_eq_cor.
-- apply funextfun; intro x; destruct x; apply idpath.
+- apply funextfun; intro x; destruct x.
+  apply (maponpaths pr1 (foldr_leaf P'HSET P0' Pc')).
 - apply funextfun; intro x; destruct x as [a [l1 l2]].
   apply (maponpaths pr1 (foldr_node P'HSET P0' Pc' a l1 l2)).
 Qed.
@@ -166,7 +171,7 @@ Definition pr1foldr_algmor : algebra_mor _ Tree_alg Tree_alg :=
 
 Lemma pr1foldr_algmor_identity : identity _ = pr1foldr_algmor.
 Proof.
-now rewrite <- (InitialEndo_is_identity _ treeFunctor_Initial pr1foldr_algmor).
+now rewrite (@InitialEndo_is_identity _ treeFunctor_Initial pr1foldr_algmor).
 Qed.
 
 Lemma treeInd l : P l.
@@ -195,7 +200,7 @@ Section nat_examples.
 Local Open Scope nat_scope.
 
 Definition size : pr1 (Tree natHSET) -> nat :=
-  foldr natHSET natHSET 0 (fun x => S (pr1 (pr2 x) + pr2 (pr2 x))).
+  foldr natHSET natHSET 0 (λ x, S (pr1 (pr2 x) + pr2 (pr2 x))).
 
 Lemma size_node a l1 l2 : size (node natHSET (a,,l1,,l2)) = 1 + size l1 + size l2.
 Proof.
@@ -211,14 +216,13 @@ Lemma size_map (f : nat -> nat) : ∏ l, size (map f l) = size l.
 Proof.
 apply treeIndProp.
 - intros l. apply isasetnat.
-- apply idpath.
-- intros a l1 l2 ih1 ih2.
-  unfold map.
+- now unfold map; rewrite foldr_leaf.
+- intros a l1 l2 ih1 ih2; unfold map.
   now rewrite foldr_node, !size_node, <- ih1, <- ih2.
 Qed.
 
 Definition sum : pr1 (Tree natHSET) -> nat :=
-  foldr natHSET natHSET 0 (fun x => pr1 x + pr1 (pr2 x) + pr2 (pr2 x)).
+  foldr natHSET natHSET 0 (λ x, pr1 x + pr1 (pr2 x) + pr2 (pr2 x)).
 
 Definition testtree : pr1 (Tree natHSET).
 Proof.
@@ -226,9 +230,9 @@ Proof.
   - apply 5.
   - use node_map; repeat split.
     + apply 6.
-    + apply leaf_map. apply tt.
-    + apply leaf_map. apply tt.
-  - apply leaf_map. apply tt.
+    + exact (leaf_map _ tt).
+    + exact (leaf_map _ tt).
+  - exact (leaf_map _ tt).
 Defined.
 
 

@@ -17,17 +17,19 @@ Contents:
 
 ************************************************************)
 
-
 Require Import UniMath.Foundations.PartD.
 Require Import UniMath.Foundations.Propositions.
 Require Import UniMath.Foundations.Sets.
 
-Require Import UniMath.CategoryTheory.precategories.
+Require Import UniMath.MoreFoundations.Tactics.
+
+Require Import UniMath.CategoryTheory.Categories.
 Require Import UniMath.CategoryTheory.functor_categories.
 Require Import UniMath.CategoryTheory.Adjunctions.
 Require Import UniMath.CategoryTheory.whiskering.
 Require Import UniMath.CategoryTheory.PrecategoryBinProduct.
 Require Import UniMath.CategoryTheory.limits.binproducts.
+
 Local Open Scope cat.
 
 Section exponentials.
@@ -48,7 +50,7 @@ Definition has_exponentials : UU := ∏ (a : C), is_exponentiable a.
 Definition nat_trans_constprod_functor1 (a : C) :
   nat_trans (constprod_functor1 a) (constprod_functor2 a).
 Proof.
-mkpair.
+use tpair.
 - intro x; simpl; unfold BinProduct_of_functors_ob; simpl.
   apply BinProductArrow; [ apply BinProductPr2 | apply BinProductPr1 ].
 - abstract (intros x y f; simpl; unfold BinProduct_of_functors_mor; simpl;
@@ -60,7 +62,7 @@ Defined.
 Definition nat_trans_constprod_functor2 (a : C) :
   nat_trans (constprod_functor2 a) (constprod_functor1 a).
 Proof.
-mkpair.
+use tpair.
 - intro x; simpl; unfold BinProduct_of_functors_ob; simpl.
   apply BinProductArrow; [ apply BinProductPr2 | apply BinProductPr1 ].
 - abstract (intros x y f; simpl; unfold BinProduct_of_functors_mor; simpl;
@@ -89,7 +91,7 @@ Lemma is_iso_constprod_functor2 a :
   @is_iso [C,C,hsC] _ _ (nat_trans_constprod_functor2 a).
 Proof.
 apply (@is_iso_qinv [C,C,hsC] _ _ _ (nat_trans_constprod_functor1 a)).
-mkpair.
+use tpair.
 + abstract (
   apply (nat_trans_eq hsC); intro x; simpl; unfold BinProduct_of_functors_ob; simpl;
   eapply pathscomp0; [apply precompWithBinProductArrow|];
@@ -130,7 +132,7 @@ Local Definition eps' : [C,C,hsC]⟦functor_composite G F',functor_identity C⟧
 Local Lemma form_adjunction_eta'_eps' : form_adjunction F' G eta' eps'.
 Proof.
 fold eta in H1; fold eps in H1; fold eta in H2; fold eps in H2; fold G in H2.
-mkpair.
+use tpair.
 + intro x; unfold eta', eps'; cbn.
   rewrite assoc.
   eapply pathscomp0.

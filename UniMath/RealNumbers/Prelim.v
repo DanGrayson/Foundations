@@ -1,5 +1,7 @@
 (** * Additionals theorems and definitions *)
 
+Require Import UniMath.MoreFoundations.Tactics.
+
 Require Export UniMath.Topology.Prelim.
 
 Unset Automatic Introduction. (* This line has to be removed for the file to compile with Coq8.2 *)
@@ -87,7 +89,7 @@ Lemma hqplusdiv2 : ∏ x : hq, x = (x + x) / 2.
 Qed.
 
 Lemma hqlth_between :
-  ∏ x y : hq, x < y -> total2 (fun z => dirprod (x < z) (z < y)).
+  ∏ x y : hq, x < y -> total2 (λ z, (x < z) × (z < y)).
 Proof.
   assert (H0 : / 2 > 0).
   { apply hqgthandmultlinv with 2.

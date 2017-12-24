@@ -12,20 +12,23 @@ Require Import UniMath.Foundations.PartD.
 Require Import UniMath.Foundations.Propositions.
 Require Import UniMath.Foundations.Sets.
 
-Require Import UniMath.CategoryTheory.precategories.
+Require Import UniMath.MoreFoundations.Tactics.
+
+Require Import UniMath.CategoryTheory.Categories.
 Require Import UniMath.CategoryTheory.functor_categories.
+
 Local Open Scope cat.
 
 (** * Discrete precategories *)
-Section DiscretePrecategory.
+Section Discretecategory.
 
 Variable (A : UU).
 
 Definition discrete_precategory_data : precategory_data.
 Proof.
-mkpair.
-- apply (A,,paths).
-- mkpair; [ apply idpath | apply @pathscomp0 ].
+use tpair.
+- exact (A,,paths).
+- use tpair; [ exact idpath | exact (@pathscomp0 A) ].
 Defined.
 
 Definition is_precategory_discrete_precategory_data : is_precategory discrete_precategory_data.
@@ -47,8 +50,8 @@ Qed.
 Lemma functor_discrete_precategory (D : precategory) (f : A → D) :
   functor discrete_precategory D.
 Proof.
-mkpair.
-+ mkpair.
+use tpair.
++ use tpair.
   - apply f.
   - intros s t []; apply identity.
 + abstract (now split; [intro|intros a b c [] []; simpl; rewrite id_left]).
@@ -67,4 +70,4 @@ Proof.
   reflexivity.
 Defined.
 
-End DiscretePrecategory.
+End Discretecategory.

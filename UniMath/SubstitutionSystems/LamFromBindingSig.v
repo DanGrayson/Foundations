@@ -11,11 +11,12 @@ Require Import UniMath.Foundations.PartD.
 Require Import UniMath.Foundations.Sets.
 Require Import UniMath.Combinatorics.Lists.
 
-Require Import UniMath.CategoryTheory.precategories.
+Require Import UniMath.MoreFoundations.Tactics.
+
+Require Import UniMath.CategoryTheory.Categories.
 Require Import UniMath.CategoryTheory.functor_categories.
-Local Open Scope cat.
-Require Import UniMath.CategoryTheory.category_hset.
-Require Import UniMath.CategoryTheory.category_hset_structures.
+Require Import UniMath.CategoryTheory.categories.category_hset.
+Require Import UniMath.CategoryTheory.categories.category_hset_structures.
 Require Import UniMath.CategoryTheory.CocontFunctors.
 Require Import UniMath.CategoryTheory.limits.graphs.limits.
 Require Import UniMath.CategoryTheory.limits.graphs.colimits.
@@ -28,7 +29,7 @@ Require Import UniMath.CategoryTheory.limits.terminal.
 Require Import UniMath.CategoryTheory.FunctorAlgebras.
 Require Import UniMath.CategoryTheory.exponentials.
 Require Import UniMath.CategoryTheory.whiskering.
-Require Import UniMath.CategoryTheory.Monads.
+Require Import UniMath.CategoryTheory.Monads.Monads.
 
 Require Import UniMath.SubstitutionSystems.Signatures.
 Require Import UniMath.SubstitutionSystems.SumOfSignatures.
@@ -38,6 +39,8 @@ Require Import UniMath.SubstitutionSystems.LamSignature.
 Require Import UniMath.SubstitutionSystems.Notation.
 Require Import UniMath.SubstitutionSystems.BindingSigToMonad.
 Require Import UniMath.SubstitutionSystems.LiftingInitial_alt.
+
+Local Open Scope cat.
 
 Section Lam.
 
@@ -73,7 +76,7 @@ Local Notation "'1'" := (functor_identity HSET).
 
 (** The signature of the lambda calculus: { [0,0], [1] } *)
 Definition LamSig : BindingSig :=
-  mkBindingSig isasetbool (fun b => if b then 0 :: 0 :: [] else 1 :: [])%nat.
+  mkBindingSig isasetbool (λ b, if b then 0 :: 0 :: [] else 1 :: [])%nat.
 
 (** The signature with strength for the lambda calculus *)
 Definition LamSignature : Signature HSET has_homsets_HSET _ _ :=
@@ -131,7 +134,7 @@ Defined.
 Lemma foldr_var X (fvar : HSET2⟦1,X⟧) (fapp : HSET2⟦X ⊗ X,X⟧) (flam : HSET2⟦X + 1,X⟧) :
   var_map · foldr_map X fvar fapp flam = fvar.
 Proof.
-assert (F := maponpaths (fun x => BinCoproductIn1 _ (BinCoproducts_functor_precat _ _ _ _ _ _) · x)
+assert (F := maponpaths (λ x, BinCoproductIn1 _ (BinCoproducts_functor_precat _ _ _ _ _ _) · x)
                         (algebra_mor_commutes _ _ _ (foldr_map X fvar fapp flam))).
 rewrite assoc in F.
 eapply pathscomp0; [apply F|].
@@ -158,7 +161,7 @@ Lemma foldr_app X (fvar : HSET2⟦1,X⟧) (fapp : HSET2⟦X ⊗ X,X⟧) (flam : 
   app_map · foldr_map X fvar fapp flam =
   # (pr1 (Id * Id)) (foldr_map X fvar fapp flam) · fapp.
 Proof.
-  assert (F := maponpaths (fun x => CoproductIn _ _ (Coproducts_functor_precat _ _ _ _ _ _) true ·
+  assert (F := maponpaths (λ x, CoproductIn _ _ (Coproducts_functor_precat _ _ _ _ _ _) true ·
                                                 BinCoproductIn2 _ (BinCoproducts_functor_precat
                                                                      _ _ _ _ _ _) · x)
                         (algebra_mor_commutes _ _ _ (foldr_map X fvar fapp flam))).
@@ -171,7 +174,7 @@ eapply pathscomp0.
   eapply maponpaths, BinCoproductOfArrowsIn2.
 rewrite assoc.
 eapply pathscomp0.
-  eapply cancel_postcomposition, cancel_postcomposition.
+  eapply @cancel_postcomposition. eapply @cancel_postcomposition.
   apply (CoproductOfArrowsIn _ _ (Coproducts_functor_precat _ _ _
           (CoproductsHSET _ isasetbool)
           _ (λ i, pr1 (Arity_to_Signature has_homsets_HSET BinProductsHSET
@@ -180,7 +183,7 @@ rewrite <- assoc.
 eapply pathscomp0; [eapply maponpaths, BinCoproductIn2Commutes|].
 rewrite <- assoc.
 eapply pathscomp0; eapply maponpaths.
-  refine (CoproductInCommutes _ _ _ _ _ _ true).
+  exact (CoproductInCommutes _ _ _ _ _ _ true).
 apply idpath.
 Defined.
 
@@ -188,7 +191,7 @@ Lemma foldr_lam X (fvar : HSET2⟦1,X⟧) (fapp : HSET2⟦X ⊗ X,X⟧) (flam : 
   lam_map · foldr_map X fvar fapp flam =
   # (pr1 (_ o option)) (foldr_map X fvar fapp flam) · flam.
 Proof.
-  assert (F := maponpaths (fun x => CoproductIn _ _ (Coproducts_functor_precat _ _ _ _ _ _) false ·
+  assert (F := maponpaths (λ x, CoproductIn _ _ (Coproducts_functor_precat _ _ _ _ _ _) false ·
                                                 BinCoproductIn2 _ (BinCoproducts_functor_precat
                                                                      _ _ _ _ _ _) · x)
                         (algebra_mor_commutes _ _ _ (foldr_map X fvar fapp flam))).
@@ -201,7 +204,7 @@ eapply pathscomp0.
   eapply maponpaths, BinCoproductOfArrowsIn2.
 rewrite assoc.
 eapply pathscomp0.
-  eapply cancel_postcomposition, cancel_postcomposition.
+  eapply @cancel_postcomposition, @cancel_postcomposition.
   apply (CoproductOfArrowsIn _ _ (Coproducts_functor_precat _ _ _
           (CoproductsHSET _ isasetbool)
           _ (λ i, pr1 (Arity_to_Signature has_homsets_HSET BinProductsHSET
@@ -211,7 +214,7 @@ eapply pathscomp0.
   eapply maponpaths, BinCoproductIn2Commutes.
 rewrite <- assoc.
 eapply pathscomp0; eapply maponpaths.
-  refine (CoproductInCommutes _ _ _ _ _ _ false).
+  exact (CoproductInCommutes _ _ _ _ _ _ false).
 apply idpath.
 Defined.
 
@@ -224,10 +227,10 @@ Local Notation "x ⊛ y" := (BinProductObject _ (BinProductsHSET x y)) (at level
 Arguments LamMonad : simpl never.
 Arguments BinCoproductObject : simpl never.
 
-Definition substLam (X : HSET) : HSET⟦LamMonad (X ⊕ 1) ⊛ LamMonad X,LamMonad X⟧.
+Definition substLam (X : HSET) : HSET⟦LamMonad (1 ⊕ X) ⊛ LamMonad X,LamMonad X⟧.
 Proof.
 intro H.
-set (f := monadSubst LamMonad TerminalHSET BinCoproductsHSET X).
+set (f := monadSubst LamMonad BinCoproductsHSET TerminalHSET X).
 set (g := λ (_ : unit), pr2 H).
 cbn in H, f, g.
 apply (f g (pr1 H)).

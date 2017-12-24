@@ -5,14 +5,18 @@ Anders Mörtberg
 
 2016
 
-Definition of the general product category
+Contents:
+
+- Definition of the general product category ([product_precategory])
+- Tuple functor ([tuple_functor])
 
 ************************************************************)
 
 Require Import UniMath.Foundations.PartD.
 
-Require Import UniMath.CategoryTheory.precategories.
+Require Import UniMath.CategoryTheory.Categories.
 Require Import UniMath.CategoryTheory.functor_categories.
+
 Local Open Scope cat.
 
 Section dep_product_precategory.
@@ -22,7 +26,7 @@ Variables C : I -> precategory.
 
 Definition product_precategory_ob_mor : precategory_ob_mor.
 Proof.
-mkpair.
+use tpair.
 - apply (∏ (i : I), ob (C i)).
 - intros f g.
   apply (∏ i, f i --> g i).
@@ -67,7 +71,7 @@ Variables C : precategory.
 
 
 Definition power_precategory : precategory
-  := product_precategory I (fun _ => C).
+  := product_precategory I (λ _, C).
 
 Definition has_homsets_power_precategory (hsC : has_homsets C) :
   has_homsets power_precategory.
@@ -78,7 +82,7 @@ Qed.
 
 End power_precategory.
 
-
+(* TODO: Some of the functors in this section can be defined in terms of each other *)
 Section functors.
 
 Definition family_functor_data (I : UU) {A B : I -> precategory}
@@ -86,7 +90,7 @@ Definition family_functor_data (I : UU) {A B : I -> precategory}
   functor_data (product_precategory I A)
                (product_precategory I B).
 Proof.
-mkpair.
+use tpair.
 - intros a i; apply (F i (a i)).
 - intros a b f i; apply (# (F i) (f i)).
 Defined.
@@ -105,7 +109,7 @@ Defined.
 Definition pr_functor_data (I : UU) (C : I -> precategory) (i : I) :
   functor_data (product_precategory I C) (C i).
 Proof.
-mkpair.
+use tpair.
 - intro a; apply (a i).
 - intros x y f; simpl; apply (f i).
 Defined.
@@ -120,7 +124,7 @@ Defined.
 Definition delta_functor_data (I : UU) (C : precategory) :
   functor_data C (power_precategory I C).
 Proof.
-mkpair.
+use tpair.
 - intros x i; apply x.
 - intros x y f i; simpl; apply f.
 Defined.
@@ -131,5 +135,31 @@ Proof.
 apply (tpair _ (delta_functor_data I C)).
 abstract (split; intros x *; apply idpath).
 Defined.
+
+Definition tuple_functor_data {I : UU} {A : precategory} {B : I → precategory}
+  (F : ∏ i, functor A (B i)) : functor_data A (product_precategory I B).
+Proof.
+use tpair.
+- intros a i; exact (F i a).
+- intros a b f i; exact (# (F i) f).
+Defined.
+
+Lemma tuple_functor_axioms {I : UU} {A : precategory} {B : I → precategory}
+  (F : ∏ i, functor A (B i)) : is_functor (tuple_functor_data F).
+Proof.
+split.
+- intros a. apply funextsec; intro i. apply functor_id.
+- intros ? ? ? ? ?. apply funextsec; intro i. apply functor_comp.
+Qed.
+
+Definition tuple_functor {I : UU} {A : precategory} {B : I → precategory}
+  (F : ∏ i, functor A (B i)) : functor A (product_precategory I B)
+    := (tuple_functor_data F,, tuple_functor_axioms F).
+
+Lemma pr_tuple_functor {I : UU} {A : precategory} {B : I → precategory} (hsB : ∏ i, has_homsets (B i))
+  (F : ∏ i, functor A (B i)) (i : I) : tuple_functor F ∙ pr_functor I B i = F i.
+Proof.
+now apply functor_eq.
+Qed.
 
 End functors.

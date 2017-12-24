@@ -2,10 +2,14 @@
 
 (** Previous theorems about hSet and order *)
 
+Require Import UniMath.MoreFoundations.Tactics.
+
 Require Export UniMath.Foundations.Sets
                UniMath.Ktheory.QuotientSet.
 Require Import UniMath.Algebra.BinaryOperations
                UniMath.Algebra.Apartness.
+
+Unset Automatic Introduction.
 
 (** ** Subsets *)
 
@@ -49,7 +53,7 @@ End po_pty.
 Definition isStrongOrder {X : UU} (R : hrel X) := istrans R × iscotrans R × isirrefl R.
 Definition StrongOrder (X : UU) := ∑ R : hrel X, isStrongOrder R.
 Definition pairStrongOrder {X : UU} (R : hrel X) (is : isStrongOrder R) : StrongOrder X :=
-  tpair (fun R : hrel X => isStrongOrder R ) R is.
+  tpair (λ R : hrel X, isStrongOrder R ) R is.
 Definition pr1StrongOrder {X : UU} : StrongOrder X → hrel X := pr1.
 Coercion  pr1StrongOrder : StrongOrder >-> hrel.
 
@@ -80,7 +84,7 @@ Defined.
 (** ** Reverse orderse *)
 (** or how easily define ge x y := le x y *)
 
-Definition hrel_reverse {X : UU} (l : hrel X) := fun x y => l y x.
+Definition hrel_reverse {X : UU} (l : hrel X) := λ x y, l y x.
 
 Lemma istrans_reverse {X : UU} (l : hrel X) :
   istrans l → istrans (hrel_reverse l).
@@ -353,7 +357,7 @@ Definition isSmallerThanUpperBounds (E : hsubtype X) (lub : X) : UU :=
   ∏ ub : X, isUpperBound E ub -> lub <= ub.
 
 Definition isLeastUpperBound (E : hsubtype X) (lub : X) : UU :=
-  dirprod (isUpperBound E lub) (isSmallerThanUpperBounds E lub).
+  (isUpperBound E lub) × (isSmallerThanUpperBounds E lub).
 Definition LeastUpperBound (E : hsubtype X) : UU :=
   ∑ lub : X, isLeastUpperBound E lub.
 Definition pairLeastUpperBound (E : hsubtype X) (lub : X)
@@ -398,7 +402,7 @@ Definition isBiggerThanLowerBounds (E : hsubtype X) (lub : X) : UU :=
   ∏ ub : X, isLowerBound E ub -> lub >= ub.
 
 Definition isGreatestLowerBound (E : hsubtype X) (glb : X) : UU :=
-  dirprod (isLowerBound E glb) (isBiggerThanLowerBounds E glb).
+  (isLowerBound E glb) × (isBiggerThanLowerBounds E glb).
 Definition GreatestLowerBound (E : hsubtype X) : UU :=
   ∑ glb : X, isGreatestLowerBound E glb.
 Definition pairGreatestLowerBound (E : hsubtype X) (glb : X)

@@ -103,14 +103,20 @@ Definition coprod_rect_compute_1
            (f : ∏ (a : A), P (ii1 a))
            (g : ∏ (b : B), P (ii2 b)) (a:A) :
   coprod_rect P f g (ii1 a) = f a.
-Proof. reflexivity. Defined.
+Proof.
+  intros.
+  apply idpath.
+Defined.
 
 Definition coprod_rect_compute_2
            (A B : UU) (P : A ⨿ B -> UU)
            (f : ∏ a : A, P (ii1 a))
            (g : ∏ b : B, P (ii2 b)) (b:B) :
   coprod_rect P f g (ii2 b) = g b.
-Proof. reflexivity. Defined.
+Proof.
+  intros.
+  apply idpath.
+Defined.
 
 (** Dependent sums.
 
@@ -118,95 +124,41 @@ One can not use a new record each time one needs it because the general theorems
 construction would not apply to new instances of "Record" due to the "generativity" of inductive
 definitions in Coq.
 
-We use "Inductive" instead of "Record" here.
+We use "Record", which is equivalent to "Structure", instead of "Inductive" here, so we can take
+advantage of the "primitive projections" feature of Coq, which introduces η-reduction for pairs, by
+adding the option "Set Primitive Projections".  It also speeds up compilation by 56 percent.
 
-Using "Record" which is equivalent to "Structure" would allow us later to use the mechanism of
-canonical structures with total2.
-By using "Structure", we could also get eta for dependent pairs, by adding the option
-"Set Primitive Projections.".
+The terms produced by the "induction" tactic, when we define "total2" as a record, contain the
+"match" construction instead appealing to the eliminator.  However, assuming the eliminator will be
+justified mathematically, the way to justify the the "match" construction is to point out that it
+can be regarded as an abbreviation for the eliminator that omits explicit mention of the first two
+parameters (X:Type) and (Y:X->Type).
 
-However, the use of "Inductive" allows us to obtain proof terms that are expressed in terms of
-the eliminator total2_rect that, unlike the "match" construct that would appear in the proof terms
-if we used "Record", has a known interpretation in the framework of the univalent model.
+I.e., whenever you see
+
+       [match w as t0 return TYPE with | tpair _ _ x y => BODY end]
+
+in a proof term, just mentally replace it by
+
+       [@total2_rect _ _ (λ t0, TYPE) (λ x y, BODY) w]
 
 *)
 
-(* two alternatives: *)
-(* total2 as a record with primitive projections: *)
+Set Primitive Projections.
 
-    (* Set Primitive Projections. *)
+Set Nonrecursive Elimination Schemes.
 
-    (* Set Nonrecursive Elimination Schemes. *)
-
-    (* Record total2 { T: Type } ( P: T -> Type ) := tpair { pr1 : T; pr2 : P pr1 }. *)
-
-(* or total2 as an inductive type:  *)
-
-    Inductive total2 { T: Type } ( P: T -> Type ) := tpair : ∏ (__t__:T) (__p__:P __t__), total2 P.
-
-    (* Do not use "induction" without specifying names; seeing __t__ or __p__ will indicate that you *)
-    (*    did that.  This will prepare for the use of primitive projections, when the names will be pr1 *)
-    (*    and pr2. *)
-
-    Definition pr1 { T : Type } { P : T -> Type } ( t : total2 P ) : T .
-    Proof . intros .  induction t as [ t p ] . exact t . Defined.
-
-    Definition pr2 { T : Type } { P : T -> Type } ( t : total2 P ) : P ( pr1 t ) .
-    Proof . intros .  induction t as [ t p ] . exact p . Defined.
-
-(* end of two alternatives *)
-
-    Print total2.               (* log which definition of total2 is currently in use *)
+Record total2 { T: Type } ( P: T -> Type ) := tpair { pr1 : T; pr2 : P pr1 }.
 
 Arguments tpair {_} _ _ _.
 Arguments pr1 {_ _} _.
 Arguments pr2 {_ _} _.
 
-(* Now prepare tactics for writing proofs in two ways, depending on whether projections are primitive *)
-Ltac primitive_projections :=
-  unify (fun (w : total2 (fun _:nat => nat)) => tpair _ (pr1 w) (pr2 w))
-        (fun (w : total2 (fun _:nat => nat)) => w).
-(* Use like this: [ tryif primitive_projections then ... else ... . ] *)
-
-Definition whether_primitive_projections : bool.
-Proof.
-  tryif primitive_projections then exact true else exact false.
-Defined.
-
-Print whether_primitive_projections.
-
-Notation "'∑'  x .. y , P" := (total2 (fun x => .. (total2 (fun y => P)) ..))
+Notation "'∑'  x .. y , P" := (total2 (λ x, .. (total2 (λ y, P)) ..))
   (at level 200, x binder, y binder, right associativity) : type_scope.
   (* type this in emacs in agda-input method with \sum *)
 
 Notation "x ,, y" := (tpair _ x y) (at level 60, right associativity). (* looser than '+' *)
-
-Ltac mkpair := (simple refine (tpair _ _ _ ) ; [| cbn]).
-
-Goal ∏ X (Y : X -> UU) (x : X) (y : Y x), ∑ x, Y x.
-  intros X Y x y.
-  mkpair.
-  - apply x.
-  - apply y.
-Defined.
-
-(* print out this theorem to see whether "induction" compiles to "match" *)
-Goal ∏ X (Y:X->UU) (w:∑ x, Y x), X.
-  intros.
-  induction w as [x y].
-  exact x.
-Defined.
-
-(* Step through this proof to demonstrate eta expansion for pairs, if primitive
-   projections are on: *)
-Goal ∏ X (Y:X->UU) (w:∑ x, Y x), w = (pr1 w,, pr2 w).
-Proof. try reflexivity. Abort.
-
-Definition rewrite_pr1_tpair {X} {P:X->UU} x p : pr1 (tpair P x p) = x.
-reflexivity. Defined.
-
-Definition rewrite_pr2_tpair {X} {P:X->UU} x p : pr2 (tpair P x p) = p.
-reflexivity. Defined.
 
 (*
 
@@ -245,9 +197,12 @@ Defined.
 Notation mult := mul.           (* this overrides the notation "mult" defined in Coq's Peano.v *)
 Notation "n * m" := (mul n m) : nat_scope.
 
+(** Some tactics  *)
 
+(* Apply this tactic to a proof of ([X] and [X -> ∅]), in either order: *)
+Ltac contradicts a b := solve [ induction (a b) | induction (b a) ].
 
-(** A few tactics, thanks go to Jason Gross *)
+(** A few more tactics, thanks go to Jason Gross *)
 
 Ltac simple_rapply p :=
   simple refine p ||
@@ -271,6 +226,11 @@ Tactic Notation "use" uconstr(p) := simple_rapply p.
 
 Tactic Notation "transparent" "assert" "(" ident(name) ":" constr(type) ")" :=
   simple refine (let name := (_ : type) in _).
+
+Ltac exact_op x := (* from Jason Gross: same as "exact", but with unification the opposite way *)
+  let T := type of x in
+  let G := match goal with |- ?G => constr:(G) end in
+  exact (((λ g:G, g) : T -> G) x).
 
 (** reserve notations for later use: *)
 
