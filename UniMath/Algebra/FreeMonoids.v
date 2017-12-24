@@ -101,7 +101,7 @@ Section AbMonoid.
     repeat split.
     - intros x y z.
       use isaprop_goal'.
-      { apply setproperty. }
+      { apply isasetsetquot. }
       generalize (lift x). apply hinhuniv. intro x'. induction x' as [x' x'']. induction x''.
       generalize (lift y). apply hinhuniv. intro y'. induction y' as [y' y'']. induction y''.
       generalize (lift z). apply hinhuniv. intro z'. induction z' as [z' z'']. induction z''.
@@ -111,7 +111,7 @@ Section AbMonoid.
       split.
       { intros x.
         use isaprop_goal'.
-        { apply setproperty. }
+        { apply isasetsetquot. }
         generalize (lift x). apply hinhuniv. intro x'. induction x' as [x' x'']. induction x''.
         apply iscompsetquotpr, hinhpr; simpl; clear lift R.
 
