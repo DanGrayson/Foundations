@@ -740,12 +740,12 @@ Section rngops.
   Opaque mult0x_is_l.
 
   Definition minus1_is_l : X := ((grinv_is is1) (unel_is is2)).
-  Local Notation "¬1" := ((grinv_is is1) (unel_is is2)).
+  Local Notation "-1" := ((grinv_is is1) (unel_is is2)) (at level 0).
 
-  Lemma islinvmultwithminus1_is_l (x : X) : ((¬1 * x) + x) = 0.
+  Lemma islinvmultwithminus1_is_l (x : X) : ((-1 * x) + x) = 0.
   Proof.
     intros x.
-    set (xinv := opp2 ¬1 x).
+    set (xinv := opp2 -1 x).
     rewrite (pathsinv0 (lunax_is is2 x)).
     unfold xinv.
     rewrite (pathsinv0 (pr2 is12 _ _ x)).
@@ -753,10 +753,10 @@ Section rngops.
   Defined.
   Opaque islinvmultwithminus1_is_l.
 
-  Lemma isrinvmultwithminus1_is_l (x : X) : (x + (¬1 * x)) = 0.
+  Lemma isrinvmultwithminus1_is_l (x : X) : (x + (-1 * x)) = 0.
   Proof.
     intros x.
-    set (xinv := (¬1 * x)).
+    set (xinv := (-1 * x)).
     rewrite (pathsinv0 (lunax_is is2 x)). unfold xinv.
     rewrite (pathsinv0 (pr2 is12 _ _ x)). unfold grinv_is.
     rewrite (grrinvax_is is1 _).
@@ -764,7 +764,7 @@ Section rngops.
   Defined.
   Opaque isrinvmultwithminus1_is_l.
 
-  Lemma isminusmultwithminus1_is_l (x : X) : ¬1 * x = (grinv_is is1 x).
+  Lemma isminusmultwithminus1_is_l (x : X) : -1 * x = (grinv_is is1 x).
   Proof.
     intros x.
     apply (invmaponpathsweq (weqpair _ (isweqrmultingr_is is1 x))).
@@ -781,14 +781,14 @@ Section rngops.
       + split with is1.
         intros x y.
         apply (invmaponpathsweq
-                (weqpair _ (isweqrmultingr_is is1 (¬1 * (x + y))))).
+                (weqpair _ (isweqrmultingr_is is1 (-1 * (x + y))))).
         simpl. rewrite (isrinvmultwithminus1_is_l (x + y)).
         rewrite (pr1 is12 x y _).
-        destruct (assoc1 (y + x) (¬1 * x) (¬1 * y)).
+        destruct (assoc1 (y + x) (-1 * x) (-1 * y)).
         rewrite (assoc1 y x _).
         destruct (pathsinv0 (isrinvmultwithminus1_is_l x)).
         unfold unel_is. rewrite (runax_is (pr1 is1) y).
-        change (grinv_is is1 (pr1 (pr2 is2)) * y) with (¬1 * y).
+        change (grinv_is is1 (pr1 (pr2 is2)) * y) with (-1 * y).
         rewrite (isrinvmultwithminus1_is_l y).
         apply idpath.
       + apply is2.
