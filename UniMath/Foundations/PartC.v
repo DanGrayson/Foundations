@@ -1214,7 +1214,7 @@ Defined.
 
 (** *** Decidable propositions [ isdecprop ] *)
 
-Lemma isdecpropif' (X : UU) : isaprop X -> X ⨿ ¬ X -> iscontr (X ⨿ ¬ X).
+Lemma isdecpropif' (X : UU) : isaprop X -> (X ⨿ ¬ X) -> iscontr (X ⨿ ¬ X).
 (* This contractibility was the old definition of isdecpropif.  We can probably
   do without it. *)
 Proof.
@@ -1293,7 +1293,7 @@ Proof.
     apply (isdecpropif _ isp (ii2 nxy)).
 Defined.
 
-Lemma fromneganddecx {X Y : UU} : isdecprop X -> ¬ (X × Y) -> ¬X ⨿ ¬Y.
+Lemma fromneganddecx {X Y : UU} : isdecprop X -> ¬ (X × Y) -> (¬X) ⨿ (¬Y).
 Proof.
   intros ? ? isx nf.
   induction (pr1 isx) as [ x | nx ].
@@ -1302,7 +1302,7 @@ Proof.
   - exact (ii1 nx).
 Defined.
 
-Lemma fromneganddecy {X Y : UU} : isdecprop Y -> ¬ (X × Y) -> ¬X ⨿ ¬Y.
+Lemma fromneganddecy {X Y : UU} : isdecprop Y -> ¬ (X × Y) -> (¬X) ⨿ (¬Y).
 Proof.
   intros ? ? isy nf. induction (pr1 isy) as [ y | ny ].
   - assert (nx := negf (λ x : X, dirprodpair x y) nf).

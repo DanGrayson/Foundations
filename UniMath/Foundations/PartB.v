@@ -1121,7 +1121,7 @@ Definition isdecprop (P:UU) := (P ⨿ ¬P) × isaprop P.
 Definition isdecproptoisaprop ( X : UU ) ( is : isdecprop X ) : isaprop X := pr2 is.
 Coercion isdecproptoisaprop : isdecprop >-> isaprop .
 
-Lemma isdecpropif ( X : UU ) : isaprop X -> X ⨿ ¬ X -> isdecprop X.
+Lemma isdecpropif ( X : UU ) : isaprop X -> (X ⨿ ¬ X) -> isdecprop X.
 Proof.
   intros ? i c. exact (c,,i).
 Defined.

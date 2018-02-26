@@ -110,7 +110,7 @@ Definition tightapSet_apSet (X : tightapSet) : apSet := pr1 X ,, (tightap_aprel 
 Coercion tightapSet_apSet : tightapSet >-> apSet.
 
 Definition tightapSet_rel (X : tightapSet) : hrel X := (pr1 (pr2 X)).
-Notation "x ≠ y" := (tightapSet_rel _ x y) (at level 70, no associativity) : tap_scope.
+Notation "x ≠ y" := (tightapSet_rel _ x y) : tap_scope.
 
 Delimit Scope tap_scope with tap.
 Open Scope tap_scope.

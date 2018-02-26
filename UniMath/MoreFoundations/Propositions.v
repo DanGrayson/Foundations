@@ -130,11 +130,8 @@ Ltac induction_hProp x y := induction (proofirrelevance_hProp _ x y).
 
 Definition iscontr_hProp (X:UU) : hProp := hProppair (iscontr X) (isapropiscontr X).
 
-Notation "'∃!' x .. y , P"
-  := (iscontr_hProp (∑ x, .. (∑ y, P) ..))
-       (at level 200, x binder, y binder, right associativity) : type_scope.
+Notation "'∃!' x .. y , P" := (iscontr_hProp (∑ x, .. (∑ y, P) ..)) : type_scope.
 (* type this in emacs in agda-input method with \ex ! *)
-
 
 (** Various algebraic properties of hProp *)
 Section hProp_logic.

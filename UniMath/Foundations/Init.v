@@ -25,6 +25,13 @@ Notation "x → y" := (x -> y)
 
 (** Reserved notations *)
 
+Reserved Notation "'∑'  x .. y , P" (at level 200, x binder, y binder, right associativity).
+(* type this in emacs in agda-input method with \sum *)
+
+Reserved Notation "'∃!' x .. y , P" (at level 200, x binder, y binder, right associativity).
+
+Reserved Notation "a != b" (at level 70, no associativity).
+
 Reserved Notation "x :: y" (at level 60, right associativity). (* originally in Coq.Init.Datatypes *)
 
 Reserved Notation "x ++ y" (at level 60, right associativity). (* originally in Coq.Init.Datatypes *)
@@ -38,8 +45,8 @@ Reserved Notation "a ╝ b" (at level 70, no associativity).
 (* in agda input mode use \--= and select the 6-th one in the first set,
    or use \chimney *)
 
-Reserved Notation "X ≃ Y" (at level 80, no associativity).
-(* written \~- or \simeq in Agda input method *)
+Reserved Notation "X ≃ Y" (at level 80, no associativity). (* parsing looser than x=y, which is at 70 *)
+(* to input: type "\simeq" or "\~-" or "\eq" with Agda input method *)
 
 Reserved Notation "p #' x" (right associativity, at level 65, only parsing).
 
@@ -47,15 +54,94 @@ Reserved Notation "f ~ g" (at level 70, no associativity).
 
 Reserved Notation "p @ q" (at level 60, right associativity).
 
-Reserved Notation "'¬¬' X" (at level 35, right associativity).
+(** Logical operations  *)
+
+Reserved Notation "A ⇒ B" (at level 95, right associativity). (* same as parsing of A <-> B *)
+(* tighter than parsing of A -> B and X ≃ Y; right associativity for logical implication *)
+(* to input: type "\Rightarrow" or "\r=" or "\r" or "\Longrightarrow" or "\=>" with Agda input method *)
+
+Reserved Notation "A ⇔ B" (at level 95, no associativity). (* same as parsing of A <-> B *)
+(* to input: type "\Leftrightarrow" or "\Longleftrightarrow" or "\iff" or "\<=>" or "\lr=" or "\lr" with Agda input method *)
+
+Reserved Notation "X ∨ Y" (at level 85, right associativity). (* same as parsing of \/ *)
+(* to input: type "\vee" or "\union" or "\or" with Agda input method *)
+
+Reserved Notation "A ∧ B" (at level 80, right associativity). (* same as parsing of /\ *)
+(* to input: type "\wedge" or "\intersection" or "\and" with Agda input method *)
+
+Reserved Notation "'¬¬' X" (at level 75, right associativity). (* the same as parsing of ~ *)
 (* type this in emacs in agda-input method with \neg twice *)
+
+Reserved Notation "'¬' X" (at level 75, right associativity). (* the same as parsing of ~ *)
+(* type this in emacs in agda-input method with \neg *)
 
 Reserved Notation "x != y" (at level 70).
 
-Reserved Notation "'¬' X" (at level 35, right associativity).
-(* type this in emacs in agda-input method with \neg *)
+Reserved Notation "x ≤ y" (at level 70, no associativity). (* same as parsing of < *)
+(* type this in emacs in agda-input method with \le *)
+
+Reserved Notation "-1" (at level 0).
+
+Reserved Notation "S ≺ T" (at level 70). (* same as parsing of < *)
+(* to input: type "\prec" or "\leq" with Agda input method *)
+
+Reserved Notation "S ≼ T" (at level 70, no associativity).
+(* to input: type "\preceq" or "\leq" or "\curlypreceq" with Agda input method *)
+
+Reserved Notation "x ≥ y" (at level 70, no associativity).
+(* type this in emacs in agda-input method with \ge *)
+
+Reserved Notation "x /+ y" (at level 40, left associativity). (* parsing like / *)
+
+Reserved Notation "x ≠ y" (at level 70, no associativity).
+(* type this in emacs in agda-input method with \ne *)
+
+Reserved Notation " s ∈ T " (at level 70, no associativity).
+(* to input: type "\in" or "\member" with Agda input method *)
+
+Reserved Notation " s ∉ T " (at level 70, no associativity).
+(* to input: type "\notin" or "\inn" or "\member" with Agda input method *)
+
+Reserved Notation " S ⊆ T " (at level 70, no associativity).
+(* to input: type "\sub=" or "\subseteqq" or "\subseteq" or "\leq" with Agda input method *)
+
+Reserved Notation " S ⊈ T " (at level 70, no associativity).
+(* to input: type "\nsubseteqq" or "\nsubseteq" or "\sub=n" or "\leqn" with Agda input method *)
+
+Reserved Notation " S ⊊ T " (at level 70, no associativity).
+(* to input: type "\subsetneqq" or "\subsetneq" or "\leqn" with Agda input method *)
+
+Reserved Notation " S ≡ T " (at level 70).
+(* to input: type "\equiv" or "\eq" or "\==" with Agda input method *)
+
+Reserved Notation "S ≣ T" (at level 70).
+(* to input: type "\eq" or "\===" with Agda input method *)
+
+Reserved Notation " S ≢ T " (at level 70).
+(* to input: type "\nequiv" or "\eqn" or "\==n" with Agda input method *)
+
+Reserved Notation "⋃ S" (at level 100, no associativity).
+(* to input: type "\bigcup" or "\Un" or "\union" with Agda input method *)
+
+Reserved Notation "⋂ S" (at level 100, no associativity).
+(* to input: type "\bigcap" or "\I" or "\intersection" with Agda input method *)
+
+Reserved Notation "⟦ n ⟧" (at level 50).
+(* in agda-mode \[[ n \]] *)
+
+Reserved Notation "● i" (at level 35).
+(* to input: type "\cib" or "\ci" with Agda input method *)
+
+Reserved Notation "x =? y" (at level 70, no associativity). (* same as parsing of = *)
+
+Reserved Notation "x ≐ y" (at level 70, no associativity). (* same as parsing of = *)
+(* to input: type "\doteq" or "\.=" or "\eq" with Agda input method *)
+
+Reserved Notation "X ≅ Y" (at level 60, no associativity).
+(* written \cong in Agda input method *)
 
 Reserved Notation "A × B" (at level 75, right associativity).
+(* type this in emacs in agda-input method with \times *)
 
 Reserved Notation "C ⟦ a , b ⟧" (at level 50).
 (* ⟦   to input: type "\[[" or "\(" with Agda input method
@@ -107,12 +193,6 @@ Reserved Notation "F ◾ b"  (at level 40, left associativity).
 
 Reserved Notation "F ▭ f"  (at level 40, left associativity). (* \rew1 *)
 (* to input: type "\rew" or "\re" with Agda input method *)
-
-(* conflict:
-    Reserved Notation "A ⇒ B" (at level 95, no associativity).
-    Reserved Notation "c ⇒ X" (at level 50).
-    (* to input: type "\Rightarrow" or "\r=" or "\r" or "\Longrightarrow" or "\=>" with Agda input method *)
-*)
 
 Reserved Notation "X ⇐ c"   (at level 50).
 (* to input: type "\Leftarrow" or "\Longleftarrow" or "\l=" or "\l" with Agda input method *)

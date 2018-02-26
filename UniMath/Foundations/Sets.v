@@ -93,11 +93,11 @@ Coercion pr1hSet: hSet >-> UU.
 
 Definition eqset {X : hSet} (x x' : X) : hProp
   := hProppair (x = x') (pr2 X x x').
-Notation "a = b" := (eqset a b) (at level 70, no associativity) : set.
+Notation "a = b" := (eqset a b) : set.
 
 Definition neqset {X : hSet} (x x' : X) : hProp
   := hProppair (x != x') (isapropneg _). (* uses funextemptyAxiom *)
-Notation "a != b" := (neqset a b) (at level 70, no associativity) : set.
+Notation "a != b" := (neqset a b) : set.
 Delimit Scope set with set.
 
 Definition setproperty (X : hSet) := pr2 X.
@@ -128,9 +128,8 @@ Definition hfiber_hSet {X Y : hSet} (f : X → Y) (y : Y) : hSet
 
 Delimit Scope set with set.
 
-Notation "'∑' x .. y , P" := (total2_hSet (λ x,.. (total2_hSet (λ y, P))..))
-  (at level 200, x binder, y binder, right associativity) : set.
-  (* type this in emacs in agda-input method with \sum *)
+Notation "'∑' x .. y , P" := (total2_hSet (λ x,.. (total2_hSet (λ y, P))..)) : set.
+(* type this in emacs in agda-input method with \sum *)
 
 Lemma isaset_forall_hSet (X : UU) (Y : X -> hSet) : isaset (∏ x, Y x).
 Proof.
@@ -140,9 +139,8 @@ Defined.
 Definition forall_hSet {X : UU} (Y : X -> hSet) : hSet
   := hSetpair (∏ x, Y x) (isaset_forall_hSet X Y).
 
-Notation "'∏' x .. y , P" := (forall_hSet (λ x,.. (forall_hSet (λ y, P))..))
-  (at level 200, x binder, y binder, right associativity) : set.
-  (* type this in emacs in agda-input method with \sum *)
+Notation "'∏' x .. y , P" := (forall_hSet (λ x,.. (forall_hSet (λ y, P))..)) : set.
+(* type this in emacs in agda-input method with \prod *)
 
 Definition unitset : hSet := hSetpair unit isasetunit.
 
@@ -152,7 +150,7 @@ Proof.
   abstract (exact (isasetdirprod _ _ (setproperty X) (setproperty Y))).
 Defined.
 
-Notation "A × B" := (dirprod_hSet A B) (at level 75, right associativity) : set.
+Notation "A × B" := (dirprod_hSet A B) : set.
 
 (** *** [hProp] as a set *)
 
@@ -299,8 +297,7 @@ Definition carrier_subset {X : hSet} (Y : hsubtype X) : hSet
   := hSetpair (∑ x, Y x) (isaset_carrier_subset X Y).
 
 Notation "'∑' x .. y , P"
-  := (carrier_subset (λ x,.. (carrier_subset (λ y, P))..))
-  (at level 200, x binder, y binder, right associativity) : subset.
+  := (carrier_subset (λ x,.. (carrier_subset (λ y, P))..)) : subset.
   (* type this in emacs in agda-input method with \sum *)
 
 Delimit Scope subset with subset.
@@ -817,8 +814,7 @@ Proof.
 Defined.
 
 Delimit Scope poset with poset.
-Notation "m ≤ n" := (posetRelation _ m n) (no associativity, at level 70) :
-                      poset.
+Notation "m ≤ n" := (posetRelation _ m n) : poset.
 Definition isaposetmorphism {X Y : Poset} (f : X -> Y)
   := (∏ x x' : X, x ≤ x' -> f x ≤ f x')%poset.
 Definition posetmorphism (X Y : Poset) : UU
@@ -882,8 +878,7 @@ Definition PosetEquivalence (X Y : Poset) : UU
   := ∑ f : X ≃ Y, isPosetEquivalence f.
 
 Local Open Scope poset.
-Notation "X ≅ Y" := (PosetEquivalence X Y) (at level 60, no associativity) :
-                      poset.
+Notation "X ≅ Y" := (PosetEquivalence X Y) : poset.
 (* written \cong in Agda input method *)
 
 Definition posetUnderlyingEquivalence {X Y : Poset} : X ≅ Y -> X ≃ Y := pr1.

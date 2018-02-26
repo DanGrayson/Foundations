@@ -200,7 +200,7 @@ Proof.
 Defined.
 
 Definition decidable_to_isdecprop_2 {X : UU} :
-  isaprop X -> X ⨿ ¬ X -> isdecprop X.
+  isaprop X -> (X ⨿ ¬ X) -> isdecprop X.
 Proof.
   intros i dec. apply isdecpropif.
   - exact i.
@@ -262,12 +262,9 @@ Proof.
   intros. exists (¬ P). apply neg_isdecprop; apply decidabilityProperty.
 Defined.
 
-Notation "X ∨ Y" := (decidableOr X Y) (at level 85, right associativity) :
-                      decidable_logic.
-Notation "A ∧ B" := (decidableAnd A B) (at level 80, right associativity) :
-                      decidable_logic.
-Notation "'¬' X" := (decidableNot X) (at level 35, right associativity) :
-                      decidable_logic.
+Notation "X ∨ Y" := (decidableOr X Y) : decidable_logic.
+Notation "A ∧ B" := (decidableAnd A B) : decidable_logic.
+Notation "'¬' X" := (decidableNot X) : decidable_logic.
 Delimit Scope decidable_logic with declog.
 
 Ltac choose P yes no := induction (pr1 (decidabilityProperty P)) as [yes|no].
@@ -372,21 +369,13 @@ Definition nateq_DecidableProposition : DecidableRelation nat :=
 Definition natneq_DecidableProposition : DecidableRelation nat :=
   decrel_to_DecidableRelation natdecneq.
 
-Notation " x < y " := (natlth_DecidableProposition x y) (at level 70, no associativity) :
-                        decidable_nat.
-Notation " x <= y " := (natleh_DecidableProposition x y) (at level 70, no associativity) :
-                         decidable_nat.
-Notation " x ≤ y " := (natleh_DecidableProposition x y) (at level 70, no associativity) :
-                        decidable_nat.
-Notation " x ≥ y " := (natgeh_DecidableProposition x y) (at level 70, no associativity) :
-                        decidable_nat.
-Notation " x ≥ y " := (natgeh_DecidableProposition x y) (at level 70, no associativity) :
-                        decidable_nat.
-Notation " x > y " := (natgth_DecidableProposition x y) (at level 70, no associativity) :
-                        decidable_nat.
-Notation " x =? y " := (nateq_DecidableProposition x y) (at level 70, no associativity) :
-                         decidable_nat.
-Notation " x ≠ y " := (natneq_DecidableProposition x y) (at level 70, no associativity) :
-                        decidable_nat.
+Notation " x < y " := (natlth_DecidableProposition x y) : decidable_nat.
+Notation " x <= y " := (natleh_DecidableProposition x y) : decidable_nat.
+Notation " x ≤ y " := (natleh_DecidableProposition x y) : decidable_nat.
+Notation " x ≥ y " := (natgeh_DecidableProposition x y) : decidable_nat.
+Notation " x ≥ y " := (natgeh_DecidableProposition x y) : decidable_nat.
+Notation " x > y " := (natgth_DecidableProposition x y) : decidable_nat.
+Notation " x =? y " := (nateq_DecidableProposition x y) : decidable_nat.
+Notation " x ≠ y " := (natneq_DecidableProposition x y) : decidable_nat.
 
 Delimit Scope decidable_nat with dnat.

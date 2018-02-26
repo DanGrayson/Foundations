@@ -187,12 +187,12 @@ Delimit Scope oset with oset.
 
 Definition Poset_lessthan {X:Poset} (x y:X) := ∥ x ≤ y  ×  x != y ∥.
 
-Notation "X ≅ Y" := (PosetEquivalence X Y) (at level 60, no associativity) : oset.
-Notation "m ≤ n" := (posetRelation _ m n) (no associativity, at level 70) : oset.
-Notation "m <= n" := (posetRelation _ m n) (no associativity, at level 70) : oset.
+Notation "X ≅ Y" := (PosetEquivalence X Y) : oset.
+Notation "m ≤ n" := (posetRelation _ m n) : oset.
+Notation "m <= n" := (posetRelation _ m n) : oset.
 Notation "m < n" := (Poset_lessthan m n) :oset.
-Notation "n ≥ m" := (posetRelation _ m n) (no associativity, at level 70) : oset.
-Notation "n >= m" := (posetRelation _ m n) (no associativity, at level 70) : oset.
+Notation "n ≥ m" := (posetRelation _ m n) : oset.
+Notation "n >= m" := (posetRelation _ m n) : oset.
 Notation "n > m" := (Poset_lessthan m n) :oset.
 
 Close Scope poset.
@@ -342,14 +342,14 @@ Definition FiniteOrderedSetDecidableLessThan (X:FiniteOrderedSet) : DecidableRel
   - apply isfinite_isdec_lessthan. apply finitenessProperty.
 Defined.
 
-Notation "x ≐ y" := (FiniteOrderedSetDecidableEquality _ x y) (at level 70, no associativity) : foset. (* in agda mode, \doteq *)
-Notation "x ≠ y" := (FiniteOrderedSetDecidableInequality _ x y) (at level 70, no associativity) : foset. (* in agda mode, \ne *)
-Notation " x ≤ y " := ( FiniteOrderedSetDecidableOrdering _ x y ) (at level 70, no associativity) : foset. (* in agda mode, \le *)
-Notation " x <= y " := ( FiniteOrderedSetDecidableOrdering _ x y ) (at level 70, no associativity) : foset.
-Notation " x ≥ y " := ( FiniteOrderedSetDecidableOrdering _ y x ) (at level 70, no associativity) : foset. (* in agda mode, \ge *)
-Notation " x >= y " := ( FiniteOrderedSetDecidableOrdering _ y x ) (at level 70, no associativity) : foset.
-Notation " x < y " := ( FiniteOrderedSetDecidableLessThan _ x y ) (at level 70, no associativity) : foset.
-Notation " x > y " := ( FiniteOrderedSetDecidableLessThan _ y x ) (at level 70, no associativity) : foset.
+Notation "x ≐ y" := (FiniteOrderedSetDecidableEquality _ x y) : foset. (* in agda mode, \doteq *)
+Notation "x ≠ y" := (FiniteOrderedSetDecidableInequality _ x y) : foset. (* in agda mode, \ne *)
+Notation " x ≤ y " := ( FiniteOrderedSetDecidableOrdering _ x y ) : foset. (* in agda mode, \le *)
+Notation " x <= y " := ( FiniteOrderedSetDecidableOrdering _ x y ) : foset.
+Notation " x ≥ y " := ( FiniteOrderedSetDecidableOrdering _ y x ) : foset. (* in agda mode, \ge *)
+Notation " x >= y " := ( FiniteOrderedSetDecidableOrdering _ y x ) : foset.
+Notation " x < y " := ( FiniteOrderedSetDecidableLessThan _ x y ) : foset.
+Notation " x > y " := ( FiniteOrderedSetDecidableLessThan _ y x ) : foset.
 
 Delimit Scope foset with foset.
 
@@ -380,7 +380,7 @@ Proof.
   - apply isfinitestn.
 Defined.
 
-Notation "⟦ n ⟧" := (standardFiniteOrderedSet n) (at level 50) : foset.
+Notation "⟦ n ⟧" := (standardFiniteOrderedSet n) : foset.
 (* in agda-mode \[[ n \]] *)
 
 Lemma inducedPartialOrder {X Y} (f:X->Y) (incl:isInjective f) (R:hrel Y) (po:isPartialOrder R) :
@@ -537,8 +537,7 @@ Proof.
   intro; apply finitenessProperty.
 Defined.
 
-Notation "'∑'  x .. y , P" := (concatenateFiniteOrderedSets (λ x, .. (concatenateFiniteOrderedSets (λ y, P)) ..))
-  (at level 200, x binder, y binder, right associativity) : foset.
+Notation "'∑'  x .. y , P" := (concatenateFiniteOrderedSets (λ x, .. (concatenateFiniteOrderedSets (λ y, P)) ..)) : foset.
   (* type this in emacs in agda-input method with \sum *)
 
 (** sorting finite ordered sets *)

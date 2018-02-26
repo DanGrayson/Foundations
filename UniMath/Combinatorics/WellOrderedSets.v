@@ -72,7 +72,7 @@ Definition tosub_order_compat {X:hSet} {S T : TOSubset X} (le : S ⊆ T) : hProp
 Definition tosub_le (X:hSet) (S T : TOSubset X) : hProp
   := (∑ le : S ⊆ T, tosub_order_compat le)%prop.
 
-Notation "S ≼ T" := (tosub_le _ S T) (at level 70) : tosubset.
+Notation "S ≼ T" := (tosub_le _ S T) : tosubset.
 
 Definition sub_initial {X:hSet} {S : hsubtype X} {T : TOSubset X} (le : S ⊆ T) : hProp
   := ∀ (s t : X) (Ss : S s) (Tt : T t), TOSrel T (t,,Tt) (s,,le s Ss) ⇒ S t.
@@ -377,7 +377,7 @@ Defined.
 Definition wosub_le (X:hSet) : hrel (WOSubset X)
   := (λ S T : WOSubset X, ∑ (le : S ⊆ T), tosub_order_compat le ∧ sub_initial le)%prop.
 
-Notation "S ≼ T" := (wosub_le _ S T) (at level 70) : wosubset.
+Notation "S ≼ T" := (wosub_le _ S T) : wosubset.
 
 Definition wosub_le_inc {X:hSet} {S T : WOSubset X} : S ≼ T -> S ⊆ T := pr1.
 
@@ -399,7 +399,7 @@ Defined.
 
 Definition wosub_equal {X:hSet} : hrel (WOSubset X) := λ S T, S ≼ T ∧ T ≼ S.
 
-Notation "S ≣ T" := (wosub_equal S T) (at level 70) : wosubset.
+Notation "S ≣ T" := (wosub_equal S T) : wosubset.
 
 Definition wosub_comparable {X:hSet} : hrel (WOSubset X) := λ S T, S ≼ T ∨ T ≼ S.
 
@@ -592,7 +592,7 @@ Defined.
 
 Definition wosub_le_smaller {X:hSet} (S T:WOSubset X) : hProp := (S ≼ T) ∧ (∃ t:T, t ∉ S).
 
-Notation "S ≺ T" := (wosub_le_smaller S T) (at level 70) : wosubset.
+Notation "S ≺ T" := (wosub_le_smaller S T) : wosubset.
 
 (* [upto s x] means x is in S and, as an element of S, it is strictly less than s *)
 Definition upto {X:hSet} {S:WOSubset X} (s:S) : hsubtype X
@@ -826,7 +826,7 @@ Proof.
   - apply chain_union_rel_istotal.
 Defined.
 
-Notation "⋃ chain" := (chain_union_TOSubset chain) (at level 100, no associativity) : tosubset.
+Notation "⋃ chain" := (chain_union_TOSubset chain) : tosubset.
 
 (** ** The union of a chain of well ordered subsets *)
 
@@ -907,7 +907,7 @@ Proof.
   - apply chain_union_rel_hasSmallest.
 Defined.
 
-Notation "⋃ chain" := (chain_union_WOSubset chain) (at level 100, no associativity) : wosubset.
+Notation "⋃ chain" := (chain_union_WOSubset chain) : wosubset.
 
 Lemma chain_union_le {X:hSet} {I:UU} (S : I -> WOSubset X) (Schain : is_wosubset_chain S) :
   ∀ i, S i ≼ ⋃ Schain.

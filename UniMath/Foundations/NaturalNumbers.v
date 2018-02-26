@@ -75,7 +75,7 @@ Fixpoint natneq_hProp (n m : nat) : hProp :=
   end.
 
 (* Provisional notation, to be replaced below: *)
-Notation " x ≠ y " := (natneq_hProp x y) (at level 70, no associativity) : nat_scope.
+Notation " x ≠ y " := (natneq_hProp x y) : nat_scope.
 
 Local Open Scope nat_scope. (* it's already open, but we want it first in line *)
 
@@ -143,7 +143,7 @@ Proof.
 Defined.
 
 (* this replaces the provisional notation above: *)
-Notation " x ≠ y " := (natneq x y) (at level 70, no associativity) : nat_scope.
+Notation " x ≠ y " := (natneq x y) : nat_scope.
 
 Local Open Scope nat_scope. (* it's already open, but we want it first in line *)
 
@@ -451,7 +451,7 @@ Defined.
 Definition natleh (n m : nat) := S m > n.
 
 Notation " x <= y " := (natleh x y) : nat_scope.
-Notation " x ≤ y " := (natleh x y) (at level 70, no associativity) : nat_scope.
+Notation " x ≤ y " := (natleh x y) : nat_scope.
 
 Definition isdecrelnatleh : isdecrel natleh := λ m n, isdecrelnatgth _ _.
 
@@ -573,7 +573,7 @@ Defined.
 Definition natgeh (n m : nat) : hProp := m ≤ n.
 
 Notation " x >= y " := (natgeh x y) : nat_scope.
-Notation " x ≥ y " := (natgeh x y) (at level 70, no associativity) : nat_scope.
+Notation " x ≥ y " := (natgeh x y) : nat_scope.
 
 Definition nat0gehtois0 (n : nat) (g : 0 ≥ n) : n = 0 := natleh0tois0 g.
 
@@ -1862,8 +1862,8 @@ Definition natdiv (n m : nat) : nat := pr1 (natdivrem n m).
 
 Definition natrem (n m : nat) : nat := pr2 (natdivrem n m).
 
-Notation " x /+ y " := (natrem x y) (at level 40, left associativity) : nat_scope.
-Notation " x / y " := (natdiv x y) (at level 40, left associativity) : nat_scope.
+Notation " x /+ y " := (natrem x y) : nat_scope.
+Notation " x / y " := (natdiv x y) : nat_scope.
 
 Lemma lthnatrem (n m : nat) : m ≠ 0 -> n /+ m < m.
 Proof.

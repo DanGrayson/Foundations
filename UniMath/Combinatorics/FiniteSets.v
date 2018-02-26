@@ -248,8 +248,7 @@ Defined.
 
 Delimit Scope finset with finset.
 
-Notation "'∑' x .. y , P" := (FiniteSetSum (λ x,.. (FiniteSetSum (λ y, P))..))
-  (at level 200, x binder, y binder, right associativity) : finset.
+Notation "'∑' x .. y , P" := (FiniteSetSum (λ x,.. (FiniteSetSum (λ y, P))..)) : finset.
   (* type this in emacs in agda-input method with \sum *)
 
 Definition isfinitedirprod { X Y : UU } ( sx : isfinite X ) ( sy : isfinite Y ) : isfinite ( dirprod X Y ) := hinhfun2 ( λ sx0 : _, λ sy0 : _, finstructondirprod sx0 sy0 ) sx sy .

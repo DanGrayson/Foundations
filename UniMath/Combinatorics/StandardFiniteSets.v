@@ -40,7 +40,7 @@ Notation " 'stnel' ( i , j ) " := ( (j,,idpath _) : stn i ) ( at level 70 ).
 
 Delimit Scope stn with stn.
 
-Notation "⟦ n ⟧" := (stn n) (at level 50) : stn.
+Notation "⟦ n ⟧" := (stn n) : stn.
 (* in agda-mode \[[ n \]] *)
 
 Notation "● i" := (i ,, (idpath _ : natgtb _ _ = _)) (at level 35) : stn.
@@ -101,7 +101,7 @@ Proof. (* here we use no axioms *)
   - apply stn_ne_iff_neq.
 Defined.
 
-Notation " x ≠ y " := ( stnneq x y ) (at level 70, no associativity) : stn.
+Notation " x ≠ y " := ( stnneq x y ) : stn.
 Delimit Scope stn with stn.
 Local Open Scope stn.
 

@@ -242,6 +242,9 @@ Definition sum : List natHSET -> nat :=
 (* All of these compute *)
 Eval lazy in length _ (nil natHSET).
 Eval lazy in length _ testlist.
+Goal length _ testlist = 2.
+  reflexivity.
+  Qed.
 Eval lazy in length _ testlistS.
 Eval lazy in sum testlist.
 Eval lazy in sum testlistS.

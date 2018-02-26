@@ -412,6 +412,14 @@ UniMath/$1/All.v: UniMath/$1/.package/files
 endef
 $(foreach P, $(PACKAGES), $(eval $(call make-summary-file,$P)) $(eval make-summary-files: UniMath/$P/All.v))
 
+# Here we create the file UniMath/All.v, which loads all of the files from all of the packages.
+make-summary-files: UniMath/All.v
+UniMath/All.v: Makefile
+	exec > $@ ;					\
+	for i in $(PACKAGES) ;				\
+	do echo "Require Export UniMath.$$i.All." ;	\
+	done
+
 #################################
 # targets best used with INCLUDE=no
 git-clean:

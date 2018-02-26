@@ -532,8 +532,9 @@ Proof.
   - exact (dirprodpair (rigrdistr _) (rigldistr _)).
 Defined.
 
-(** In Emacs, use the function insert-char and choose SUPERSCRIPT ZERO *)
 Notation "X ⁰" := (opposite_rig X) (at level 12) : rig_scope.
+(* to input: type "\^0" with Agda input method *)
+(** In Emacs, use the function insert-char and choose SUPERSCRIPT ZERO *)
 
 Definition opposite_opposite_rig (X : rig) : rigiso X ((X⁰)⁰).
 Proof.
@@ -804,7 +805,7 @@ Notation "x - y" := (op1 x (rnginv1 y)) : rng_scope.
 Notation "x * y" := (op2 x y) : rng_scope.
 Notation "0" := (rngunel1) : rng_scope.
 Notation "1" := (rngunel2) : rng_scope.
-Notation "-1" := (rngminus1) (at level 0) : rng_scope.
+Notation "-1" := (rngminus1) : rng_scope.
 Notation " - x " := (rnginv1 x) : rng_scope.
 
 Delimit Scope rng_scope with rng.

@@ -116,7 +116,7 @@ Definition TRRGraph : UU := ∑ (V : hSet), TRRGraphData V.
 
 Definition TRRG_edgerel (G : TRRGraph) : hrel (pr1 G) := pr12 G.
 
-Local Notation "x ≤ y" := (TRRG_edgerel _ x y)(at level 70).
+Local Notation "x ≤ y" := (TRRG_edgerel _ x y).
 
 Definition TRRG_root (G : TRRGraph) : pr1 G := pr122 G.
 
@@ -1026,6 +1026,6 @@ Proof.
   apply (! s).
 Qed.
 
-Local Notation "x ∈ y" := (ZFS_elementof x y)(at level 30).
+Local Notation "x ∈ y" := (ZFS_elementof x y).
 
 (*** End of The Elementhood Relation ***)

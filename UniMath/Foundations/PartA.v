@@ -988,9 +988,7 @@ Defined.
 
 Definition iscontr (T:UU) : UU := ∑ cntr:T, ∏ t:T, t=cntr.
 
-Notation "'∃!' x .. y , P"
-  := (iscontr (∑ x, .. (∑ y, P) ..))
-       (at level 200, x binder, y binder, right associativity) : type_scope.
+Notation "'∃!' x .. y , P" := (iscontr (∑ x, .. (∑ y, P) ..)) : type_scope.
 (* type this in emacs in agda-input method with \ex ! *)
 
 Definition iscontrpair {T : UU} : ∏ x : T, (∏ t : T, t = x) -> iscontr T

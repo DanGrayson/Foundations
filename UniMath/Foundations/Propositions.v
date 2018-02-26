@@ -425,8 +425,8 @@ Definition hneg (P : UU) : hProp := hProppair (¬ P) (isapropneg P).
 
 (* use scope "logic" for notations that might conflict with others *)
 
-Notation "'¬' X" := (hneg X) (at level 35, right associativity) : logic.
-  (* type this in emacs in agda-input method with \neg *)
+Notation "'¬' X" := (hneg X) : logic.
+(* type this in emacs in agda-input method with \neg *)
 Delimit Scope logic with logic.
 
 Definition himpl (P : UU) (Q : hProp) : hProp.
@@ -434,11 +434,8 @@ Proof.
   intros. split with (P -> Q). apply impred. intro. apply (pr2 Q).
 Defined.
 
-Local Notation "A ⇒ B" := (himpl A B) (at level 95, no associativity) : logic.
-  (* precedence same as <-> *)
-  (* in agda-input method, type \r= or \Rightarrow or \=> *)
-  (* can't make it global, because it's defined differently in
-     CategoryTheory/UnicodeNotations.v *)
+Notation "A ⇒ B" := (himpl A B) : logic.
+(* in agda-input method, type \r= or \Rightarrow or \=> *)
 Local Open Scope logic.
 
 Definition hexists {X : UU} (P : X -> UU) := ∥ total2 P ∥.
@@ -579,14 +576,14 @@ Proof.
   refine (npq _). exact (p,,q).
 Defined.
 
-Lemma tonegcoprod {X Y : UU} : ¬ X × ¬ Y -> ¬ (X ⨿ Y).
+Lemma tonegcoprod {X Y : UU} : (¬ X) × (¬ Y) -> ¬ (X ⨿ Y).
 Proof.
   intros ? ? is. intro c. induction c as [ x | y ].
   - apply (pr1 is x).
   - apply (pr2 is y).
 Defined.
 
-Lemma toneghdisj {X Y : UU} : ¬ X × ¬ Y -> ¬ (X ∨ Y).
+Lemma toneghdisj {X Y : UU} : (¬ X) × (¬ Y) -> ¬ (X ∨ Y).
 Proof.
   intros ? ? is. unfold hdisj.
   apply weqnegtonegishinh.
@@ -594,7 +591,7 @@ Proof.
   apply is.
 Defined.
 
-Lemma fromnegcoprod {X Y : UU} : ¬ (X ⨿ Y) -> ¬X × ¬Y.
+Lemma fromnegcoprod {X Y : UU} : ¬ (X ⨿ Y) -> (¬X) × (¬Y).
 Proof.
   intros ? ? is. split.
   - exact (λ x, is (ii1 x)).

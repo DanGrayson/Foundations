@@ -423,7 +423,7 @@ Module Test_ord.
       - intro i. apply isdeceqstn.
     Defined.
 
-    Definition which {X} : X ⨿ ¬X -> bool.
+    Definition which {X} : (X ⨿ ¬X) -> bool.
     Proof.
       intros X c.
       induction c.

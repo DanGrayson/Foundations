@@ -92,18 +92,18 @@ Definition universalElement {C:category} {X:[C^op,SET]} (r:Representation X) :
 Coercion universalElement : Representation >-> pr1hSet.
 
 Definition universalProperty {C:category} {X:[C^op,SET]} (r:Representation X) (c:C) :
-  c --> universalObject r ≃ c ⇒ X
+  (c --> universalObject r) ≃ (c ⇒ X)
   := weqpair (λ f : c --> universalObject r, r ⟲ f)
              (pr2 (pr2 r) c).
 
 Definition universalMap {C:category} {X:[C^op,SET]} (r:Representation X) {c:C} :
-  c ⇒ X -> c --> universalObject r
+  (c ⇒ X) -> (c --> universalObject r)
   := invmap (universalProperty _ _).
 
 Notation "r \\ x" := (universalMap r x) (at level 50, left associativity) : cat.
 
 Definition universalMap' {C:category} {X:[C^op^op,SET]} (r:Representation X) {c:C} :
-  X ⇐ c -> c <-- universalObject r
+  (X ⇐ c) -> (c <-- universalObject r)
   := invmap (universalProperty _ _).
 
 Notation "x // r" := (universalMap' r x) (at level 50, left associativity) : cat.

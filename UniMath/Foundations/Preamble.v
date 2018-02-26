@@ -138,7 +138,7 @@ Notation "1000" := (10 * 100) : nat_scope.
 
 Inductive paths {A:UU} (a:A) : A -> UU := paths_refl : paths a a.
 Hint Resolve paths_refl : core .
-Notation "a = b" := (paths a b) (at level 70, no associativity) : type_scope.
+Notation "a = b" := (paths a b) : type_scope.
 Notation idpath := paths_refl .
 
 (* Remark: all of the uu0.v now uses only paths_rect and not the direct "match" construction
@@ -182,8 +182,7 @@ Arguments tpair {_} _ _ _.
 Arguments pr1 {_ _} _.
 Arguments pr2 {_ _} _.
 
-Notation "'∑'  x .. y , P" := (total2 (λ x, .. (total2 (λ y, P)) ..))
-  (at level 200, x binder, y binder, right associativity) : type_scope.
+Notation "'∑'  x .. y , P" := (total2 (λ x, .. (total2 (λ y, P)) ..)) : type_scope.
   (* type this in emacs in agda-input method with \sum *)
 
 Notation "x ,, y" := (tpair _ x y).
