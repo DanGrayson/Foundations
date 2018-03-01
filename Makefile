@@ -74,7 +74,7 @@ ifeq ($(BUILD_COQ),yes)
 $(VOFILES) : $(COQBIN)coqc
 endif
 
-all html install uninstall $(VOFILES) :build/CoqMakefile.make ; $(MAKE) -f build/CoqMakefile.make $@
+all html install uninstall $(VOFILES) :build/CoqMakefile.make .coq_makefile_output.local ; $(MAKE) -f build/CoqMakefile.make $@
 clean:: build/CoqMakefile.make; $(MAKE) -f build/CoqMakefile.make $@
 distclean:: build/CoqMakefile.make; $(MAKE) -f build/CoqMakefile.make cleanall archclean
 
@@ -84,11 +84,9 @@ ifeq ($(VERBOSE),yes)
 OTHERFLAGS += -verbose
 endif
 
-# this list is duplicated in UniMath/.dir-locals.el :
-TYPE_IN_TYPE_FILES := UniMath/Foundations/Resizing.vo
-
+# this dependency is duplicated in UniMath/.dir-locals.el :
 .coq_makefile_output.local : Makefile
-	echo "$(TYPE_IN_TYPE_FILES) : OTHERFLAGS += -type-in-type" >$@
+	echo "UniMath/Foundations/Resizing.vo : OTHERFLAGS += -type-in-type" >$@
 
 ENHANCEDDOCTARGET = enhanced-html
 ENHANCEDDOCSOURCE = util/enhanced-doc
@@ -145,7 +143,7 @@ TAGS : Makefile $(PACKAGE_FILES) $(VFILES)
 FILES_FILTER := grep -vE '^[[:space:]]*(\#.*)?$$'
 FILES_FILTER_2 := grep -vE '^[[:space:]]*(\#.*)?$$$$'
 $(foreach P,$(PACKAGES),												\
-	$(eval $P: check-first build/CoqMakefile.make;									\
+	$(eval $P: check-first .coq_makefile_output.local build/CoqMakefile.make;									\
 		$(MAKE) -f build/CoqMakefile.make									\
 			$(shell <UniMath/$P/.package/files $(FILES_FILTER) |sed "s=^\(.*\).v=UniMath/$P/\1.vo=" )	\
 			UniMath/$P/All.vo))
