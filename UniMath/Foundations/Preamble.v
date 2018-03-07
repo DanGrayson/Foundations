@@ -22,7 +22,7 @@ Constraint uu0 < uu1, uu1 < uu2.
 Global Set Universe Polymorphism.
 Global Set Polymorphic Inductive Cumulativity.
 Global Unset Universe Minimization ToSet.
-Global Unset Cumulativity Use ULub.
+Global Unset Cumulativity Weak Constraints.
 
 Notation UU  := Type (only parsing).
 Notation UU0 := Type@{uu0} (only parsing).
