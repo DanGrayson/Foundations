@@ -13,6 +13,7 @@ Require Import UniMath.Foundations.NaturalNumbers.
 
 Require Import UniMath.Combinatorics.Lists.
 
+Require Import UniMath.MoreFoundations.PartA. (* flip *)
 Require Import UniMath.MoreFoundations.Tactics.
 
 Require Import UniMath.CategoryTheory.total2_paths.
@@ -25,7 +26,7 @@ Require Import UniMath.CategoryTheory.limits.initial.
 Require Import UniMath.CategoryTheory.FunctorAlgebras.
 Require Import UniMath.CategoryTheory.limits.binproducts.
 Require Import UniMath.CategoryTheory.limits.terminal.
-Require Import UniMath.CategoryTheory.CocontFunctors.
+Require Import UniMath.CategoryTheory.Chains.All.
 Require Import UniMath.CategoryTheory.exponentials.
 Require Import UniMath.CategoryTheory.limits.bincoproducts.
 Require Import UniMath.CategoryTheory.PrecategoryBinProduct.
@@ -351,8 +352,6 @@ Variables (x : HSET).
 Definition constprod_functor : functor HSET HSET :=
   BinProduct_of_functors HSET HSET BinProductsHSET (constant_functor HSET HSET x)
                                          (functor_identity HSET).
-
-Definition flip {A B C : UU} (f : A -> B -> C) : B -> A -> C := λ x y, f y x.
 
 Lemma omega_cocontConstProdFunctor : is_omega_cocont constprod_functor.
 Proof.
