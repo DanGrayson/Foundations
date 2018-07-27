@@ -1307,7 +1307,7 @@ Definition WO_hasSmallest (X : WellOrderedSet) : hasSmallest (WOrel X) := pr222 
 Lemma WOlt_istrans (X : WellOrderedSet) : istrans (@WOlt X).
 Proof.
 intros x y z H1 H2 H3; simpl in *.
-apply (@squash_to_hProp _ (_,,isapropempty) (WO_istotal X y z)); intros [H|H]; simpl.
+apply (@squash_to_hProp _ hfalse (WO_istotal X y z)); intros [H|H]; simpl.
 - now apply H1, (WO_istrans X y z x H H3).
 - now apply H2.
 Qed.
@@ -1320,7 +1320,7 @@ Qed.
 (** Equivalent definition (assuming decidable equality) of the WOlt relation *)
 Definition WOlt' (X : WellOrderedSet) (x y : X) : hProp.
 Proof.
-exists ((x ≤ y) × (x != y)).
+exists ((x ≤ y) ∧ (x != y)).
 abstract (now apply isapropdirprod; [ apply propproperty | apply isapropneg ]).
 Defined.
 
@@ -1444,8 +1444,9 @@ Proof.
 exists (_,,isasetunit).
 use tpair.
 - intros x y.
-  exists (x = y).
-  abstract (apply isapropifcontr, isapropunit).
+  use hProppair.
+  + exact (x = y).
+  + abstract (apply isapropifcontr, isapropunit).
 - repeat split.
   + now intros x y z [].
   + now intros x.
