@@ -1,7 +1,7 @@
 [submodule "sub/coq"]
 	path = sub/coq
-	url = https://github.com/SkySkimmer/coq
-	branch = univ-cumul
+	url = https://github.com/coq/coq
+	branch = master
 [submodule "sub/coq-tools"]
 	path = sub/coq-tools
 	url = https://github.com/JasonGross/coq-tools
