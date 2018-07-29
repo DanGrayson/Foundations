@@ -14,7 +14,10 @@ Qed.
 Note: similar to [transportf_pathsinv0_var], [transportf_pathsinv0'],
 but not quite a special case of them, or (as far as I can find) any other
 library lemma.
-*)
+ *)
+
+
+
 Lemma transportf_transpose {X : UU} {P : X → UU} {x x' : X}
       (e : x = x') (y : P x) (y' : P x') :
       transportb P e y' = y -> y' = transportf P e y.
@@ -37,9 +40,9 @@ Lemma transportf_comp_lemma (X : UU) (B : X -> UU) {A A' A'': X} (e : A = A'') (
 Proof.
   intro H.
   eapply pathscomp0.
-    2: { apply maponpaths. exact H. }
+  2: { apply maponpaths. exact H. }
   eapply pathscomp0.
-    2: { symmetry. apply transport_f_f. }
+  2: { symmetry. apply transport_f_f. }
   apply (maponpaths (λ p, transportf _ p x)).
   apply pathsinv0.
   eapply pathscomp0.
@@ -61,6 +64,18 @@ Proof.
     apply hs.
   - exact ex.
 Qed.
+
+
+Lemma transportf_set {A : UU} (B : A → UU)
+      {a : A} (e : a = a) (b : B a)
+      (X : isaset A)
+  : transportf B e b = b.
+Proof.
+  apply transportf_comp_lemma_hset.
+  - apply X.
+  - apply idpath.
+Defined.
+
 
 Lemma transportf_pair {A B} (P : A × B -> UU) {a a' : A} {b b' : B}
       (eA : a = a') (eB : b = b') (p : P (a,,b))
@@ -132,39 +147,6 @@ Proof.
   apply idpath.
 Defined.
 
-(** If x = y, then x = z if and only if y = z by transitivity. *)
-Definition transitive_paths_weq {X : UU} {x y z : X} :
-  x = y -> (x = z ≃ y = z).
-Proof.
-  intro xeqy.
-  use weq_iso.
-  - intro xeqz.
-    exact (!xeqy @ xeqz).
-  - intro yeqz.
-    exact (xeqy @ yeqz).
-  - intro xeqz.
-    refine (path_assoc _ _ _ @ _).
-    refine (maponpaths (λ p, p @ xeqz) (pathsinv0r xeqy) @ _).
-    reflexivity.
-  - intro yeqz.
-    refine (path_assoc _ _ _ @ _).
-    refine (maponpaths (λ p, p @ yeqz) (pathsinv0l xeqy) @ _).
-    reflexivity.
-Defined.
-
-(** A rewrite of [pathsdirprod] as an equivalence:
-    Two pairs are equal if and only if both of their components are. *)
-Definition pathsdirprodweq {X Y : UU} {x1 x2 : X} {y1 y2 : Y} :
-  (dirprodpair x1 y1 = dirprodpair x2 y2) ≃ (x1 = x2) × (y1 = y2).
-Proof.
-  intermediate_weq (dirprodpair x1 y1 ╝ dirprodpair x2 y2).
-  - apply total2_paths_equiv.
-  - unfold PathPair; cbn.
-    use weqfibtototal; intro p; cbn.
-    apply transitive_paths_weq.
-    apply (toforallpaths _ _ _ (transportf_const p Y) y1).
-Defined.
-
 (** Flip the arguments of a function *)
 Definition flipsec {A B : UU} {C : A -> B -> UU} (f : ∏ a b, C a b) : ∏ b a, C a b :=
   λ x y, f y x.
@@ -178,3 +160,17 @@ Defined.
 
 Definition flipsec_weq {A B : UU} {C : A -> B -> UU} :
   (∏ a b, C a b) ≃ (∏ b a, C a b) := weqpair flipsec isweq_flipsec.
+
+(** The subtypes of a type of hlevel S n are also of hlevel S n.
+    This doesn't work for types of hlevel 0: a subtype of a contractible
+    type might be empty, not contractible! *)
+Lemma isofhlevel_hsubtype {X : UU} {n : nat} (isof : isofhlevel (S n) X) :
+  ∏ subt : hsubtype X, isofhlevel (S n) subt.
+Proof.
+  intros subt.
+  apply isofhleveltotal2.
+  - assumption.
+  - intro.
+    apply isofhlevelsnprop.
+    apply propproperty.
+Defined.

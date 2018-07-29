@@ -74,7 +74,7 @@ ifeq ($(BUILD_COQ),yes)
 $(VOFILES) : $(COQBIN)coqc
 endif
 
-all html install uninstall $(VOFILES) :build/CoqMakefile.make .coq_makefile_output.local ; $(MAKE) -f build/CoqMakefile.make $@
+all html install uninstall $(VOFILES): build/CoqMakefile.make ; $(MAKE) -f build/CoqMakefile.make $@
 clean:: build/CoqMakefile.make; $(MAKE) -f build/CoqMakefile.make $@
 distclean:: build/CoqMakefile.make; $(MAKE) -f build/CoqMakefile.make cleanall archclean
 
@@ -143,8 +143,8 @@ TAGS : Makefile $(PACKAGE_FILES) $(VFILES)
 FILES_FILTER := grep -vE '^[[:space:]]*(\#.*)?$$'
 FILES_FILTER_2 := grep -vE '^[[:space:]]*(\#.*)?$$$$'
 $(foreach P,$(PACKAGES),												\
-	$(eval $P: check-first .coq_makefile_output.local build/CoqMakefile.make;									\
-		$(MAKE) -f build/CoqMakefile.make									\
+	$(eval $P: check-first build/CoqMakefile.make;									\
+		+$(MAKE) -f build/CoqMakefile.make									\
 			$(shell <UniMath/$P/.package/files $(FILES_FILTER) |sed "s=^\(.*\).v=UniMath/$P/\1.vo=" )	\
 			UniMath/$P/All.vo))
 install:all
@@ -179,7 +179,13 @@ describe:; git describe --dirty --long --always --abbrev=40 --all
 	echo '# End:' ;\
 	) >$@
 # the '' above prevents emacs from mistaking the lines above as providing local variables when visiting this file
-build/CoqMakefile.make .coq_makefile_output.conf: $(COQBIN)coq_makefile .coq_makefile_input
+
+ifdef COQBIN
+build/CoqMakefile.make .coq_makefile_output.conf: $(COQBIN)coq_makefile
+else
+build/CoqMakefile.make .coq_makefile_output.conf: $(shell command -v coq_makefile)
+endif
+build/CoqMakefile.make .coq_makefile_output.conf: .coq_makefile_input
 	$(COQBIN)coq_makefile -f .coq_makefile_input -o .coq_makefile_output
 	mv .coq_makefile_output build/CoqMakefile.make
 
@@ -202,7 +208,7 @@ sub/coq/configure.ml:
 	git submodule update --init sub/coq
 sub/coq/config/coq_config.ml: sub/coq/configure.ml
 	: making $@ because of $?
-	cd sub/coq && ./configure -coqide "$(COQIDE_OPTION)" -with-doc no -annotate -local
+	cd sub/coq && ./configure -coqide "$(COQIDE_OPTION)" -with-doc no -local
 # instead of "coqlight" below, we could use simply "theories/Init/Prelude.vo"
 sub/coq/bin/coq_makefile sub/coq/bin/coqc: sub/coq/config/coq_config.ml
 .PHONY: rebuild-coq
@@ -222,7 +228,7 @@ doc: $(GLOBFILES) $(VFILES)
 	    -toc $(COQDOCFLAGS) -html $(COQDOCLIBS) -d $(ENHANCEDDOCTARGET)	\
 	    --with-header $(ENHANCEDDOCSOURCE)/header.html			\
 	    $(VFILES)
-	sed -i '.bk' -f $(ENHANCEDDOCSOURCE)/proofs-toggle.sed $(ENHANCEDDOCTARGET)/*html
+	sed -i'.bk' -f $(ENHANCEDDOCSOURCE)/proofs-toggle.sed $(ENHANCEDDOCTARGET)/*html
 
 # Jason Gross' coq-tools bug isolator:
 # The isolated bug will appear in this file, in the UniMath directory:

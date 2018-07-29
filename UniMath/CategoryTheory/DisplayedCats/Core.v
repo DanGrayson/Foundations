@@ -98,6 +98,13 @@ Section Disp_Cat.
 Definition disp_cat_ob_mor (C : precategory_ob_mor)
   := ∑ (obd : C -> UU), (∏ x y:C, obd x -> obd y -> (x --> y) -> UU).
 
+Definition mk_disp_cat_ob_mor
+           (C : precategory_ob_mor)
+           (obd : C -> UU)
+           (mord : ∏ x y:C, obd x -> obd y -> (x --> y) -> UU)
+  : disp_cat_ob_mor C
+  := obd,, mord.
+
 Definition ob_disp {C} (D : disp_cat_ob_mor C) : C -> UU := pr1 D.
 Coercion ob_disp : disp_cat_ob_mor >-> Funclass.
 
@@ -1079,7 +1086,7 @@ Definition total_iso_equiv (xx yy : total_category)
 Lemma is_univalent_total_category (CC : is_univalent C) (DD : is_univalent_disp D)
   : is_univalent (total_category).
 Proof.
-  split. Focus 2. apply homset_property.
+  split. 2: apply homset_property.
   intros xs ys.
   set (x := pr1 xs). set (xx := pr2 xs).
   set (y := pr1 ys). set (yy := pr2 ys).
@@ -1142,14 +1149,14 @@ Proof.
     eapply pathscomp0. apply transport_b_f.
     eapply pathscomp0. apply maponpaths, id_left_disp.
     eapply pathscomp0. apply transport_f_b.
-    eapply pathscomp0. Focus 2. apply @pathsinv0, (functtransportb (# F)).
+    eapply pathscomp0. 2: apply @pathsinv0, (functtransportb (# F)).
     unfold transportb; apply maponpaths_2, homset_property.
   - intros x y f xx yy ff.
     eapply pathscomp0. apply maponpaths, mor_disp_transportf_prewhisker.
     eapply pathscomp0. apply transport_b_f.
     eapply pathscomp0. apply maponpaths, id_right_disp.
     eapply pathscomp0. apply transport_f_b.
-    eapply pathscomp0. Focus 2. apply @pathsinv0, (functtransportb (# F)).
+    eapply pathscomp0. 2: apply @pathsinv0, (functtransportb (# F)).
     unfold transportb; apply maponpaths_2, homset_property.
   - intros x y z w f g h xx yy zz ww ff gg hh.
     eapply pathscomp0. apply maponpaths, mor_disp_transportf_prewhisker.
@@ -1908,6 +1915,26 @@ Proof.
     apply (comp_disp (b' _ _ )  (b _ _ )).
   - apply disp_nat_trans_comp_ax.
 Defined.
+
+Definition disp_nat_trans_eq
+  {C' C : category}
+  {F' F : functor_data C' C}
+  (a : nat_trans F' F)
+  {D' : disp_cat_data C'}
+  {D : disp_cat C}
+  {R' : disp_functor_data F' D' D}
+  {R : disp_functor_data F D' D}
+  (b b' : disp_nat_trans a R' R)
+  : (∏ x (xx : D' x), b x xx = b' x xx) → b = b'.
+Proof.
+  intro H.
+  apply subtypeEquality.
+  { intro r.  apply isaprop_disp_nat_trans_axioms. }
+  apply funextsec. intro x.
+  apply funextsec.  intro xx.
+  apply H.
+Qed.
+
 
 End Disp_Nat_Trans.
 
