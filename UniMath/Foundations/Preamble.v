@@ -15,9 +15,8 @@ Require Export UniMath.Foundations.Init.
 
 Monomorphic Universe uu0.       (* level 0 -- resized propositions and elements of hProp live here *)
 Monomorphic Universe uu1.       (* level 1 -- empty, unit, bool, nat, and hProp live here *)
-Monomorphic Universe uu2.       (* level 2 -- hPropset, unitset, natset, ... live here *)
 
-Constraint uu0 < uu1, uu1 < uu2.
+Constraint uu0 < uu1.
 
 Global Set Universe Polymorphism.
 Global Set Polymorphic Inductive Cumulativity.
@@ -26,8 +25,7 @@ Global Unset Cumulativity Weak Constraints.
 
 Notation UU  := Type (only parsing).
 Notation UU0 := Type@{uu0} (only parsing).
-Notation UU1 := Type@{uu1} (only parsing). (* else we get this: Notation UU1 := UU2 *)
-Notation UU2 := Type@{uu2} (only parsing).
+Notation UU1 := Type@{uu1} (only parsing).
 
 (* for debugging, temporarily: *)
 Global Set Printing Universes.

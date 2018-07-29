@@ -1445,7 +1445,7 @@ Defined.
 
 Theorem isasetbool@{}: isaset@{uu1} bool.
 Proof.
-  apply (isasetifdeceq@{uu2} _ isdeceqbool).
+  apply (isasetifdeceq _ isdeceqbool).
 Defined.
 
 (** ** Splitting of [ X ] into a coproduct defined by a function [ X -> bool ] *)

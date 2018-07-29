@@ -375,7 +375,7 @@ Abort.
 
 (** making finite ordered sets in various ways *)
 
-Definition standardFiniteOrderedSet@{} (n:nat) : FiniteOrderedSet@{uu1 uu2}.
+Definition standardFiniteOrderedSet (n:nat) : FiniteOrderedSet.
 Proof.
   intros. simple refine (_,,_).
   - exists (stnposet n). intros x y; apply istotalnatleh.
@@ -403,7 +403,7 @@ Proof.
 Defined.
 
 Local Open Scope foset.
-Definition transportFiniteOrdering@{i j} {n} {X:Type@{i}} : X ≃ ⟦ n ⟧ -> FiniteOrderedSet@{i j}.
+Definition transportFiniteOrdering {n} {X:Type} : X ≃ ⟦ n ⟧ -> FiniteOrderedSet.
 (* The new finite ordered set has X as its underlying set. *)
 Proof.
   intros ? ? w.

@@ -135,7 +135,7 @@ Proof.
   intros ? ?. exact (pr1 (natneq_iff_neq n m)).
 Defined.
 
-Definition natneq@{} (m n : nat) : negProp@{uu1 uu2} (m = n).
+Definition natneq (m n : nat) : negProp (m = n).
 Proof.
   intros. exists (m ≠ n). split.
   - apply propproperty.
@@ -199,7 +199,7 @@ Proof.
   apply (isasetifdeceq _ isdeceqnat).
 Defined.
 
-Definition natset : hSet@{uu1 uu2} := hSetpair _ isasetnat.
+Definition natset : hSet := hSetpair _ isasetnat.
 
 Lemma nat_eq_or_neq (m n : nat) : (m = n) ⨿ (m ≠ n).
 Proof.

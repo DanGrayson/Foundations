@@ -153,7 +153,7 @@ Proof.
   apply ( isasetifdeceq _ ( isdeceqstn n ) ).
 Defined.
 
-Definition stnset n := hSetpair@{uu1 uu2} (⟦n⟧) (isasetstn n).
+Definition stnset n := hSetpair (⟦n⟧) (isasetstn n).
 
 Definition stn_to_nat n : stnset n -> natset := pr1.
 

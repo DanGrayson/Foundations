@@ -86,7 +86,7 @@ Require Export UniMath.Foundations.Propositions.
 
 (** ** The type of sets, i.e., of types of h-level 2 in [UU] *)
 
-Definition hSet@{i u} : Type@{u} := total2@{u} isaset@{i}.
+Definition hSet@{i u} : Type@{u} := @total2@{u} Type@{i} isaset@{i}.
 Definition hSetpair (X : UU) (i : isaset X) := tpair isaset X i : hSet.
 Definition pr1hSet@{i u} : hSet@{i u} -> Type@{i} := pr1.
 Coercion pr1hSet: hSet >-> Sortclass.
@@ -144,7 +144,7 @@ Notation "'∏' x .. y , P" := (forall_hSet (λ x,.. (forall_hSet (λ y, P))..))
   (at level 200, x binder, y binder, right associativity) : set.
   (* type this in emacs in agda-input method with \sum *)
 
-Definition unitset : hSet := hSetpair@{uu1 uu2} unit isasetunit.
+Definition unitset : hSet := hSetpair unit isasetunit.
 
 Definition dirprod_hSet (X Y : hSet) : hSet.
 Proof.
@@ -156,7 +156,7 @@ Notation "A × B" := (dirprod_hSet A B) (at level 75, right associativity) : set
 
 (** *** [hProp] as a set *)
 
-Definition hPropset : hSet@{uu1 uu2} := tpair@{uu2} isaset@{uu1} hProp isasethProp.
+Definition hPropset : hSet := tpair isaset@{uu1} hProp isasethProp.
 (* Canonical Structure hPropset. *)
 
 Definition hProp_to_hSet (P : hProp) : hSet
@@ -166,7 +166,7 @@ Coercion hProp_to_hSet : hProp >-> hSet.
 
 (** *** Booleans as a set *)
 
-Definition boolset@{} : hSet@{uu1 uu2} := hSetpair bool isasetbool.
+Definition boolset : hSet := hSetpair bool isasetbool.
 (* Canonical Structure boolset. *)
 
 (* properties of functions between sets *)
