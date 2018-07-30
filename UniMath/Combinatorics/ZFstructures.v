@@ -80,14 +80,14 @@ Qed.
 
 Definition PointedGraph := ∑ (V : hSet) (E : hrel V), V.
 
-Definition isaroot {V : hSet} (E : hrel V) (r : V) : UU := (∏ w : V, E r w).
+Definition isaroot@{i j} {V : hSet@{i j}} (E : hrel@{i} V) (r : V) : Type@{i} := (∏ w : V, E r w).
 
-Lemma isaprop_isaroot {V : hSet} (E : hrel V) (r : V) : isaprop (isaroot E r).
+Lemma isaprop_isaroot@{i j} {V : hSet@{i j}} (E : hrel@{i} V) (r : V) : isaprop (isaroot E r).
 Proof.
   repeat (apply impred ; intros). apply propproperty.
 Qed.
 
-Definition isTRR (V : hSet) (E : hrel V) (r : V) : UU :=
+Definition isTRR@{i j} (V : hSet@{i j}) (E : hrel@{i} V) (r : V) : Type@{i} :=
   isrefl E × istrans E × isaroot E r.
 
 Lemma isaprop_isTRR (V : hSet) (E : hrel V) (r : V) : isaprop (isTRR V E r).
@@ -99,7 +99,7 @@ Proof.
     -- apply (isaprop_isaroot E r).
 Qed.
 
-Definition TRRGraphData (V : hSet) : UU := ∑ (E : hrel V) (r : V), isTRR V E r.
+Definition TRRGraphData@{i j} (V : hSet@{i j}) : Type@{i} := ∑ (E : hrel V) (r : V), isTRR V E r.
 
 Lemma isaset_TRRGraphData (V : hSet) : isaset (TRRGraphData V).
 Proof.
@@ -112,13 +112,21 @@ Proof.
      -- intros.  apply hlevelntosn. apply isaprop_isTRR.
 Qed.
 
-Definition TRRGraph : UU := ∑ (V : hSet), TRRGraphData V.
+Definition TRRGraph@{i j} : Type@{j} := ∑ (V : hSet@{i j}), TRRGraphData V.
 
 Definition TRRG_edgerel (G : TRRGraph) : hrel (pr1 G) := pr12 G.
 
 Local Notation "x ≤ y" := (TRRG_edgerel _ x y)(at level 70).
 
-Definition TRRG_root (G : TRRGraph) : pr1 G := pr122 G.
+Definition TRRG_root (G : TRRGraph) := pr1 (pr2 (pr2 G)).
+
+Section Foo.
+  Universe uu2 uu3.
+  Constraint uu1 < uu2.
+  Context (G : TRRGraph@{uu2 uu3}).
+  Check (pr1 (pr2 (pr2 G))).
+  Check (TRRG_root G).
+End Foo.
 
 Definition TRRG_transitivity (G : TRRGraph) : istrans (TRRG_edgerel G) := pr12 (pr222 G).
 
@@ -128,8 +136,15 @@ Definition selfedge (G : TRRGraph) (x : pr1 G) : pr1 (pr2 G) x x :=
 (** Definition of [TRRGraph] homomorphisms [isTRRGhomo], isomorphisms [TRRGraphiso], and a proof
     that isomorphisms are equivalent to identities [TRRGraph_univalence] **)
 
-Definition isTRRGhomo {G H : TRRGraph} (f : pr1 G → pr1 H) : UU :=
-  (∏ (x y : pr1 G), (x ≤ y) <-> (f x ≤ f y)) × (f (TRRG_root G) = TRRG_root H).
+Definition foo@{i j} (H : TRRGraph@{i j}) : Type@{i}.
+  set (b := (TRRG_root H = TRRG_root H)).
+  exact b.
+Defined.
+
+Definition isTRRGhomo@{i j} {G H : TRRGraph@{i j}} (f : pr1 G → pr1 H) : Type@{i} :=
+  dirprod@{i} (∏ (x y : pr1 G), (x ≤ y) <-> (f x ≤ f y)) (f (TRRG_root G) = TRRG_root H).
+
+... uu1 = i above!
 
 Lemma isaprop_isTRRGhomo {G H : TRRGraph} (f : pr1 G → pr1 H) : isaprop (isTRRGhomo f).
 Proof.
