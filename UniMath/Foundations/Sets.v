@@ -3111,13 +3111,13 @@ Proof.
   intros ? ? e. exact (eqweqmap (maponpaths pr1hSet e)).
 Defined.
 
-Theorem hSet_univalence (X Y : hSet) : (X = Y) ≃ (X ≃ Y).
+Theorem hSet_univalence@{i j} (X Y : hSet@{i j}) : (X = Y) ≃ (X ≃ Y).
 Proof.
   Set Printing Coercions.
   intros.
   set (f := hSet_univalence_map X Y).
   exists f.
-  set (g := @eqweqmap (pr1 X) (pr1 Y)).
+  set (g := @eqweqmap@{i j} (pr1 X) (pr1 Y)).
   set (h := λ e : X = Y, maponpaths pr1hSet e).
   assert (comp : f = g ∘ h).
   {
@@ -3129,7 +3129,7 @@ Proof.
   Unset Printing Coercions.
 Defined.
 
-Theorem hSet_rect (X Y : hSet) (P : X ≃ Y -> UU) :
+Theorem hSet_rect@{i j} (X Y : hSet@{i j}) (P : X ≃ Y -> Type@{i}) :
   (∏ e : X=Y, P (hSet_univalence _ _ e)) -> ∏ f, P f.
 Proof.
   intros ? ? ? ih ?.

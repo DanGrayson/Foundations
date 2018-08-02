@@ -809,8 +809,8 @@ Definition logeqweq (P Q : hProp) : (P -> Q) -> (Q -> P) -> P ≃ Q :=
   λ f g, weqimplimpl f g (pr2 P) (pr2 Q).
 
 (* ** A variant of a lemma proved in uu0b.v *)
-Theorem total2_paths_hProp_equiv {A : UU} (B : A -> hProp)
-   (x y : total2 (λ x, B x)) : (x = y) ≃ (pr1 x = pr1 y).
+Theorem total2_paths_hProp_equiv@{i} {A : Type@{i}} (B : A -> hProp)
+   (x y : total2@{i} B) : (paths@{i} x y) ≃ (paths@{i} (pr1 x) (pr1 y)).
 Proof.
   intros.
   apply subtypeInjectivity.
