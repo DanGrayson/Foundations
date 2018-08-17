@@ -161,6 +161,30 @@ Proof.
   assumption.
 Qed.
 
+
+(** forgetful functor from FunctorAlg to its underlying category *)
+
+(* first step of definition *)
+Definition forget_algebras_data (hsC: has_homsets C): functor_data (FunctorAlg hsC) C.
+Proof.
+  set (onobs := fun alg : FunctorAlg hsC => alg_carrier alg).
+  apply (mk_functor_data onobs).
+  intros alg1 alg2 m.
+  simpl in m.
+  exact (mor_from_algebra_mor _ _ m).
+Defined.
+
+(* the forgetful functor *)
+Definition forget_algebras (hsC: has_homsets C): functor (FunctorAlg hsC) C.
+Proof.
+  apply (mk_functor (forget_algebras_data hsC)).
+  red.
+  split; red.
+  - intro alg. apply idpath.
+  - intros alg1 alg2 alg3 m n. apply idpath.
+Defined.
+
+
 (** ** This category is saturated if the base category is  *)
 
 Section FunctorAlg_saturated.
@@ -313,6 +337,21 @@ Proof.
 Defined.
 
 End FunctorAlg_saturated.
+
+
+Lemma idtomor_FunctorAlg_commutes (hsC: has_homsets C)(X Y: FunctorAlg hsC)(e: X = Y): mor_from_algebra_mor _ _ (idtomor _ _ e) = idtomor _ _ (maponpaths alg_carrier e).
+Proof.
+  induction e.
+  apply idpath.
+Qed.
+
+Corollary idtoiso_FunctorAlg_commutes (hsC: has_homsets C)(X Y: FunctorAlg hsC)(e: X = Y): mor_from_algebra_mor _ _ (morphism_from_iso _ _ _ (idtoiso e)) = idtoiso (maponpaths alg_carrier e).
+Proof.
+  unfold morphism_from_iso.
+  do 2 rewrite eq_idtoiso_idtomor.
+  apply idtomor_FunctorAlg_commutes.
+Qed.
+
 
 End Algebra_Definition.
 
