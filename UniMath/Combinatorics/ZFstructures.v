@@ -81,23 +81,6 @@ Definition PointedGraph := ∑ (V : hSet) (E : hrel V), V.
 
 Definition isaroot@{i j} {V : hSet@{i j}} (E : hrel@{i} V) (r : V) : Type@{i} := (∏ w : V, E r w).
 
-Section Foo0.
-  (* In this section we investigate this strange printout coming from "Check isaroot":
-
-        isaroot@{uu1 Top.188}
-             : forall (_ : hrel@{uu1} (pr1hSet@{uu1 Top.188} ?V)) (_ : pr1hSet@{uu1 Top.188} ?V),
-               Type@{uu1}
-
-     The question is whether the first parameter of isaroot, which has been named uu1, is the same
-     as our constant uu1 defined in Preamble.v .  If so, we should be able to get a universe
-     inconsistency, as follows: *)
-  Universe i j.
-  Constraint uu1 < i.
-  Context (V : hSet@{i j}).
-  Check (@isaroot V).
-  (* but we don't get one... *)
-End Foo0.
-
 Lemma isaprop_isaroot@{i j} {V : hSet@{i j}} (E : hrel@{i} V) (r : V) : isaprop (isaroot E r).
 Proof.
   repeat (apply impred ; intros). apply propproperty.
