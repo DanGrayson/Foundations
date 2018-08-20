@@ -775,10 +775,10 @@ Proof.
     {
       apply total2_paths_equiv.
       exists (idpath (pr1 z)).
-      use (λ P r s, pr1 (propproperty P r s)).
+      apply iscontrpr1; use propproperty.
     }
     exists H.
-    use (λ P r s, pr1 (propproperty P r s)).
+    apply iscontrpr1; use propproperty.
   }
    assert (LL : ∏ x, g (f x) = x).
   {
@@ -811,7 +811,7 @@ Proof.
     }
     rewrite -> q.
     exists (idpath (y ,, π)).
-    use (λ P r s, pr1 (propproperty P r s)).
+    apply iscontrpr1; use propproperty.
 Qed.
 
 Lemma UpUpid  (T : Tree) (x : pr11 T) (y : pr11 (Up x)) :
@@ -929,10 +929,10 @@ Proof.
     {
       apply total2_paths_equiv.
       exists (idpath (pr1 z)).
-      use (λ P r s, pr1 (propproperty P r s)).
+      exact (iscontrpr1 (propproperty _ _ _)).
     }
     exists H.
-    use (λ P r s, pr1 (propproperty P r s)).
+    exact (iscontrpr1 (propproperty _ _ _)).
   }
   apply (@weq_iso _ _ _ _ LL L).
 Defined.
@@ -954,7 +954,7 @@ Proof.
     destruct y as [y π].
     simpl.
     exists (idpath y).
-    use (λ P r s, pr1 (propproperty P r s)).
+    exact (iscontrpr1 (propproperty _ _ _)).
 Qed.
 
 
@@ -981,9 +981,8 @@ Proof.
   set (τ := π (pr1 y) (pr1 z) p).
   apply total2_paths_equiv.
   exists τ.
-  use (λ P r s, pr1 (propproperty P r s)).
+  apply iscontrpr1; use propproperty.
 Qed.
-
 
 Definition ZFS_Branch (X : ZFS) (x : X) : ZFS := (Branch X x ,, ZFS_Branch_is_ZFS X x).
 
