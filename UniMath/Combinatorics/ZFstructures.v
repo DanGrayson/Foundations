@@ -775,10 +775,10 @@ Proof.
     {
       apply total2_paths_equiv.
       exists (idpath (pr1 z)).
-      apply propproperty.
+      use (λ P r s, pr1 (propproperty P r s)).
     }
     exists H.
-    apply propproperty.
+    use (λ P r s, pr1 (propproperty P r s)).
   }
    assert (LL : ∏ x, g (f x) = x).
   {
@@ -811,9 +811,8 @@ Proof.
     }
     rewrite -> q.
     exists (idpath (y ,, π)).
-    apply propproperty.
+    use (λ P r s, pr1 (propproperty P r s)).
 Qed.
-
 
 Lemma UpUpid  (T : Tree) (x : pr11 T) (y : pr11 (Up x)) :
   pr1 (Up (pr1 y)) = Upw_to_TRRGraph (Up x) y.
@@ -827,10 +826,10 @@ Qed.
 Lemma preZFS_Branch_issuperrigid (T : preZFS) (x : T) : issuperrigid (preZFS_Branch T x).
  Proof.
   split.
-  - apply (pr1contr_to_contr _ (λ x, (isatree x ,, isaprop_isatree x)) (preZFS_Branch T x)).
+  - apply (pr1contr_to_contr _ (λ x, isatree x) (preZFS_Branch T x)).
     apply (iscontrauto_Tree_TRRGraph (Up x) ((pr222 T) x)).
   - intros y.
-    apply (pr1contr_to_contr _ (λ x, (isatree x ,, isaprop_isatree x)) (Up y)).
+    apply (pr1contr_to_contr _ (λ x, isatree x) (Up y)).
     simpl.
     unfold preZFS_Branch.
     unfold preZFS_Branch in y.
@@ -863,7 +862,7 @@ Definition ZFS_iso (x y : ZFS) := preZFS_iso x y.
 Theorem ZFS_univalence (x y : ZFS) : (x = y) ≃ (ZFS_iso x y).
 Proof.
   set (P := λ x, λ y, preZFS_univalence x y).
-  set (Q := λ x, (hasuniquerepbranch x ,, isaprop_hasuniquerepbranch x)).
+  set (Q := λ x, hProppair (hasuniquerepbranch x) (isaprop_hasuniquerepbranch x)).
   apply (substructure_univalence _ _ P Q x y).
 Qed.
 
@@ -930,10 +929,10 @@ Proof.
     {
       apply total2_paths_equiv.
       exists (idpath (pr1 z)).
-      apply propproperty.
+      use (λ P r s, pr1 (propproperty P r s)).
     }
     exists H.
-    apply propproperty.
+    use (λ P r s, pr1 (propproperty P r s)).
   }
   apply (@weq_iso _ _ _ _ LL L).
 Defined.
@@ -955,7 +954,7 @@ Proof.
     destruct y as [y π].
     simpl.
     exists (idpath y).
-    apply propproperty.
+    use (λ P r s, pr1 (propproperty P r s)).
 Qed.
 
 
@@ -982,7 +981,7 @@ Proof.
   set (τ := π (pr1 y) (pr1 z) p).
   apply total2_paths_equiv.
   exists τ.
-  apply propproperty.
+  use (λ P r s, pr1 (propproperty P r s)).
 Qed.
 
 
@@ -994,14 +993,7 @@ Local Notation "x ⊏ y" := ((pr121 (pr111 _)) x y)(at level 50).
 
 Definition Root (X : ZFS) := pr122 (pr111 X).
 
-Definition isapoint {X : ZFS} (x : X) := ¬ (x = Root X).
-
-Lemma isaprop_isapoint {X : ZFS} (x : X) : isaprop (isapoint x).
-Proof.
-  apply impred.
-  intros.
-  apply isapropempty.
-Qed.
+Definition isapoint {X : ZFS} (x : X) : hProp := ¬ (x = Root X).
 
 Definition ZFS_elementof (X Y : ZFS) := ∑ (a : Y), (isapoint a) × (X = Y ↑ a).
 
@@ -1019,8 +1011,8 @@ Proof.
   destruct r as [r ρ].
   set (s := (pr2 Y w z r)).
   simpl in ρ.
-  set (τ y := @isapropdirprod _ _ (isaprop_isapoint y) (isaset_ZFS X (Y ↑ y))).
-  set (P := λ y : Y, (isapoint y × X = Y ↑ y) ,, τ y).
+  set (τ y := @isapropdirprod _ _ (propproperty (isapoint y)) (isaset_ZFS X (Y ↑ y))).
+  set (P := λ y : Y, hProppair (isapoint y × X = Y ↑ y) (τ y)).
   apply (total2_paths_hProp_equiv P (z,, (ispp,, p)) (w,, (ispq,, q))).
   simpl.
   apply (! s).
