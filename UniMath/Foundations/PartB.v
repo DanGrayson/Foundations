@@ -1063,7 +1063,7 @@ Proof.
     * intros p. exact (n p q).
 Defined.
 
-Definition decidable (X:UU) := X ⨿ ¬X.
+Definition decidable@{i} (X:Type@{i}) : Type@{i} := X ⨿ ¬X.
 
 Definition decidable_to_complementary {X} : decidable X -> complementary X (¬X).
 Proof.
@@ -1118,7 +1118,9 @@ Defined.
 
 (** *** Decidable propositions [ isdecprop ] *)
 
-Definition isdecprop (P:UU) := (P ⨿ ¬P) × isaprop P.
+Definition isdecprop@{i} (P:Type@{i}) : Type@{i} := (P ⨿ ¬P) × isaprop P.
+
+(* Check isdecprop.                (* strange: isdecprop@{uu1} : forall _ : Type@{uu1}, Type@{uu1} *) *)
 
 Definition isdecproptoisaprop ( X : UU ) ( is : isdecprop X ) : isaprop X := pr2 is.
 Coercion isdecproptoisaprop : isdecprop >-> isaprop .
@@ -1128,7 +1130,7 @@ Proof.
   intros ? i c. exact (c,,i).
 Defined.
 
-Lemma isdecpropfromiscontr@{i} {P:Type@{i}} : iscontr P -> isdecprop@{i i i} P.
+Lemma isdecpropfromiscontr@{i} {P:Type@{i}} : iscontr P -> isdecprop@{i} P.
 Proof.
   intros ? i.
   split.
@@ -1191,7 +1193,7 @@ Defined.
 
 (** *** Types with decidable equality *)
 
-Definition isdeceq (X:UU) : UU := ∏ (x x':X), decidable (x=x').
+Definition isdeceq@{i} (X:Type@{i}) : Type@{i} := ∏ (x x':X), decidable (x=x').
 
 Lemma isdeceqweqf {X Y : UU} (w : X ≃ Y) (is : isdeceq X) : isdeceq Y.
 Proof.
@@ -1241,7 +1243,7 @@ Proof.
   apply (isdeceqifisaprop _ isapropunit).
 Defined.
 
-Theorem isdeceqbool@{}: isdeceq@{uu1 uu1 uu1} bool.
+Theorem isdeceqbool: isdeceq bool.
 Proof.
   unfold isdeceq. intros x' x. induction x.
   - induction x'.

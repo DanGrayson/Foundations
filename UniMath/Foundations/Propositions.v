@@ -133,17 +133,17 @@ Proof.
   intros A B s s'. apply invmap. apply subtypeInjectivity_prop.
 Defined.
 
-Section impred_prop.
+Section Foo.
 
   Universe i.
-  Constraint uu0 < i.           (* without this, we get i = uu0 belo *)
+  Constraint uu0<i.
 
-  Corollary impred_prop@{} {T : Type@{i}} (P : T -> hProp) : isaprop@{i} (∏ t : T, P t).
-  Proof.
-    intros. apply impred; intro. apply propproperty.
-  Defined.
+Corollary impred_prop@{} {T : Type@{i}} (P : T -> hProp) : isaprop@{i} (∏ t : T, P t).
+Proof.
+  intros. apply impred@{i}; intro. apply propproperty.
+Defined.
 
-End impred_prop.
+End Foo.
 
 Corollary isaprop_total2 (X : hProp) (Y : X -> hProp) : isaprop (∑ x, Y x).
 Proof.
@@ -163,10 +163,10 @@ Section forall_hProp.
     intros. apply impred_isaprop. intro x. apply propproperty.
   Defined.
 
-  Definition forall_hProp@{} {X : Type@{i}} (Y : X -> hProp) : hProp
-    := hProppair@{i} (∏ x, Y x) (isaprop_forall_hProp X Y).
-
 End forall_hProp.
+
+Definition forall_hProp@{i} {X : Type@{i}} (Y : X -> hProp) : hProp
+  := hProppair@{i} (∏ x, Y x) (isaprop_forall_hProp X Y).
 
 Notation "∀  x .. y , P"
   := (forall_hProp (λ x, .. (forall_hProp (λ y, P))..))

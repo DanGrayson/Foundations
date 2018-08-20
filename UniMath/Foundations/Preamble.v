@@ -36,6 +36,8 @@ Global Unset Printing Notations.
 
 Monomorphic Inductive empty : UU1 := .
 
+(* empty_rect eliminates into types at monomorphic universe level UniMath.Foundations.Preamble.3 *)
+
 Notation "∅" := empty.
 
 (** The one-element type *)
@@ -43,17 +45,21 @@ Notation "∅" := empty.
 Monomorphic Inductive unit : UU1 :=
   | tt : unit.
 
+(* unit_rect eliminates into types at monomorphic universe level UniMath.Foundations.Preamble.4 *)
+
 (** The two-element type *)
 
 Monomorphic Inductive bool : UU1 :=
   | true : bool
   | false : bool.
 
+(* bool_rect eliminates into types at monomorphic universe level UniMath.Foundations.Preamble.5 *)
+
 Definition negb (b:bool) := if b then false else true.
 
 (** The coproduct of two types *)
 
-Monomorphic Inductive coprod (A B:UU) : UU :=
+Inductive coprod@{i} (A B:Type@{i}) : Type@{i} :=
   | ii1 : A -> coprod A B
   | ii2 : B -> coprod A B.
 
@@ -74,6 +80,8 @@ Notation "X ⨿ Y" := (coprod X Y).
 Monomorphic Inductive nat : UU1 :=
   | O : nat
   | S : nat -> nat.
+
+(* nat_rect eliminates into types at monomorphic universe level UniMath.Foundations.Preamble.13 *)
 
 Definition succ := S.
 

@@ -361,7 +361,7 @@ Proof.
     + intros ng1 ng2. apply (maponpaths S (IHn m ng1 ng2)).
 Defined.
 
-Lemma isdecrelnatgth : isdecrel natgth.
+Lemma isdecrelnatgth@{} : isdecrel@{uu1} natgth.
 Proof.
   intros n m. apply (isdeceqbool (natgtb n m) true).
 Defined.
@@ -636,7 +636,7 @@ Definition natgehsnn (n : nat) : (S n) ≥ n := natlehnsn n.
 
 (** *** Comparison alternatives *)
 
-Definition natgthorleh (n m : nat) : (n > m) ⨿ (n ≤ m).
+Definition natgthorleh@{+} (n m : nat) : coprod@{uu0} (n > m) (n ≤ m).
 Proof.
   intros.
   induction (isdecrelnatgth n m) as [a|a].
@@ -644,7 +644,7 @@ Proof.
   - apply ii2. apply negnatgthtoleh. assumption.
 Defined.
 
-Definition natlthorgeh (n m : nat) : (n < m) ⨿ (n ≥ m) := natgthorleh _ _.
+Definition natlthorgeh@{} (n m : nat) : (n < m) ⨿ (n ≥ m) := natgthorleh _ _.
 
 Definition natchoice0 (n : nat) : (0 = n) ⨿ (0 < n).
 Proof.
@@ -1183,7 +1183,7 @@ Proof.
   induction (natlehtonegnatgth _ _ (natlehmplusnm i n) is).
 Defined.
 
-Lemma isdecinclnatplusr (n : nat) : isdecincl (λ i : nat, i + n).
+Lemma isdecinclnatplusr@{} (n : nat) : isdecincl@{uu1 uu1 uu1 uu1} (λ i : nat, i + n).
 Proof.
   intros. intro m. apply isdecpropif.
   - apply (isinclnatplusr _ m).

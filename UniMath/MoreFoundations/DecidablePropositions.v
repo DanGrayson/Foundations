@@ -218,7 +218,7 @@ Proof. apply pr2. Defined.
 Definition DecidableProposition_to_hProp : DecidableProposition -> hProp.
 Proof.
   intros X.
-  exact (pr1 X,, isdecproptoisaprop (pr1 X) (pr2 X)).
+  exact (hProppair (pr1 X) (isdecproptoisaprop (pr1 X) (pr2 X))).
 Defined.
 Coercion DecidableProposition_to_hProp : DecidableProposition >-> hProp.
 Definition decidabilityProperty (X : DecidableProposition) :

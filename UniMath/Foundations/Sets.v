@@ -90,6 +90,7 @@ Definition hSet@{i u} : Type@{u} := @total2@{u} Type@{i} isaset@{i}.
 Definition hSetpair (X : UU) (i : isaset X) := tpair isaset X i : hSet.
 Definition pr1hSet@{i u} : hSet@{i u} -> Type@{i} := pr1.
 Coercion pr1hSet: hSet >-> Sortclass.
+Definition hSetRaise@{i j u v | i<j, j<u} (X:hSet@{i u}) : hSet@{j u} := hSetpair@{j u} (pr1 X) (pr2 X).
 
 Definition eqset {X : hSet} (x x' : X) : hProp
   := hProppair (x = x') (pr2 X x x').
@@ -490,6 +491,17 @@ Defined.
 Definition hrel@{i} (X : Type@{i}) : Type@{i} := X -> X -> hProp.
 Identity Coercion idhrel : hrel >-> Funclass.
 
+(* Check hrel.                     (* hrel@{uu1} : forall _ : Type@{uu1}, Type@{uu1} -- ??? *) *)
+
+(*
+Section Foo2.
+  Universe j.
+  Constraint uu1 < j.
+  Context (X : Type@{j}).
+  Check (hrel X).
+End Foo2.
+*)
+
 Definition brel@{i} (X : Type@{i}) : Type@{i} := X -> X -> bool.
 Identity Coercion idbrel : brel >-> Funclass.
 
@@ -530,7 +542,7 @@ Definition iscotrans {X : UU} (R : hrel X) : UU
 Definition isdeccotrans {X : UU} (R : hrel X) : UU
   := ∏ x1 x2 x3, R x1 x3 -> R x1 x2 ⨿ R x2 x3.
 
-Definition isdecrel {X : UU} (R : hrel X) : UU := ∏ x1 x2, R x1 x2 ⨿ ¬ R x1 x2.
+Definition isdecrel@{i} {X : Type@{i}} (R : hrel@{i} X) : Type@{i} := ∏ x1 x2, R x1 x2 ⨿ ¬ R x1 x2.
 
 Definition isnegrel {X : UU} (R : hrel X) : UU
   := ∏ x1 x2, ¬ ¬ R x1 x2 -> R x1 x2.
@@ -828,7 +840,7 @@ Defined.
 Delimit Scope poset with poset.
 Notation "m ≤ n" := (posetRelation _ m n) (no associativity, at level 70) :
                       poset.
-Definition isaposetmorphism {X Y : Poset} (f : X -> Y)
+Definition isaposetmorphism@{i j} {X Y : Poset@{i j}} (f : X -> Y) : Type@{i}
   := (∏ x x' : X, x ≤ x' -> f x ≤ f x')%poset.
 Definition posetmorphism (X Y : Poset) : UU
   := total2 (fun f : X -> Y => isaposetmorphism f).
@@ -842,10 +854,10 @@ Coercion carrierofposetmorphism : posetmorphism >-> Funclass.
 Definition isdec_ordering@{i j} (X : Poset@{i j}) : Type@{i}
   := ∏ (x y : X), decidable (x ≤ y)%poset.
 
-Lemma isaprop_isaposetmorphism {X Y : Poset} (f : X -> Y) :
+Lemma isaprop_isaposetmorphism@{i j} {X Y : Poset@{i j}} (f : X -> Y) :
   isaprop (isaposetmorphism f).
 Proof.
-  intros. apply impredtwice; intros. apply impred_prop.
+  intros. apply impredtwice@{i i i}; intros. apply impred_prop@{i}.
 Defined.
 
 (** the preorders on a set form a set *)
@@ -1099,7 +1111,7 @@ Defined.
 (** *** Boolean representation of decidable relations *)
 
 
-Definition decrel@{i} (X : Type@{i}) : Type@{i} := total2 (λ R : hrel@{i} X, isdecrel@{i i i} R).
+Definition decrel@{i} (X : Type@{i}) : Type@{i} := total2 (λ R : hrel@{i} X, isdecrel@{i} R).
 Definition pr1decrel@{i} (X : Type@{i}) : decrel X -> hrel@{i} X := @pr1 _ _.
 Definition decrelpair {X : UU} {R : hrel X} (is : isdecrel R) : decrel X
   := tpair _ R is.
@@ -2215,16 +2227,16 @@ Proof.
 Defined.
 
 
-Definition setquotbooleq {X : UU} (R : eqrel X)
-           (is : ∏ x x' : X, isdecprop (R x x')) :
-  setquot R -> setquot R -> bool
-  := setquotuniv2 R (hSetpair _ (isasetbool)) (setquotbooleqint R is)
+Definition setquotbooleq@{i j} {X : Type@{i}} (R : eqrel X)
+           (is : ∏ x x' : X, isdecprop@{i} (R x x')) :
+  setquot@{i} R -> setquot R -> bool
+  := setquotuniv2@{i j} R (hSetpair (bool:Type@{i}) isasetbool) (setquotbooleqint R is)
                   (setquotbooleqintcomp R is).
 
 Lemma setquotbooleqtopaths {X : UU} (R : eqrel X)
       (is : ∏ x x' : X, isdecprop (R x x')) (x x' : setquot R) :
   setquotbooleq R is x x' = true  -> x = x'.
-Proof.
+ Proof.
   intros X R is.
   assert (isp : ∏ (x x' : setquot R),
                 isaprop ((setquotbooleq R is x x') = true  -> x = x')).

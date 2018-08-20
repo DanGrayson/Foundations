@@ -208,14 +208,14 @@ sub/coq/configure.ml:
 	git submodule update --init sub/coq
 sub/coq/config/coq_config.ml: sub/coq/configure.ml
 	: making $@ because of $?
-	cd sub/coq && ./configure -coqide "$(COQIDE_OPTION)" -with-doc no -local
+	cd sub/coq && ./configure -coqide "$(COQIDE_OPTION)" -with-doc no -local -no-custom
 # instead of "coqlight" below, we could use simply "theories/Init/Prelude.vo"
 sub/coq/bin/coq_makefile sub/coq/bin/coqc: sub/coq/config/coq_config.ml
 .PHONY: rebuild-coq
 rebuild-coq sub/coq/bin/coq_makefile sub/coq/bin/coqc:
-	$(MAKE) -w -C sub/coq KEEP_ML4_PREPROCESSED=true VERBOSE=true READABLE_ML4=yes coqbinaries tools states
+	$(MAKE) -w -C sub/coq VERBOSE=true READABLE_ML4=yes coqbinaries tools states
 sub/coq/bin/coqide: sub/coq/config/coq_config.ml
-	$(MAKE) -w -C sub/coq KEEP_ML4_PREPROCESSED=true VERBOSE=true READABLE_ML4=yes coqide-files bin/coqide
+	$(MAKE) -w -C sub/coq VERBOSE=true READABLE_ML4=yes coqide-files bin/coqide
 configure-coq: sub/coq/config/coq_config.ml
 git-describe:
 	git describe --dirty --long --always --abbrev=40
@@ -441,6 +441,15 @@ UniMath/$1/All.v: UniMath/$1/.package/files
 	<UniMath/$1/.package/files $(FILES_FILTER_2) | grep -v '^All.v$$$$' |sed -e "s=^=Require Export UniMath.$1.=" -e "s=/=.=g" -e s/\.v$$$$/./
 endef
 $(foreach P, $(PACKAGES), $(eval $(call make-summary-file,$P)) $(eval make-summary-files: UniMath/$P/All.v))
+
+# Running the debugger.
+# (Hint: use the emacs package tuareg to make debugging easier.)
+ifeq ($(BUILD_COQ),yes)
+debug: sub/coq/bin/coqtop.byte
+	sub/coq/dev/ocamldebug-coq $< $(OTHERFLAGS) $(COQ_PATH) -compile $(FILE)
+sub/coq/bin/coqtop.byte:	# need dependencies here
+	$(MAKE) -C sub/coq byte
+endif
 
 #################################
 # targets best used with INCLUDE=no

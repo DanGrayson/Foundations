@@ -289,37 +289,21 @@ Definition DownwardClosure@{i j} {G : TRRGraph@{i j}} (x : pr1 G) : Type@{i} :=
 Definition antisymmetric {G :TRRGraph} (y z : pr1 G) : hProp :=
   (y ≤ z) ∧ (z ≤ y) ⇒ (z = y) % set.
 
-Definition total {G : TRRGraph} (y z : pr1 G) : hProp :=
-  (y ≤ z) ∨ (z ≤ y).
+Definition total' {G : TRRGraph} (y z : pr1 G) : hProp :=
+  hdisj@{uu1} (y ≤ z) (z ≤ y).            (* G ends up in uu1 !! *)
 
-Definition isatree@{i j} (G : TRRGraph@{i j}) : hProp :=
-  ∀ (x : pr1 G) (y z : DownwardClosure x), antisymmetric (pr1 y) (pr1 z) ∧ total (pr1 y) (pr1 z).
+Definition total@{i j} {G : TRRGraph@{i j}} (y z : pr1 G) : hProp :=
+  hdisj@{uu1} (y ≤ z) (z ≤ y).
+
+Definition isatree@{i j +} (G : TRRGraph@{i j}) : hProp :=
+  ∀ (x : pr1 G) (y z : DownwardClosure x), antisymmetric@{i j i} (pr1 y) (pr1 z) ∧ total (pr1 y) (pr1 z).
 
 Section Foo3.
   Universe i j.
   Constraint uu1 < i.
   Context (G : TRRGraph@{i j}).
-
-  (* these failures are probably bugs: *)
-
-  Fail Check (TRRG_root' G).    (* this is the one I reported originally *)
-  Check (pr1 (pr2 (pr2 G))).    (* its body succeeds *)
-
-  (* here the defined term and the body both fail: *)
-  Fail Check isatree@{i j}.
-  Fail Check (∀ (x : pr1 G) (y z : DownwardClosure x), antisymmetric (pr1 y) (pr1 z) ∧ total (pr1 y) (pr1 z)).
-
-  (* note the bad printing, which ambiguity about whether uu1 is a parameter or a constant:
-        DownwardClosure@{uu1
-        Top.5294}
-             : forall _ : pr1hSet@{uu1 Top.5294} (pr1 ?G), Type@{uu1}
-        where
-        ?G : [ |- TRRGraph@{uu1 Top.5294}]
-        (* {Top.5294} |= uu1 < Top.5294
-                         uu0 <= uu1
-                          *)
-                          *)
-
+  Fail Check (TRRG_root' G).
+  Fail Check (@total' G).
 End Foo3.
 
 Definition Tree@{i j} : Type@{j} :=  ∑ G : TRRGraph@{i j}, isatree@{i j} G.

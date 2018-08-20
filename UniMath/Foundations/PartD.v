@@ -693,7 +693,7 @@ Proof.
     apply (isofhlevelweqf n w s1).
 Defined.
 
-Lemma isofhlevel_raise@{i j|i<j} n (X:Type@{i}) : isofhlevel@{i} n X ≃ isofhlevel@{j} n X.
+Lemma isofhlevelRaise@{i j|i<j} n (X:Type@{i}) : isofhlevel@{i} n X ≃ isofhlevel@{j} n X.
 (* if this fact turns out to be needed, finish the proof *)
 Proof.
   intro.
