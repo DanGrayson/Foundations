@@ -17,18 +17,10 @@ Section A.
      the cases we want. *)
   Constraint i < j.
 
-  Definition ResizeProp@{} (T : Type@{j}) : isaprop@{j} T -> Type@{i}.
-  (* this is related to the rule Voevodsky calls RR1 *)
-  Proof.
-    intros _.
-    exact T.
-  Defined.
+  (* this is related to the rule Voevodsky calls RR1: *)
+  Definition ResizeProp@{} (T : Type@{j}) : isaprop T -> Type@{i} := λ _, T.
 
-  Definition ResizeType@{} {S : Type@{i}} (T : Type@{j}) : weq@{j} S T -> Type@{i}.
-  (* this is related to the rule Voevodsky calls RR5 *)
-  Proof.
-    intros _.
-    exact T.
-  Defined.
+  (* this is related to the rule Voevodsky calls RR5: *)
+  Definition ResizeType@{} {S : Type@{i}} (T : Type@{j}) : weq@{j} S T -> Type@{i} := λ _, T.
 
 End A.
