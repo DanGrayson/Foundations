@@ -286,6 +286,7 @@ clean::; rm -f $(VDFILE).d
 ifeq ($(shell grep -q ^VDFILE build/CoqMakefile.make && echo yes),yes)
 # Coq >= 8.8
 DEPFILES := $(VDFILE).d
+include $(DEPFILES)
 .enforce-prescribed-ordering.okay: Makefile $(DEPFILES) $(PACKAGE_FILES)
 	: "--- enforce ordering prescribed by the files UniMath/*/.packages/files ---"
 	@set -e ;														    \
