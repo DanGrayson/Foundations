@@ -847,7 +847,7 @@ Definition aintdomconstr := aintdompair.
 Definition pr1aintdom : aintdom -> acommring := @pr1 _ _.
 Coercion pr1aintdom : aintdom >-> acommring.
 
-Definition aintdomazerosubmonoid ( A : aintdom ) : @subabmonoid ( ringmultabmonoid A ).
+Definition aintdomazerosubmonoid@{i j +} ( A : aintdom ) : @subabmonoid@{i j} ( ringmultabmonoid A ).
 Proof.
   intros. split with ( fun x : A => x # 0 ).
   split.

@@ -1966,7 +1966,7 @@ Close Scope rig_scope.
 
 Definition iscommring (X : setwith2binop) : UU := iscommringops (@op1 X) (@op2 X).
 
-Definition commring : UU := total2 (λ X : setwith2binop, iscommringops (@op1 X) (@op2 X)).
+Definition commring@{i j} : Type@{j} := total2 (λ X : setwith2binop, iscommringops (@op1 X) (@op2@{i j} X)).
 
 Definition commringpair (X : setwith2binop) (is : iscommringops (@op1 X) (@op2 X)) :
   ∑ X0 : setwith2binop, iscommringops op1 op2 :=
@@ -2167,7 +2167,7 @@ Close Scope rig_scope.
 
 Open Scope ring_scope.
 
-Definition commringfracop1int (X : commring) (S : @subabmonoid (ringmultabmonoid X)) :
+Definition commringfracop1int@{i j} (X : commring@{i j}) (S : @subabmonoid (ringmultabmonoid X)) :
   binop (X × S) := λ x1s1 x2s2 : dirprod X S,
                            @dirprodpair X S (((pr1 (pr2 x2s2)) * (pr1 x1s1)) +
                                              ((pr1 (pr2 x1s1)) * (pr1 x2s2)))
@@ -2176,8 +2176,10 @@ Definition commringfracop1int (X : commring) (S : @subabmonoid (ringmultabmonoid
 Definition commringfracop2int (X : commring) (S : @subabmonoid (ringmultabmonoid X)) :
   binop (X × S) := abmonoidfracopint (ringmultabmonoid X) S.
 
-Definition commringfracunel1int (X : commring) (S : @subabmonoid (ringmultabmonoid X)) :
-  dirprod X S := dirprodpair 0 (unel S).
+Definition commringfracunel1int@{i j} (X : commring@{i j}) (S : @subabmonoid@{i j} (ringmultabmonoid@{i j} X)) :
+  dirprod@{i} X S := dirprodpair@{i i i} 0 (unel@{i j} S).
+
+Definition commringfracunel1int_test@{i j|uu1<i+} (X : commring@{i j}) := commringfracunel1int X.
 
 Definition commringfracunel2int (X : commring) (S : @subabmonoid (ringmultabmonoid X)) :
   dirprod X S := dirprodpair 1 (unel S).
@@ -2251,10 +2253,12 @@ Proof.
 Defined.
 Opaque commringfracop1comp.
 
-Definition commringfracop1 (X : commring) (S : @subabmonoid (ringmultabmonoid X)) :
+Definition commringfracop1@{i j} (X : commring@{i j}) (S : @subabmonoid@{i j} (ringmultabmonoid X)) :
   binop (setquotinset (eqrelcommringfrac X S)) :=
   setquotfun2 (eqrelcommringfrac X S) (eqrelcommringfrac X S)
               (commringfracop1int X S) (commringfracop1comp X S).
+
+Definition commringfracop1_test@{i j|uu1 < i +} (X : commring@{i j}) := commringfracop1 X.
 
 Lemma commringfracl2 (X : commring) (x x' x'' s s' s'' : X) :
   paths ((s'' * ((s' * x) + (s * x'))) + ((s * s') * x''))
@@ -2326,6 +2330,8 @@ Opaque commringfraccomm1.
 Definition commringfracunel1 (X : commring) (S : @subabmonoid (ringmultabmonoid X)) :
   setquot (eqrelcommringfrac X S) := setquotpr (eqrelcommringfrac X S) (commringfracunel1int X S).
 
+Definition commringfracunel1_test@{i j|uu1<i+} (X : commring@{i j}) := commringfracunel1 X.
+
 Definition commringfracunel2 (X : commring) (S : @subabmonoid (ringmultabmonoid X)) :
   setquot (eqrelcommringfrac X S) := setquotpr (eqrelcommringfrac X S) (commringfracunel2int X S).
 
@@ -2383,8 +2389,8 @@ Proof.
 Defined.
 Opaque commringfracisinv1.
 
-Lemma commringfraclunit1 (X : commring) (S : @subabmonoid (ringmultabmonoid X)) :
-  islunit (commringfracop1 X S) (commringfracunel1 X S).
+Lemma commringfraclunit1@{i j} (X : commring) (S : @subabmonoid (ringmultabmonoid X)) :
+  islunit (commringfracop1 X S) (commringfracunel1@{i} X S).
 Proof.
   intros.
   set (R := eqrelcommringfrac X S). set (add1int := commringfracop1int X S).
@@ -2409,6 +2415,8 @@ Proof.
 Defined.
 Opaque commringfraclunit1.
 
+Definition commringfraclunit1_test@{i j|uu1<i+}  (X : commring@{i j}) := commringfraclunit1 X.
+
 Lemma commringfracrunit1 (X : commring) (S : @subabmonoid (ringmultabmonoid X)) :
   isrunit (commringfracop1 X S) (commringfracunel1 X S).
 Proof.
@@ -2423,6 +2431,8 @@ Definition commringfracunit1 (X : commring) (S : @subabmonoid (ringmultabmonoid 
   tpair _ (commringfracassoc1 X S)
         (tpair _ (commringfracunel1 X S)
                (dirprodpair (commringfraclunit1 X S) (commringfracrunit1 X S))).
+
+Definition commringfracrunit1_test@{i j|uu1<i+} (X:commring@{i j}) := commringfracrunit1 X.
 
 Definition commringfracop2 (X : commring) (S : @subabmonoid (ringmultabmonoid X)) :
   binop (setquotinset (eqrelcommringfrac X S)) := abmonoidfracop (ringmultabmonoid X) S.
@@ -2509,7 +2519,7 @@ Defined.
    properties.
 *)
 
-Definition commringfrac (X : commring) (S : @subabmonoid (ringmultabmonoid X)) : commring.
+Definition commringfrac@{i j} (X : commring@{i j}) (S : @subabmonoid@{i j} (ringmultabmonoid@{i j} X)) : commring@{i j}.
 Proof.
   intros.
   set (R := eqrelcommringfrac  X S).
@@ -2525,6 +2535,8 @@ Proof.
   - apply (commringfraccomm2 X S).
   - apply (dirprodpair (commringfracldistr X S) (commringfracrdistr X S)).
 Defined.
+
+Definition commringfrac_test@{i j|uu1<i} (X : commring@{i j}) := commringfrac X.
 
 Definition prcommringfrac (X : commring) (S : @subabmonoid (ringmultabmonoid X)) :
   X -> S -> commringfrac X S := λ x s, setquotpr _ (dirprodpair x s).

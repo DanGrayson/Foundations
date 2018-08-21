@@ -1305,7 +1305,7 @@ Defined.
 
 (** **** General definitions *)
 
-Definition setwithbinop : UU := total2 (λ X : hSet, binop X).
+Definition setwithbinop@{i j} : Type@{j} := total2 (λ X : hSet@{i j}, binop X).
 
 Definition setwithbinoppair (X : hSet) (opp : binop X) : setwithbinop :=
   tpair (λ X : hSet, binop X) X opp.

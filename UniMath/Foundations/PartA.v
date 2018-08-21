@@ -188,7 +188,7 @@ Definition uncurry {X : UU} {Y : X -> UU} {Z : (∑ x, Y x) -> UU}
 
 (** *** Definition of binary operation *)
 
-Definition binop (X : UU) : UU := X -> X -> X.
+Definition binop@{i} (X : Type@{i}) : Type@{i} := X -> X -> X.
 
 (** *** Iteration of an endomorphism *)
 
