@@ -404,7 +404,7 @@ Proof.
     + exact fginv.
     + refine (iscomprelrelfun_generated_binopeqrel_rev (fginv_binopfun X) _). unfold iscomprelrelfun.
       apply free_gr_hrel_univ.
-      * intros. apply pr2.
+      * intros. use pr2.
       * intro x. rewrite fginv_binopfun_homot. apply free_gr_hrel_in_rev.
   - apply mk_isinv.
     + refine (setquotunivprop' _ _ _).

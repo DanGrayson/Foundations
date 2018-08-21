@@ -77,7 +77,7 @@ Section Append.
     rewrite replace_dni_last.
     unfold append_vec; simpl.
     induction (natlehchoice4 i n (natlthtolths i n b)) as [p|p].
-    - simpl. apply maponpaths. apply isinjstntonat; simpl. reflexivity.
+    - simpl. apply maponpaths. use isinjstntonat; simpl. reflexivity.
     - simpl. destruct p. induction (isirreflnatlth i b).
   Defined.
 
@@ -101,14 +101,14 @@ Proof.
   - unfold funcomp; simpl.
     unfold append_vec. simpl.
     induction (natlehchoice4 i n b) as [q|q].
-    + simpl. apply maponpaths. apply isinjstntonat; simpl. reflexivity.
+    + simpl. apply maponpaths. use isinjstntonat; simpl. reflexivity.
     + induction q. contradicts p (isirreflnatlth i).
   - induction p.
     unfold append_vec; simpl.
     induction (natlehchoice4 i i b) as [r|r].
     * simpl. unfold funcomp; simpl. apply maponpaths.
-      apply isinjstntonat; simpl. reflexivity.
-    * simpl. apply maponpaths. apply isinjstntonat; simpl. reflexivity.
+      use isinjstntonat; simpl. reflexivity.
+    * simpl. apply maponpaths. use isinjstntonat; simpl. reflexivity.
 Defined.
 
 (** An induction principle for vectors: If a statement is true for the empty
@@ -153,7 +153,7 @@ Section Lemmas.
             {i j : stn n} : (stntonat _ i = stntonat _ j) -> vec i = vec j.
   Proof.
     intros ? ? ? ?.
-    apply maponpaths, isinjstntonat; assumption.
+    use maponpaths; use isinjstntonat; assumption.
   Defined.
 End Lemmas.
 

@@ -31,7 +31,7 @@ Proof.
   - apply impred. intro x.
     apply impred. intro m.
     apply impred. intro a.
-    apply (pr2 (A _)).
+    use (pr2 (A _)).
 Defined.
 
 (* Submodules *)

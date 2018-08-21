@@ -1108,7 +1108,7 @@ Proof.
   intro ae. destruct ae as [ a eq ].
   apply (invmaponpathsincl _ (iscanc a) _ _ eq).
   intro eq. apply hinhpr. split with (unel A). rewrite (runax X).
-  rewrite (runax X). apply eq. apply (isapropishinh _).
+  rewrite (runax X). apply eq. use isapropishinh.
   apply (setproperty X).
 Defined.
 

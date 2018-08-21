@@ -2620,7 +2620,7 @@ Proof.
   - intro eq. apply hinhpr. split with (unel S).
     rewrite (ringrunax2 X). rewrite (ringrunax2 X).
     apply eq.
-  - apply (isapropishinh _).
+  - use isapropishinh.
   - apply (setproperty X).
 Defined.
 Opaque weqhrelhrel0abmonoidfrac.

@@ -723,7 +723,7 @@ Proof. assert ( int : ∏ n m , isaprop ( hzgth n m -> hzgeh n ( m + 1 )  ) ) .
        intros x x' .  change ( R x x' -> ( neg ( R ( @op ( abmonoiddirprod (rigaddabmonoid natcommrig) (rigaddabmonoid natcommrig) ) x' ( dirprodpair 1%nat 0%nat ) ) x ) ) ) .
        unfold R . unfold abgrdiffrelint . simpl .
        apply ( @hinhuniv _  (hProppair ( neg ( ishinh_UU _ ) ) ( isapropneg _ ) ) ) .
-       intro t2 . simpl . unfold neg .  apply ( @hinhuniv _ ( hProppair _ isapropempty ) ) .
+       intro t2 . simpl . unfold neg .  refine (@hinhuniv _ hfalse _) .
        intro t2' .
        set ( x1 := pr1 x ) . set ( a1 := pr2 x ) . set ( x2 := pr1 x' ) .
        set ( a2 := pr2 x' ) . set ( c1 := pr1 t2 ) . assert ( r1 := pr2 t2 ) .

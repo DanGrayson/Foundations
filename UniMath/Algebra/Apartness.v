@@ -52,8 +52,8 @@ Proof.
   apply isapropdirprod.
   apply isapropisirrefl.
   apply isapropdirprod.
-  apply isapropissymm.
-  apply isapropiscotrans.
+  use isapropissymm.
+  use isapropiscotrans.
 Qed.
 
 Definition aprel (X : UU) := ∑ ap : hrel X, isaprel ap.

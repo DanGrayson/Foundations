@@ -2026,7 +2026,7 @@ Lemma iscomprelrelfun_generated_binopeqrel {X Y : setwithbinop} {R : hrel X} {S 
       (f : binopfun X Y) (H : iscomprelrelfun R S f) :
   iscomprelrelfun (generated_binopeqrel R) (generated_binopeqrel S) f.
 Proof.
-  intros x x' r. apply (r (pullback_binopeqrel f (generated_binopeqrel S))).
+  intros x x' r. use (r (pullback_binopeqrel f (generated_binopeqrel S))).
   intros x1 x2 r' S' s. use s. apply H. exact r'.
 Defined.
 
@@ -2035,7 +2035,7 @@ Lemma iscomprelrelfun_generated_binopeqrel_rev {X Y : setwithbinop} {R : hrel X}
       (f : binopfun X (setwithbinop_rev Y)) (H : iscomprelrelfun R S f) :
   iscomprelrelfun (generated_binopeqrel R) (generated_binopeqrel S) f.
 Proof.
-  intros x x' r. apply (r (pullback_binopeqrel_rev f (generated_binopeqrel S))).
+  intros x x' r. use (r (pullback_binopeqrel_rev f (generated_binopeqrel S))).
   intros x1 x2 r' S' s. use s. apply H. exact r'.
 Defined.
 
