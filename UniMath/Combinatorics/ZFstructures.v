@@ -121,6 +121,14 @@ Definition TRRG_root' (G : TRRGraph) := pr1 (pr2 (pr2 G)).
 
 Definition TRRG_root@{i j} (G : TRRGraph@{i j}) := pr1 (pr2 (pr2 G)).
 
+Section Foo3.
+  Universe i j.
+  Constraint uu1 < i.
+  Context (G : TRRGraph@{i j}).
+  Check (TRRG_root G).
+  Fail Check (TRRG_root' G).
+End Foo3.
+
 Definition TRRG_transitivity@{i j} (G : TRRGraph@{i j}) : istrans (TRRG_edgerel@{i j} G) := pr12 (pr222 G).
 
 Definition selfedge@{i j} (G : TRRGraph@{i j}) (x : pr1 G) : pr1 (pr2 G) x x :=
@@ -295,16 +303,16 @@ Definition total' {G : TRRGraph} (y z : pr1 G) : hProp :=
 Definition total@{i j} {G : TRRGraph@{i j}} (y z : pr1 G) : hProp :=
   hdisj@{uu1} (y ≤ z) (z ≤ y).
 
-Definition isatree@{i j +} (G : TRRGraph@{i j}) : hProp :=
-  ∀ (x : pr1 G) (y z : DownwardClosure x), antisymmetric@{i j i} (pr1 y) (pr1 z) ∧ total (pr1 y) (pr1 z).
-
-Section Foo3.
+Section Foo4.
   Universe i j.
   Constraint uu1 < i.
   Context (G : TRRGraph@{i j}).
-  Fail Check (TRRG_root' G).
+  Check (@total G).
   Fail Check (@total' G).
-End Foo3.
+End Foo4.
+
+Definition isatree@{i j +} (G : TRRGraph@{i j}) : hProp :=
+  ∀ (x : pr1 G) (y z : DownwardClosure x), antisymmetric@{i j i} (pr1 y) (pr1 z) ∧ total (pr1 y) (pr1 z).
 
 Definition Tree@{i j} : Type@{j} :=  ∑ G : TRRGraph@{i j}, isatree@{i j} G.
 

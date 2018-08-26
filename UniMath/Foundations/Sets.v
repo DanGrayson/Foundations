@@ -491,17 +491,6 @@ Defined.
 Definition hrel@{i} (X : Type@{i}) : Type@{i} := X -> X -> hProp.
 Identity Coercion idhrel : hrel >-> Funclass.
 
-(* Check hrel.                     (* hrel@{uu1} : forall _ : Type@{uu1}, Type@{uu1} -- ??? *) *)
-
-(*
-Section Foo2.
-  Universe j.
-  Constraint uu1 < j.
-  Context (X : Type@{j}).
-  Check (hrel X).
-End Foo2.
-*)
-
 Definition brel@{i} (X : Type@{i}) : Type@{i} := X -> X -> bool.
 Identity Coercion idbrel : brel >-> Funclass.
 
@@ -1663,23 +1652,16 @@ Proof.
     + exact (tax x1 X0 x2 (sax X0 x1 X1) X2).
 Defined.
 
-Section setquotl0.
-
-  Universe i.
-  (* Constraint uu1 < i.           (* without this constraint, we get uu1=i in setquotl0.  ???  *) *)
-
-  Lemma setquotl0@{} {X : Type@{i}} (R : eqrel X) (c : setquot R) (x : c) :
-    setquotpr@{i} R (pr1 x) = c.
-  Proof.
-    intros X R c x.
-    apply (invmaponpathsincl (pr1setquot R) (isinclpr1setquot R) (setquotpr R (pr1 x)) c).
-    apply funextsec; intro x0.
-    use hPropUnivalence.
-    - intro r. exact (eqax1 (pr2 c) (pr1 x) x0 r (pr2 x)).
-    - intro r. exact (eqax2 (pr2 c) (pr1 x) x0 (pr2 x) r).
-  Defined.
-
-End setquotl0.
+Lemma setquotl0 {X : Type} (R : eqrel X) (c : setquot R) (x : c) :
+  setquotpr R (pr1 x) = c.
+Proof.
+  intros X R c x.
+  apply (invmaponpathsincl (pr1setquot R) (isinclpr1setquot R) (setquotpr R (pr1 x)) c).
+  apply funextsec; intro x0.
+  use hPropUnivalence.
+  - intro r. exact (eqax1 (pr2 c) (pr1 x) x0 r (pr2 x)).
+  - intro r. exact (eqax2 (pr2 c) (pr1 x) x0 (pr2 x) r).
+Defined.
 
 Theorem issurjsetquotpr {X : UU} (R : eqrel X) : issurjective (setquotpr R).
 Proof.
@@ -1691,23 +1673,16 @@ Proof.
   - apply (eqax0 (pr2 c)).
 Defined.
 
-Section iscompsetquotpr.
-
-  Universe i.
-  (* Constraint uu1 < i. (* without this, we get uu1 = i from the next definition *) *)
-
-  Lemma iscompsetquotpr@{} {X : Type@{i}} (R : eqrel X) (x x' : X) (a : R x x') :
-    setquotpr R x = setquotpr@{i} R x'.
-  Proof.
-    intros. apply (invmaponpathsincl _ (isinclpr1setquot R)).
-    simpl. apply funextsec.
-    intro x0.
-    use hPropUnivalence.
-    intro r0. apply (eqreltrans R _ _ _ (eqrelsymm R _ _ a) r0).
-    intro x0'. apply (eqreltrans R _ _ _ a x0').
-  Defined.
-
-End iscompsetquotpr.
+Lemma iscompsetquotpr {X : Type} (R : eqrel X) (x x' : X) (a : R x x') :
+  setquotpr R x = setquotpr R x'.
+Proof.
+  intros. apply (invmaponpathsincl _ (isinclpr1setquot R)).
+  simpl. apply funextsec.
+  intro x0.
+  use hPropUnivalence.
+  intro r0. apply (eqreltrans R _ _ _ (eqrelsymm R _ _ a) r0).
+  intro x0'. apply (eqreltrans R _ _ _ a x0').
+Defined.
 
 (** *** Universal property of [seqtquot R] for functions to sets satisfying compatibility condition [iscomprelfun] *)
 

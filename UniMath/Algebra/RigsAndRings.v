@@ -2173,11 +2173,20 @@ Definition commringfracop1int@{i j} (X : commring@{i j}) (S : @subabmonoid (ring
                                              ((pr1 (pr2 x1s1)) * (pr1 x2s2)))
                                         (@op S (pr2 x1s1) (pr2 x2s2)).
 
-Definition commringfracop2int (X : commring) (S : @subabmonoid (ringmultabmonoid X)) :
+Definition commringfracop2int@{i j} (X : commring@{i j}) (S : @subabmonoid (ringmultabmonoid X)) :
   binop (X × S) := abmonoidfracopint (ringmultabmonoid X) S.
 
 Definition commringfracunel1int@{i j} (X : commring@{i j}) (S : @subabmonoid@{i j} (ringmultabmonoid@{i j} X)) :
-  dirprod@{i} X S := dirprodpair@{i i i} 0 (unel@{i j} S).
+  dirprod@{i} X S.
+Proof.
+  intros.
+  refine (dirprodpair@{i i i} _ _).
+  { exact 0. }
+  { Show Universes.
+    exact (unel@{i j} S).
+    Show Universes.             (* ??? *)
+    }
+Defined.
 
 Definition commringfracunel1int_test@{i j|uu1<i+} (X : commring@{i j}) := commringfracunel1int X.
 
@@ -2278,7 +2287,7 @@ Proof.
 Defined.
 Opaque commringfracl2.
 
-Lemma commringfracassoc1 (X : commring) (S : @subabmonoid (ringmultabmonoid X)) :
+Lemma commringfracassoc1@{i j} (X : commring@{i j}) (S : @subabmonoid (ringmultabmonoid X)) :
   isassoc (commringfracop1 X S).
 Proof.
   intros.
@@ -2303,7 +2312,7 @@ Proof.
 Defined.
 Opaque commringfracassoc1.
 
-Lemma commringfraccomm1 (X : commring) (S : @subabmonoid (ringmultabmonoid X)) :
+Lemma commringfraccomm1@{i j} (X : commring@{i j}) (S : @subabmonoid (ringmultabmonoid X)) :
   iscomm (commringfracop1 X S).
 Proof.
   intros.
@@ -2327,7 +2336,7 @@ Proof.
 Defined.
 Opaque commringfraccomm1.
 
-Definition commringfracunel1 (X : commring) (S : @subabmonoid (ringmultabmonoid X)) :
+Definition commringfracunel1@{i j} (X : commring@{i j}) (S : @subabmonoid (ringmultabmonoid X)) :
   setquot (eqrelcommringfrac X S) := setquotpr (eqrelcommringfrac X S) (commringfracunel1int X S).
 
 Definition commringfracunel1_test@{i j|uu1<i+} (X : commring@{i j}) := commringfracunel1 X.
@@ -2390,7 +2399,7 @@ Defined.
 Opaque commringfracisinv1.
 
 Lemma commringfraclunit1@{i j} (X : commring) (S : @subabmonoid (ringmultabmonoid X)) :
-  islunit (commringfracop1 X S) (commringfracunel1@{i} X S).
+  islunit (commringfracop1 X S) (commringfracunel1@{i j} X S).
 Proof.
   intros.
   set (R := eqrelcommringfrac X S). set (add1int := commringfracop1int X S).
@@ -2417,7 +2426,7 @@ Opaque commringfraclunit1.
 
 Definition commringfraclunit1_test@{i j|uu1<i+}  (X : commring@{i j}) := commringfraclunit1 X.
 
-Lemma commringfracrunit1 (X : commring) (S : @subabmonoid (ringmultabmonoid X)) :
+Lemma commringfracrunit1@{i j} (X : commring@{i j}) (S : @subabmonoid (ringmultabmonoid X)) :
   isrunit (commringfracop1 X S) (commringfracunel1 X S).
 Proof.
   intros.
@@ -2426,7 +2435,7 @@ Proof.
 Defined.
 Opaque commringfracrunit1.
 
-Definition commringfracunit1 (X : commring) (S : @subabmonoid (ringmultabmonoid X)) :
+Definition commringfracunit1@{i j} (X : commring@{i j}) (S : @subabmonoid (ringmultabmonoid X)) :
   ismonoidop (commringfracop1 X S) :=
   tpair _ (commringfracassoc1 X S)
         (tpair _ (commringfracunel1 X S)
@@ -2434,15 +2443,15 @@ Definition commringfracunit1 (X : commring) (S : @subabmonoid (ringmultabmonoid 
 
 Definition commringfracrunit1_test@{i j|uu1<i+} (X:commring@{i j}) := commringfracrunit1 X.
 
-Definition commringfracop2 (X : commring) (S : @subabmonoid (ringmultabmonoid X)) :
+Definition commringfracop2@{i j} (X : commring@{i j}) (S : @subabmonoid (ringmultabmonoid X)) :
   binop (setquotinset (eqrelcommringfrac X S)) := abmonoidfracop (ringmultabmonoid X) S.
 
-Lemma commringfraccomm2 (X : commring) (S : @subabmonoid (ringmultabmonoid X)) :
+Lemma commringfraccomm2@{i j} (X : commring@{i j}) (S : @subabmonoid (ringmultabmonoid X)) :
   iscomm (commringfracop2 X S).
 Proof. intros. apply (commax (abmonoidfrac (ringmultabmonoid X) S)). Defined.
 Opaque commringfraccomm2.
-
-Lemma commringfracldistr (X : commring) (S : @subabmonoid (ringmultabmonoid X)) :
+---
+Lemma commringfracldistr@{i j} (X : commring@{i j}) (S : @subabmonoid (ringmultabmonoid X)) :
   isldistr (commringfracop1 X S) (commringfracop2 X S).
 Proof.
   intros.
@@ -2500,14 +2509,14 @@ Proof.
 Defined.
 Opaque commringfracldistr.
 
-Lemma commringfracrdistr (X : commring) (S : @subabmonoid (ringmultabmonoid X)) :
+Lemma commringfracrdistr@{i j} (X : commring@{i j}) (S : @subabmonoid (ringmultabmonoid X)) :
   isrdistr (commringfracop1 X S) (commringfracop2 X S).
 Proof.
   intros.
   apply (weqldistrrdistr (commringfracop1 X S) (commringfracop2 X S)
                          (commringfraccomm2 X S) (commringfracldistr X S)).
 Defined.
-
+---
 (** Notes :
 
 1. Construction of the addition on the multiplicative monoid of fractions

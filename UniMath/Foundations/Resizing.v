@@ -9,18 +9,8 @@ Require Export UniMath.Foundations.PartB.
 
 (** This file is the only file in UniMath that is compiled with type-in-type. *)
 
-Section A.
+(* this is related to the rule Voevodsky calls RR1: *)
+Definition ResizeProp@{i j|i <j} (T : Type@{j}) : isaprop T -> Type@{i} := λ _, T.
 
-  Universe i j.
-
-  (* If we don't impose this constraint, Coq generates the constraint j <= i for us, which excludes
-     the cases we want. *)
-  Constraint i < j.
-
-  (* this is related to the rule Voevodsky calls RR1: *)
-  Definition ResizeProp@{} (T : Type@{j}) : isaprop T -> Type@{i} := λ _, T.
-
-  (* this is related to the rule Voevodsky calls RR5: *)
-  Definition ResizeType@{} {S : Type@{i}} (T : Type@{j}) : weq@{j} S T -> Type@{i} := λ _, T.
-
-End A.
+(* this is related to the rule Voevodsky calls RR5: *)
+Definition ResizeType@{i j|i <j} {S : Type@{i}} (T : Type@{j}) : weq@{j} S T -> Type@{i} := λ _, T.

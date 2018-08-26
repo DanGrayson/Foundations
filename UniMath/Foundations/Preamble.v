@@ -30,6 +30,7 @@ Notation UU1 := Type@{uu1} (only parsing).
 (* for debugging, temporarily: *)
 Global Set Printing Universes.
 Global Set Printing Coercions.
+Global Set Printing All.
 Global Unset Printing Notations.
 
 (** The empty type *)

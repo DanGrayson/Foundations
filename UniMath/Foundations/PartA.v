@@ -209,7 +209,7 @@ Definition adjev2 {X Y : UU} (phi : ((X -> Y) -> Y) -> Y) : X -> Y :=
 
 (** *** Pairwise direct products *)
 
-Definition dirprod@{i} (X Y : Type@{i}) : Type@{i} := ∑ x:X, Y.
+Definition dirprod@{i +} (X Y : Type@{i}) : Type@{i} := ∑ x:X, Y.
 
 Notation "A × B" := (dirprod A B) : type_scope.
 

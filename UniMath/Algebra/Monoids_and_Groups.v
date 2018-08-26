@@ -382,7 +382,7 @@ Proof.
   - apply (pr2 (A (unel X))).
 Defined.
 
-Definition submonoid@{i j} (X : monoid) : Type@{j} := total2 (λ A : hsubtype X, issubmonoid@{i j} A).
+Definition submonoid@{i j} (X : monoid@{i j}) : Type@{i} := total2@{i} (λ A : hsubtype X, issubmonoid@{i j} A).
 
 Definition submonoidpair {X : monoid} :
   ∏ (t : hsubtype X), (λ A : hsubtype X, issubmonoid A) t → ∑ A : hsubtype X, issubmonoid A :=
@@ -415,7 +415,7 @@ Definition submonoidtosubsetswithbinop@{i j} (X : monoid@{i j}) : submonoid X ->
   λ A : _, subsetswithbinoppair (pr1 A) (pr1 (pr2 A)).
 Coercion submonoidtosubsetswithbinop : submonoid >-> subsetswithbinop.
 
-Lemma ismonoidcarrier {X : monoid} (A : submonoid X) : ismonoidop (@op A).
+Lemma ismonoidcarrier@{i j} {X : monoid@{i j}} (A : submonoid X) : ismonoidop (@op A).
 Proof.
   split.
   - intros a a' a''. apply (invmaponpathsincl _ (isinclpr1carrier A)).
@@ -428,9 +428,11 @@ Proof.
       simpl. apply (runax X).
 Defined.
 
-Definition carrierofsubmonoid {X : monoid} (A : submonoid X) : monoid.
+Definition carrierofsubmonoid@{i j} {X : monoid@{i j}} (A : submonoid X) : monoid@{i j}.
 Proof. split with A. apply ismonoidcarrier. Defined.
 Coercion carrierofsubmonoid : submonoid >-> monoid.
+
+Definition carrierofsubmonoid_test@{i j|uu1 < i +} (X : monoid@{i j}) := @carrierofsubmonoid X.
 
 Lemma intersection_submonoid :
   forall {X : monoid} {I : UU} (S : I -> hsubtype X)
@@ -847,7 +849,7 @@ Opaque abmonoid_univalence.
 Definition subabmonoid@{i j} (X : abmonoid@{i j}) := submonoid X.
 Identity Coercion id_subabmonoid : subabmonoid >-> submonoid.
 
-Lemma iscommcarrier {X : abmonoid} (A : submonoid X) : iscomm (@op A).
+Lemma iscommcarrier@{i j} {X : abmonoid@{i j}} (A : submonoid X) : iscomm (@op A).
 Proof.
   intros a a'.
   apply (invmaponpathsincl _ (isinclpr1carrier A)).
@@ -855,10 +857,10 @@ Proof.
 Defined.
 Opaque iscommcarrier.
 
-Definition isabmonoidcarrier {X : abmonoid} (A : submonoid X) :
+Definition isabmonoidcarrier@{i j} {X : abmonoid@{i j}} (A : submonoid X) :
   isabmonoidop (@op A) := dirprodpair (ismonoidcarrier A) (iscommcarrier A).
 
-Definition carrierofsubabmonoid {X : abmonoid} (A : subabmonoid X) : abmonoid.
+Definition carrierofsubabmonoid@{i j} {X : abmonoid@{i j}} (A : subabmonoid X) : abmonoid@{i j}.
 Proof.
   unfold subabmonoid in A. split with A. apply isabmonoidcarrier.
 Defined.
@@ -869,7 +871,7 @@ submonoid_incl A.
 
 (** **** Quotient objects *)
 
-Lemma iscommquot {X : abmonoid} (R : binopeqrel X) : iscomm (@op (setwithbinopquot R)).
+Lemma iscommquot@{i j} {X : abmonoid@{i j}} (R : binopeqrel X) : iscomm (@op (setwithbinopquot R)).
 Proof.
   intros.
   set (X0 := setwithbinopquot R).
@@ -880,12 +882,17 @@ Proof.
 Defined.
 Opaque iscommquot.
 
-Definition isabmonoidquot {X : abmonoid} (R : binopeqrel X) :
+Definition iscommquot_test@{i j|uu1<i+} {X : abmonoid@{i j}} := @iscommquot X.
+
+Definition isabmonoidquot@{i j} {X : abmonoid@{i j}} (R : binopeqrel X) :
   isabmonoidop (@op (setwithbinopquot R)) := dirprodpair (ismonoidquot R) (iscommquot R).
 
-Definition abmonoidquot {X : abmonoid} (R : binopeqrel X) : abmonoid.
+Definition isabmonoidquot_test@{i j|uu1<i+} {X : abmonoid@{i j}} := @isabmonoidquot X.
+
+Definition abmonoidquot@{i j} {X : abmonoid@{i j}} (R : binopeqrel X) : abmonoid@{i j}.
 Proof. split with (setwithbinopquot R). apply isabmonoidquot. Defined.
 
+Definition abmonoidquot@{i j|uu1<i+} {X : abmonoid@{i j}} := @abmonoidquot X.
 
 (** **** Direct products *)
 
@@ -913,7 +920,7 @@ of the [abmonoid] operations but does not use the unit element. *)
 
 Open Scope addmonoid_scope.
 
-Definition abmonoidfracopint (X : abmonoid) (A : submonoid X) :
+Definition abmonoidfracopint@{i j} (X : abmonoid@{i j}) (A : submonoid X) :
   binop (X × A) := @op (setwithbinopdirprod X A).
 
 Definition hrelabmonoidfrac@{i j} (X : abmonoid@{i j}) (A : submonoid X) : hrel (setwithbinopdirprod X A) :=
@@ -966,7 +973,7 @@ Opaque iseqrelabmonoidfrac.
 Definition eqrelabmonoidfrac@{i j} (X : abmonoid@{i j}) (A : submonoid X) : eqrel (setwithbinopdirprod X A) :=
   eqrelpair (hrelabmonoidfrac@{i j} X A) (iseqrelabmonoidfrac X A).
 
-Lemma isbinophrelabmonoidfrac (X : abmonoid) (A : submonoid X) :
+Lemma isbinophrelabmonoidfrac@{i j +} (X : abmonoid@{i j}) (A : submonoid X) :
   @isbinophrel (setwithbinopdirprod X A) (eqrelabmonoidfrac X A).
 Proof.
   intros.
@@ -990,17 +997,21 @@ Proof.
 Defined.
 Opaque isbinophrelabmonoidfrac.
 
-Definition abmonoidfracop (X : abmonoid) (A : submonoid X) :
+Definition abmonoidfracop@{i j} (X : abmonoid@{i j}) (A : submonoid X) :
   binop (setquot (hrelabmonoidfrac X A)) :=
   setquotfun2 (hrelabmonoidfrac X A) (eqrelabmonoidfrac X A) (abmonoidfracopint X A)
               ((iscompbinoptransrel _ (eqreltrans _) (isbinophrelabmonoidfrac X A))).
 
-Definition binopeqrelabmonoidfrac (X : abmonoid) (A : subabmonoid X) :
-  binopeqrel (abmonoiddirprod X A) :=
+Definition binopeqrelabmonoidfrac@{i j} (X : abmonoid@{i j}) (A : subabmonoid@{i j} X) :
+   binopeqrel@{i j} (abmonoiddirprod@{i j} X A) :=
   @binopeqrelpair (setwithbinopdirprod X A) (eqrelabmonoidfrac X A) (isbinophrelabmonoidfrac X A).
 
-Definition abmonoidfrac (X : abmonoid) (A : submonoid X) : abmonoid :=
+Definition binopeqrelabmonoidfrac_test@{i j|uu1<i +} (X : abmonoid@{i j}) := binopeqrelabmonoidfrac X.
+
+Definition abmonoidfrac@{i j} (X : abmonoid@{i j}) (A : submonoid X) : abmonoid :=
   abmonoidquot (binopeqrelabmonoidfrac X A).
+
+Definition abmonoidfrac_test@{i j|uu1<i+} (X : abmonoid@{i j}) := abmonoidfrac X.
 
 Definition prabmonoidfrac (X : abmonoid) (A : submonoid X) : X -> A -> abmonoidfrac X A :=
   fun (x : X) (a : A) => setquotpr (eqrelabmonoidfrac X A) (dirprodpair x a).
