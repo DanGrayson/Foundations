@@ -24,6 +24,11 @@ Definition hom (C:precategory_data) : ob C -> ob C -> UU :=
 Definition Hom (C : category) : ob C -> ob C -> hSet :=
   λ c c', hSetpair (c --> c') (homset_property C _ _ ).
 
+Delimit Scope catset with catset.
+Notation "a --> b" := (Hom _ a b) : catset.
+Notation "f = g" := (eqset f g) : catset.
+Notation "f ∘ g" := (compose g f : Hom _ _ _) : catset.
+
 Ltac eqn_logic :=
   abstract (
       repeat (

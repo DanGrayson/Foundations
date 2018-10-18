@@ -43,7 +43,7 @@ Definition Representation {C:category} (X:[C^op,SET]) : UU
 Definition isRepresentable {C:category} (X:[C^op,SET]) := ∥ Representation X ∥.
 
 Lemma isaprop_Representation {C: univalent_category} (X:[C^op,SET]) :
-  isaprop (@Representation C X).
+  isaprop (Representation X).
 Proof.
 
 Abort.
@@ -141,6 +141,16 @@ Proof.
   apply maponpaths.
   apply universalMapProperty.
 Qed.
+
+
+(** uniqueness of representations up to isomorphism *)
+
+Lemma uniqueRepresentation {C: univalent_category} (X:[C^op,SET]) (r r' : Representation X) :
+  ∃! i : iso (universalObject r) (universalObject r'),
+         universalElement r = universalElement r' ⟲ i.
+Proof.
+
+Abort.
 
 (*  *)
 
@@ -622,29 +632,26 @@ Definition po_eqn {C:category} {a b c:C} {f:a-->c} {g:a-->c} (po : Pushout f g) 
 
 (** kernels and cokernels *)
 
-Definition Annihilator (C:category) (zero:ZeroMaps C) {c d:C} (f:c --> d) :
+Local Open Scope set.
+Local Open Scope catset.
+
+Definition Annihilator (C:category) (zero:ZeroMaps C) {c d:C} (f:Hom C c d) :
   C^op ⟶ SET.
 Proof.
-  unshelve refine (_,,_).
-  { unshelve refine (_,,_).
-    { intro b. exists (∑ g:Hom C b c, f ∘ g = pr1 zero b d).
-      abstract (apply isaset_total2; [ apply setproperty |
-      intro g; apply isasetaprop; apply homset_property ]) using _L_. }
-    { intros a b p ge; simpl.
-      exists (pr1 ge ∘ opp_mor p).
-      { abstract (
-            unshelve refine (! assoc _ _ _ @ _); rewrite (pr2 ge);
-            apply (pr2 (pr2 zero) _ _ _ _)) using _M_. } } }
-  { abstract (split;
-    [ intros x; apply funextsec; intros [r rf0];
-      apply subtypeEquality;
-      [ intro; apply homset_property
-      | simpl; unfold opp_mor; apply id_left ]
-    | intros w x y t u; apply funextsec; intros [r rf0];
-      apply subtypeEquality;
-      [ intro; apply homset_property
-      | simpl; unfold opp_mor; apply pathsinv0, assoc ] ]) using _N_. }
+  use tpair.
+  { exists (λ b, ∑ g:Hom C b c, f ∘ g = pr1 zero b d).
+    intros a b p [g e]. exists (g ∘ opp_mor p).
+    refine (! assoc _ _ _ @ _). induction (!e); clear e.
+    exact (pr2 (pr2 zero) d a b (opp_mor p)). }
+  { cbn beta. split.
+    - intros x; apply funextsec; intros [r rf0].
+      apply subtypeEquality_prop. cbn. apply id_left.
+    - intros w x y t u. apply funextsec. intros [r e].
+      apply subtypeEquality_prop. cbn. apply pathsinv0, assoc. }
 Defined.
+
+Close Scope set.
+Close Scope catset.
 
 Definition Kernel {C:category} (zero:ZeroMaps C) {c d:ob C} (f:c --> d) :=
   Representation (Annihilator C zero f).
