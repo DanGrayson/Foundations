@@ -1896,56 +1896,7 @@ Defined.
 
 Definition setwithbinopquot_test@{i j|uu1<i+} {X : setwithbinop@{i j}} := @setwithbinopquot X.
 
-setwithbinopquot@{i j} =
-fun (X : setwithbinop@{i j}) (R : binopeqrel@{i j} X) =>
-@tpair@{j} hSet@{i j} (fun X0 : hSet@{i j} => binop@{i} (pr1hSet@{i j} X0))
-  (@setquotinset@{uu1 i j} (pr1hSet@{uu1 j} (pr1setwithbinop@{uu1 j} X))
-     (pr1eqrel@{uu1} (pr1hSet@{uu1 j} (pr1setwithbinop@{uu1 j} X)) (pr1binopeqrel@{j} X R)))
-  (let qt : Type@{uu1} :=
-     @setquot@{uu1} (pr1hSet@{uu1 j} (pr1setwithbinop@{uu1 j} X))
-       (pr1eqrel@{uu1} (pr1hSet@{uu1 j} (pr1setwithbinop@{uu1 j} X))
-          (pr1binopeqrel@{j} X R)) in
-   let qtset : hSet@{i j} :=
-     @setquotinset@{uu1 i j} (pr1hSet@{uu1 j} (pr1setwithbinop@{uu1 j} X))
-       (pr1eqrel@{uu1} (pr1hSet@{uu1 j} (pr1setwithbinop@{uu1 j} X))
-          (pr1binopeqrel@{j} X R)) in
-   let iscomp :
-     @iscomprelrelfun2@{uu1 uu1 uu1 uu1 uu1} (pr1hSet@{uu1 j} (pr1setwithbinop@{uu1 j} X))
-       (pr1hSet@{uu1 j} (pr1setwithbinop@{uu1 j} X))
-       (pr1eqrel@{uu1} (pr1hSet@{uu1 j} (pr1setwithbinop@{uu1 j} X))
-          (pr1binopeqrel@{j} X R))
-       (pr1eqrel@{uu1} (pr1hSet@{uu1 j} (pr1setwithbinop@{uu1 j} X))
-          (pr1binopeqrel@{j} X R)) (@op@{uu1 j} X) :=
-     @iscompbinoptransrel@{uu1 j} X
-       (pr1eqrel@{uu1} (pr1hSet@{uu1 j} (pr1setwithbinop@{uu1 j} X))
-          (pr1binopeqrel@{j} X R))
-       (@eqreltrans@{uu1 uu1} (pr1hSet@{uu1 j} (pr1setwithbinop@{uu1 j} X))
-          (pr1binopeqrel@{j} X R)) R.(pr2) in
-   let qtmlt :
-     forall
-       (_ : @setquot@{uu1} (pr1hSet@{uu1 j} (pr1setwithbinop@{uu1 j} X))
-              (pr1eqrel@{uu1} (pr1hSet@{uu1 j} (pr1setwithbinop@{uu1 j} X))
-                 (pr1binopeqrel@{j} X R)))
-       (_ : @setquot@{uu1} (pr1hSet@{uu1 j} (pr1setwithbinop@{uu1 j} X))
-              (pr1eqrel@{uu1} (pr1hSet@{uu1 j} (pr1setwithbinop@{uu1 j} X))
-                 (pr1binopeqrel@{j} X R))),
-     @setquot@{uu1} (pr1hSet@{uu1 j} (pr1setwithbinop@{uu1 j} X))
-       (pr1eqrel@{uu1} (pr1hSet@{uu1 j} (pr1setwithbinop@{uu1 j} X))
-          (pr1binopeqrel@{j} X R)) :=
-     @setquotfun2@{uu1 uu1 j} (pr1hSet@{uu1 j} (pr1setwithbinop@{uu1 j} X))
-       (pr1hSet@{uu1 j} (pr1setwithbinop@{uu1 j} X))
-       (pr1eqrel@{uu1} (pr1hSet@{uu1 j} (pr1setwithbinop@{uu1 j} X))
-          (pr1binopeqrel@{j} X R)) (pr1binopeqrel@{j} X R) (@op@{uu1 j} X) iscomp in
-   (qtmlt
-    :
-    binop@{i}
-      (@setquot@{i} (pr1hSet@{uu1 j} (pr1setwithbinop@{uu1 j} X))
-         (pr1eqrel@{uu1} (pr1hSet@{uu1 j} (pr1setwithbinop@{uu1 j} X))
-            (pr1binopeqrel@{j} X R))))
-   :
-   binop@{i} (pr1hSet@{i j} qtset))
-     : forall (X : setwithbinop@{i j}) (_ : binopeqrel@{i j} X), setwithbinop@{i j}
-
+-- got to here --
 
 Definition ispartbinophrel {X : setwithbinop} (S : hsubtype X) (R : hrel X) : UU :=
   dirprod (∏ a b c : X, S c -> R a b -> R (op c a) (op c b))
