@@ -165,6 +165,8 @@ Proof.
     apply (@id_right (functor_precategory B C hs)).
   - apply (invmap (LModule_Mor_equiv hs _ _ )).
     apply (@assoc (functor_precategory B C hs)).
+  - apply (invmap (LModule_Mor_equiv hs _ _ )).
+    apply (@assoc' (functor_precategory B C hs)).
 Qed.
 
 Definition precategory_LModule (C : category) : precategory

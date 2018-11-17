@@ -21,3 +21,5 @@
 /COQC.log
 /.*.okay
 .coq_makefile_output.local
+.vscode
+_CoqProject
