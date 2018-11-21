@@ -51,6 +51,7 @@ Local Arguments ToBinDirectSum {_ _ _} _ {_}.
 Local Arguments isBinDirectSum {_ _ _ _}.
 
 Require Import UniMath.CategoryTheory.ExactCategories.ExactCategories.
+Require Import UniMath.CategoryTheory.ExactCategories.AdditiveCategories.
 
 Goal ∏ (C:precategory) (a b:C) (f: a --> b), isMonic (C:=C) f = isEpi (C:=C^op) f.
   reflexivity.

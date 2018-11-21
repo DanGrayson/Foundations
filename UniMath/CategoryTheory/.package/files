@@ -89,6 +89,7 @@ category_binops.v
 AbelianToAdditive.v
 Morphisms.v
 ExactCategories/ExactCategories.v
+ExactCategories/AdditiveCategories.v
 ExactCategories/Tests.v
 ShortExactSequences.v
 AdditiveFunctors.v

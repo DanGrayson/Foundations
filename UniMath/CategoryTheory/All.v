@@ -90,6 +90,7 @@ Require Export UniMath.CategoryTheory.category_binops.
 Require Export UniMath.CategoryTheory.AbelianToAdditive.
 Require Export UniMath.CategoryTheory.Morphisms.
 Require Export UniMath.CategoryTheory.ExactCategories.ExactCategories.
+Require Export UniMath.CategoryTheory.ExactCategories.AdditiveCategories.
 Require Export UniMath.CategoryTheory.ExactCategories.Tests.
 Require Export UniMath.CategoryTheory.ShortExactSequences.
 Require Export UniMath.CategoryTheory.AdditiveFunctors.
@@ -164,7 +165,9 @@ Require Export UniMath.CategoryTheory.Bicategories.bicategory_laws_2.
 Require Export UniMath.CategoryTheory.Bicategories.bicategory_laws.
 Require Export UniMath.CategoryTheory.Bicategories.PseudoFunctor.
 Require Export UniMath.CategoryTheory.Bicategories.Univalence.
+Require Export UniMath.CategoryTheory.Bicategories.transport_laws.
 Require Export UniMath.CategoryTheory.Bicategories.equiv_to_adjequiv.
+Require Export UniMath.CategoryTheory.Bicategories.adjoint_unique.
 Require Export UniMath.CategoryTheory.Bicategories.DispBicat.
 Require Export UniMath.CategoryTheory.Bicategories.BicatOfCats.
 Require Export UniMath.CategoryTheory.Bicategories.DispBicatOfDispCats.
