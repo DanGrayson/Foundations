@@ -228,15 +228,15 @@ End Pullbacks.
 Local Open Scope abgrcat.
 
 (* This exactly duplicates definitions upstream, but Import doesn't get the ones overridden,
-   which are useful (mysteriously) for printing: *)
-Local Notation "0"     := (unel (grtomonoid (abgrtogr _))) : abgrcat.
-Local Notation "0"     := (unel (grtomonoid (abgrtogr (to_abgr _ _)))) : abgrcat.
-Local Notation "f + g" := (@op (pr1monoid (grtomonoid (abgrtogr _))) f g) : abgrcat.
-Local Notation "f + g" := (@op (pr1monoid (grtomonoid (abgrtogr (to_abgr _ _)))) f g) : abgrcat.
-Local Notation "  - g" := (@grinv (abgrtogr _) g) : abgrcat.
-Local Notation "  - g" := (@grinv (abgrtogr (to_abgr _ _)) g) : abgrcat.
-Local Notation "f - g" := (@op (pr1monoid (grtomonoid (abgrtogr _))) f (@grinv (abgrtogr (to_abgr _ _)) g)) : abgrcat.
-Local Notation "f - g" := (@op (pr1monoid (grtomonoid (abgrtogr (to_abgr _ _)))) f (@grinv (abgrtogr (to_abgr _ _)) g)) : abgrcat.
+   which are useful (mysteriously) for printing.  Or maybe not... *)
+(* Local Notation "0"     := (unel (grtomonoid (abgrtogr _))) : abgrcat. *)
+(* Local Notation "0"     := (unel (grtomonoid (abgrtogr (to_abgr _ _)))) : abgrcat. *)
+(* Local Notation "f + g" := (@op (pr1monoid (grtomonoid (abgrtogr _))) f g) : abgrcat. *)
+(* Local Notation "f + g" := (@op (pr1monoid (grtomonoid (abgrtogr (to_abgr _ _)))) f g) : abgrcat. *)
+(* Local Notation "  - g" := (@grinv (abgrtogr _) g) : abgrcat. *)
+(* Local Notation "  - g" := (@grinv (abgrtogr (to_abgr _ _)) g) : abgrcat. *)
+(* Local Notation "f - g" := (@op (pr1monoid (grtomonoid (abgrtogr _))) f (@grinv (abgrtogr (to_abgr _ _)) g)) : abgrcat. *)
+(* Local Notation "f - g" := (@op (pr1monoid (grtomonoid (abgrtogr (to_abgr _ _)))) f (@grinv (abgrtogr (to_abgr _ _)) g)) : abgrcat. *)
 
 Section PreAdditive.
   (** Reprove some standard facts in additive categories with the 0 map (the zero element of the
