@@ -175,6 +175,7 @@ The packages and files are listed here in logical order: each file depends only 
    - [Morphisms.v](CategoryTheory/Morphisms.v)
    - [ExactCategories/ExactCategories.v](CategoryTheory/ExactCategories/ExactCategories.v)
    - [ExactCategories/AdditiveCategories.v](CategoryTheory/ExactCategories/AdditiveCategories.v)
+   - [ExactCategories/AbelianCategories.v](CategoryTheory/ExactCategories/AbelianCategories.v)
    - [ExactCategories/Tests.v](CategoryTheory/ExactCategories/Tests.v)
    - [ShortExactSequences.v](CategoryTheory/ShortExactSequences.v)
    - [AdditiveFunctors.v](CategoryTheory/AdditiveFunctors.v)

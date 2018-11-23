@@ -91,6 +91,7 @@ Require Export UniMath.CategoryTheory.AbelianToAdditive.
 Require Export UniMath.CategoryTheory.Morphisms.
 Require Export UniMath.CategoryTheory.ExactCategories.ExactCategories.
 Require Export UniMath.CategoryTheory.ExactCategories.AdditiveCategories.
+Require Export UniMath.CategoryTheory.ExactCategories.AbelianCategories.
 Require Export UniMath.CategoryTheory.ExactCategories.Tests.
 Require Export UniMath.CategoryTheory.ShortExactSequences.
 Require Export UniMath.CategoryTheory.AdditiveFunctors.

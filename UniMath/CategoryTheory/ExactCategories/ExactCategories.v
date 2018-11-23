@@ -285,6 +285,8 @@ Section PreAdditive.
     f · g = 0 ∧ ∀ (w : M) (h : w --> y), h · g = 0 ⇒ ∃! φ : w --> x, φ · f = h.
   Definition hasKernel {M:PreAdditive} {y z : M} (g : y --> z) : hProp :=
     ∃ x (f:x-->y), isKernel' f g.
+  Definition isAKernel {M:PreAdditive} {x y : M} (f : x --> y) : hProp :=
+    ∃ (z:M) (g:y-->z), isKernel' f g.
   Lemma isKernel_iff {M:PreAdditive} {x y z : M} (Z:Zero M) (f : x --> y) (g : y --> z) :
     isKernel' f g <-> ∑ e : f · g = ZeroArrow Z x z, isKernel Z f g e.
   Proof.
@@ -308,6 +310,8 @@ Section PreAdditive.
     f · g = 0 ∧ ∀ (w : M) (h : y --> w), f · h = 0 ⇒ ∃! φ : z --> w, g · φ = h.
   Definition hasCokernel {M:PreAdditive} {x y : M} (f : x --> y) : hProp :=
     ∃ z (g:y-->z), isCokernel' f g.
+  Definition isACokernel {M:PreAdditive} {y z : M} (g : y --> z) : hProp :=
+    ∃ (x:M) (f:x-->y), isCokernel' f g.
   Lemma isCokernel_iff {M:PreAdditive} {x y z : M} (Z:Zero M) (f : x <-- y) (g : y <-- z) :
     isCokernel' g f <-> ∑ e : f ∘ g = ZeroArrow Z z x, isCokernel Z g f e.
   Proof.
