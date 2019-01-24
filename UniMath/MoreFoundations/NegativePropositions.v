@@ -289,7 +289,7 @@ Theorem isweqrecompl' (X : UU) (x : X) (is : isisolated X x) :
   isweq (recompl _ x).
 Proof.
   (* alternative proof, spoils a computation if used in [weqrecompl], so unused *)
-  intros. set (neq_x := λ y, make_neqProp x y).
+  set (neq_x := λ y, make_neqProp x y).
   apply (isweqhomot (weqrecompl_ne X x is neq_x
                                    ∘ weqcoprodf (compl_ne_weq_compl X x neq_x)
                                    (idweq unit))%weq).

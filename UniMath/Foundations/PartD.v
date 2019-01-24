@@ -688,7 +688,7 @@ Defined.
 Lemma isofhlevelRaise@{i j|i<j} n (X:Type@{i}) : isofhlevel@{i} n X ≃ isofhlevel@{j} n X.
 (* if this fact turns out to be needed, finish the proof *)
 Proof.
-  intro.
+  revert n X.
   Fail exact (λ X, idweq _).    (* cannot unify "isofhlevel@{i} n X" and "isofhlevel@{j} n X" *)
   induction n as [|n IH].
   - intro. exact (idweq _).

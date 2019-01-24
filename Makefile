@@ -81,7 +81,7 @@ clean:: build/CoqMakefile.make; $(MAKE) -f build/CoqMakefile.make $@
 distclean:: build/CoqMakefile.make; $(MAKE) -f build/CoqMakefile.make cleanall archclean
 
 OTHERFLAGS += $(MOREFLAGS)
-OTHERFLAGS += -noinit -indices-matter -type-in-type -w '-notation-overridden,-local-declaration,+uniform-inheritance'
+OTHERFLAGS += -noinit -indices-matter -w '-notation-overridden,-local-declaration,+uniform-inheritance'
 ifeq ($(VERBOSE),yes)
 OTHERFLAGS += -verbose
 endif
@@ -447,6 +447,7 @@ check-style :
 # Here we create the files UniMath/*/All.v, with * running over the names of the packages.  Each one of these files
 # will "Require Export" all of the files in its package.
 define make-summary-file
+$(VDFILE).d: UniMath/$1/All.v
 UniMath/$1/All.v: UniMath/$1/.package/files
 	$(SHOW)'making $$@'
 	$(HIDE)																		\
@@ -467,6 +468,7 @@ endif
 
 # Here we create the file UniMath/All.v.  It will "Require Export" all of the All.v files for the various packages.
 make-first: UniMath/All.v
+$(VDFILE).d: UniMath/All.v
 UniMath/All.v: Makefile
 	$(SHOW)'making $@'
 	$(HIDE)									\
