@@ -18,11 +18,14 @@ Contents : Definition of opposite category and functor
 Require Import UniMath.Foundations.PartD.
 Require Import UniMath.Foundations.Propositions.
 
-Require Import UniMath.MoreFoundations.Tactics.
-Require Import UniMath.MoreFoundations.Notations.
+Require Import UniMath.MoreFoundations.All.
 
-Require Import UniMath.CategoryTheory.Categories.
-Require Import UniMath.CategoryTheory.functor_categories.
+Require Import UniMath.CategoryTheory.Core.Categories.
+Require Import UniMath.CategoryTheory.Core.Isos.
+Require Import UniMath.CategoryTheory.Core.NaturalTransformations.
+Require Import UniMath.CategoryTheory.Core.Univalence.
+Require Import UniMath.CategoryTheory.Core.Functors.
+Require Import UniMath.CategoryTheory.FunctorCategory.
 
 Local Open Scope cat.
 
@@ -53,6 +56,9 @@ Definition rm_opp_ob {C : precategory} (cop : ob C^op) : ob C := cop.
 Definition opp_mor {C : precategory} {b c : C} (f : C⟦b, c⟧) : C^op⟦c, b⟧ := f.
 
 Definition rm_opp_mor {C : precategory} {b c : C} (f : C^op⟦c, b⟧) : C⟦b, c⟧ := f.
+
+Definition oppositeCategory : category -> category
+  := λ M, @tpair precategory has_homsets (opp_precat M) (λ A B, homset_property M (rm_opp_ob B) (rm_opp_ob A)).
 
 Definition opp_mor_eq {C : precategory} {a b : C} {f g : a --> b} (e : opp_mor f = opp_mor g) :
   f = g := e.
@@ -86,6 +92,15 @@ Proof.
   intros H.
   set (T := is_z_iso_from_is_iso _ H).
   apply (is_iso_qinv (C:=C^op) _ (pr1 T)).
+  split; [ apply (pr2 (pr2 T)) | apply (pr1 (pr2 T)) ].
+Qed.
+
+Definition iso_from_opp {C : precategory} {a b : C} (f : a --> b) :
+  @is_iso C^op b a f → @is_iso C a b f.
+Proof.
+  intros H.
+  set (T := is_z_iso_from_is_iso _ H).
+  apply (is_iso_qinv (C:=C) _ (pr1 T)).
   split; [ apply (pr2 (pr2 T)) | apply (pr1 (pr2 T)) ].
 Qed.
 
@@ -250,3 +265,41 @@ Proof.
       (intros x y h;
        apply (! (nat_trans_ax a _ _ _ ))).
 Defined.
+
+(** It's univalent *)
+
+Definition op_iso_is_cat_iso
+           {C : category}
+           (X Y : C^op)
+  : @iso C Y X ≃ iso X Y.
+Proof.
+  use weqfibtototal.
+  intro f.
+  use weqimplimpl.
+  - apply opp_is_iso.
+  - apply iso_from_opp.
+  - apply isaprop_is_iso.
+  - apply isaprop_is_iso.
+Defined.
+
+Definition op_is_univalent (C : univalent_category)
+  : is_univalent (C^op).
+Proof.
+  split.
+  - intros X Y.
+    use weqhomot.
+    + exact ((op_iso_is_cat_iso X Y)
+               ∘ weqpair (@idtoiso C Y X) (pr1(pr2 C) Y X)
+               ∘ weqpathsinv0 _ _)%weq.
+    + intros p.
+      induction p ; cbn.
+      apply subtypeEquality.
+      * intro ; apply isaprop_is_iso.
+      * reflexivity.
+  - intros X Y ; cbn.
+    apply C.
+Defined.
+
+Definition op_unicat (C : univalent_category)
+  : univalent_category
+  := (C^op ,, op_is_univalent C).

@@ -26,13 +26,16 @@ Require Import UniMath.Foundations.Sets.
 Require Import UniMath.Foundations.UnivalenceAxiom.
 
 Require Import UniMath.Algebra.BinaryOperations.
-Require Import UniMath.Algebra.Monoids_and_Groups.
+Require Import UniMath.Algebra.Groups.
+Require Import UniMath.Algebra.Monoids.
 
 Require Import UniMath.NumberSystems.Integers.
 
 Require Import UniMath.CategoryTheory.total2_paths.
-Require Import UniMath.CategoryTheory.Categories.
-Require Import UniMath.CategoryTheory.functor_categories.
+Require Import UniMath.CategoryTheory.Core.Categories.
+Require Import UniMath.CategoryTheory.Core.Isos.
+Require Import UniMath.CategoryTheory.Core.Univalence.
+Require Import UniMath.CategoryTheory.Core.Functors.
 
 Require Import UniMath.CategoryTheory.Monics.
 Require Import UniMath.CategoryTheory.Epis.
@@ -445,9 +448,9 @@ Section abgr_additive.
     - exact (abgr_DirectSumId X Y).
   Defined.
 
-  Definition abgr_isAdditive : isAdditive abgr_PreAdditive.
+  Definition abgr_AdditiveStructure : AdditiveStructure abgr_PreAdditive.
   Proof.
-    use mk_isAdditive.
+    use mk_AdditiveStructure.
     - exact abgr_Zero.
     - use mk_BinDirectSums. intros X Y. use mk_BinDirectSum.
       + exact (abgrdirprod X Y).
@@ -458,7 +461,7 @@ Section abgr_additive.
       + exact (abgr_isBinDirectSum X Y).
   Defined.
 
-  Definition abgr_Additive : Additive := mk_Additive abgr_PreAdditive abgr_isAdditive.
+  Definition abgr_Additive : CategoryWithAdditiveStructure := mk_Additive abgr_PreAdditive abgr_AdditiveStructure.
 
 End abgr_additive.
 
@@ -1326,7 +1329,7 @@ Section abgr_corollaries.
 
   (** *** (_ · ZeroArrow) = ZeroArrow = (ZeroArrow · _) *)
 
-  Lemma AdditiveZeroArrow_postmor_Abelian {Add : Additive} (x y z : Add) :
+  Lemma AdditiveZeroArrow_postmor_Abelian {Add : CategoryWithAdditiveStructure} (x y z : Add) :
     to_postmor_monoidfun Add x y z (ZeroArrow (Additive.to_Zero Add) y z) =
     ZeroArrow (to_Zero abgr_Abelian) (@to_abgr Add x y) (@to_abgr Add x z).
   Proof.
@@ -1334,7 +1337,7 @@ Section abgr_corollaries.
     use monoidfun_paths. use funextfun. intros f. exact (to_premor_unel Add z f).
   Qed.
 
-  Lemma AdditiveZeroArrow_premor_Abelian {Add : Additive} (x y z : Add) :
+  Lemma AdditiveZeroArrow_premor_Abelian {Add : CategoryWithAdditiveStructure} (x y z : Add) :
     to_premor_monoidfun Add x y z (ZeroArrow (Additive.to_Zero Add) x y) =
     ZeroArrow (to_Zero abgr_Abelian) (@to_abgr Add y z) (@to_abgr Add x z).
   Proof.
@@ -1344,7 +1347,7 @@ Section abgr_corollaries.
 
   (** *** f isomorphism ⇒ (f · _) isomorphism *)
 
-  Local Lemma abgr_Additive_is_iso_premor_inverses {Add : Additive} (x y z : Add) {f : x --> y}
+  Local Lemma abgr_Additive_is_iso_premor_inverses {Add : CategoryWithAdditiveStructure} (x y z : Add) {f : x --> y}
         (H : is_z_isomorphism f) :
     is_inverse_in_precat ((to_premor_monoidfun Add x y z f) : abgr_Abelian⟦_, _⟧)
                          (to_premor_monoidfun Add y x z (is_z_isomorphism_mor H)).
@@ -1358,7 +1361,7 @@ Section abgr_corollaries.
       rewrite (is_inverse_in_precat1 H). use id_left.
   Qed.
 
-  Lemma abgr_Additive_is_iso_premor {Add : Additive} (x y z : Add) {f : x --> y}
+  Lemma abgr_Additive_is_iso_premor {Add : CategoryWithAdditiveStructure} (x y z : Add) {f : x --> y}
         (H : is_z_isomorphism f) :
     @is_z_isomorphism abgr_Abelian _ _ (to_premor_monoidfun Add x y z f).
   Proof.
@@ -1369,7 +1372,7 @@ Section abgr_corollaries.
 
   (** *** f isomorphism ⇒ (_ · f) isomorphism *)
 
-  Local Lemma abgr_Additive_is_iso_postmor_inverses {Add : Additive} (x y z : Add) {f : y --> z}
+  Local Lemma abgr_Additive_is_iso_postmor_inverses {Add : CategoryWithAdditiveStructure} (x y z : Add) {f : y --> z}
         (H : is_z_isomorphism f) :
     is_inverse_in_precat ((to_postmor_monoidfun Add x y z f) : abgr_Abelian⟦_, _⟧)
                          (to_postmor_monoidfun Add x z y (is_z_isomorphism_mor H)).
@@ -1383,7 +1386,7 @@ Section abgr_corollaries.
       rewrite (is_inverse_in_precat2 H). use id_right.
   Qed.
 
-  Lemma abgr_Additive_is_iso_postmor {Add : Additive} (x y z : Add) {f : y --> z}
+  Lemma abgr_Additive_is_iso_postmor {Add : CategoryWithAdditiveStructure} (x y z : Add) {f : y --> z}
         (H : is_z_isomorphism f) :
     @is_z_isomorphism abgr_Abelian _ _ (to_postmor_monoidfun Add x y z f).
   Proof.
@@ -1394,7 +1397,7 @@ Section abgr_corollaries.
 
   (** *** Pre- and postcomposition with f is an isomorphism ⇒ f isomorphism *)
 
-  Local Lemma abgr_Additive_premor_postmor_is_iso_inverses {Add : Additive} (x y : Add)
+  Local Lemma abgr_Additive_premor_postmor_is_iso_inverses {Add : CategoryWithAdditiveStructure} (x y : Add)
         {f : x --> y}
         (H1 : @is_z_isomorphism abgr_Abelian _ _ (to_premor_monoidfun Add x y x f))
         (H2 : @is_z_isomorphism abgr_Abelian _ _ (to_postmor_monoidfun Add y x y f)) :
@@ -1427,7 +1430,7 @@ Section abgr_corollaries.
     - rewrite H. exact Hy.
   Qed.
 
-  Lemma abgr_Additive_premor_postmor_is_iso {Add : Additive} (x y : Add) {f : x --> y}
+  Lemma abgr_Additive_premor_postmor_is_iso {Add : CategoryWithAdditiveStructure} (x y : Add) {f : x --> y}
         (H1 : @is_z_isomorphism abgr_Abelian _ _ (to_premor_monoidfun Add x y x f))
         (H2 : @is_z_isomorphism abgr_Abelian _ _ (to_postmor_monoidfun Add y x y f)) :
     is_z_isomorphism f.

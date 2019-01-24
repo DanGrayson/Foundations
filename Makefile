@@ -22,6 +22,7 @@ PACKAGES += Tactics
 PACKAGES += SubstitutionSystems
 PACKAGES += Folds
 PACKAGES += HomologicalAlgebra
+PACKAGES += Paradoxes
 PACKAGES += Induction
 ############################################
 # other user options; see also build/Makefile-configuration-template
@@ -80,7 +81,7 @@ clean:: build/CoqMakefile.make; $(MAKE) -f build/CoqMakefile.make $@
 distclean:: build/CoqMakefile.make; $(MAKE) -f build/CoqMakefile.make cleanall archclean
 
 OTHERFLAGS += $(MOREFLAGS)
-OTHERFLAGS += -noinit -indices-matter -w '-notation-overridden,-local-declaration,+uniform-inheritance,-deprecated-option'
+OTHERFLAGS += -noinit -indices-matter -type-in-type -w '-notation-overridden,-local-declaration,+uniform-inheritance'
 ifeq ($(VERBOSE),yes)
 OTHERFLAGS += -verbose
 endif
@@ -127,11 +128,11 @@ MODIFIERS := $(MODIFIERS)Local\|
 MODIFIERS := $(MODIFIERS)Private\|
 MODIFIERS := $(MODIFIERS)Program\|
 
-COQDEFS := --language=none																\
-	-r '/^[[:space:]]*\(\($(MODIFIERS)\)[[:space:]]+\)?\($(DEFINERS)\)[[:space:]]+\([[:alnum:]'\''_]+\)/\4/'					\
-	-r "/^[[:space:]]*Notation.* \"'\([[:alnum:]'\''_]+\)'/\1/"											\
-	-r '/^[[:space:]]*Tactic[[:space:]]+Notation.*[[:space:]]"\([[:alnum:]'\''_]+\)"[[:space:]]/\1/'						\
-	-r '/^[[:space:]]*Delimit[[:space:]]+Scope[[:space:]]+[[:alnum:]'\''_]+[[:space:]]+with[[:space:]]+\([[:alnum:]'\''_]+\)[[:space:]]*\./\1/'
+COQDEFS := --language=none																			\
+	-r '/^[[:space:]]*\(\($(MODIFIERS)\)[[:space:]]+\)?\($(DEFINERS)\)[[:space:]]+\([[:alnum:][:nonascii:]'\''_]+\)/\4/'							\
+	-r "/^[[:space:]]*Notation.* \"'\([[:alnum:][:nonascii:]'\''_]+\)'/\1/"													\
+	-r '/^[[:space:]]*Tactic[[:space:]]+Notation.*[[:space:]]"\([[:alnum:][:nonascii:]'\''_]+\)"[[:space:]]/\1/'								\
+	-r '/^[[:space:]]*Delimit[[:space:]]+Scope[[:space:]]+[[:alnum:][:nonascii:]'\''_]+[[:space:]]+with[[:space:]]+\([[:alnum:][:nonascii:]'\''_]+\)[[:space:]]*\./\1/'
 
 $(foreach P,$(PACKAGES),$(eval TAGS-$P: Makefile $(filter UniMath/$P/%,$(VFILES)); etags $(COQDEFS) -o $$@ $$^))
 TAGS : Makefile $(PACKAGE_FILES) $(VFILES)
@@ -367,7 +368,7 @@ DEPFILES := $(VFILES:.v=.v.d)
 endif
 
 # DEPFILES is defined above
-$(DEPFILES): | build/CoqMakefile.make
+$(DEPFILES): make-summary-files | build/CoqMakefile.make
 	$(MAKE) -f build/CoqMakefile.make $@
 
 # here we ensure that the travis script checks every package

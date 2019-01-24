@@ -11,8 +11,13 @@
 
 Require Import UniMath.Foundations.Sets.
 Require Import UniMath.MoreFoundations.PartA.
-Require Import UniMath.CategoryTheory.Categories.
-Require Import UniMath.CategoryTheory.functor_categories.
+Require Import UniMath.CategoryTheory.Core.Categories.
+Require Import UniMath.CategoryTheory.Core.Isos.
+Require Import UniMath.CategoryTheory.Core.NaturalTransformations.
+Require Import UniMath.CategoryTheory.Core.Setcategories.
+Require Import UniMath.CategoryTheory.Core.Univalence.
+Require Import UniMath.CategoryTheory.FunctorCategory.
+Require Import UniMath.CategoryTheory.Core.Functors.
 Require Import UniMath.CategoryTheory.Groupoids.
 Require Import UniMath.CategoryTheory.limits.initial.
 Require Import UniMath.CategoryTheory.limits.terminal.
@@ -20,7 +25,7 @@ Require Import UniMath.CategoryTheory.limits.bincoproducts.
 Require Import UniMath.CategoryTheory.limits.binproducts.
 Require Import UniMath.CategoryTheory.PrecategoryBinProduct.
 Require Import UniMath.CategoryTheory.exponentials.
-Require Import UniMath.CategoryTheory.Adjunctions.
+Require Import UniMath.CategoryTheory.Adjunctions.Core.
 Require Import UniMath.CategoryTheory.catiso.
 
 Local Open Scope cat.
@@ -272,16 +277,28 @@ Section FunctorFromEmpty.
   Definition functor_from_empty : functor empty_category A :=
     mk_functor _ is_functor_from_empty.
 
-  Lemma iscontr_functor_from_empty {hs : has_homsets A} :
-    iscontr (functor empty_category A).
+  (** Compare to [isaprop_is_functor]. For a functor from the empty_category,
+      it's not necessary that the codomain has homsets. *)
+  Lemma isaprop_is_functor_from_empty
+        (F : functor_data empty_category A) : isaprop (is_functor F).
+  Proof.
+    apply isapropdirprod.
+    - unfold functor_idax.
+      apply impred; intro e; induction e.
+    - unfold functor_compax.
+      apply impred; intro e; induction e.
+  Defined.
+
+  Lemma iscontr_functor_from_empty : iscontr (functor empty_category A).
   Proof.
     use iscontrpair.
     - exact functor_from_empty.
     - intro F.
-      apply functor_eq; [assumption|].
-      use total2_paths_f;
-        apply funextsec; intro empt; induction empt.
-  Qed.
+      use total2_paths_f.
+      + use total2_paths_f;
+          apply funextsec; intro empt; induction empt.
+      + apply proofirrelevance, isaprop_is_functor_from_empty.
+  Defined.
 End FunctorFromEmpty.
 
 (* *)

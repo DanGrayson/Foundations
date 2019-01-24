@@ -9,11 +9,16 @@ Require Import UniMath.Foundations.Sets.
 
 Require Import UniMath.MoreFoundations.Tactics.
 
-Require Import UniMath.CategoryTheory.Categories.
+Require Import UniMath.CategoryTheory.Core.Categories.
+Require Import UniMath.CategoryTheory.Core.Isos.
+Require Import UniMath.CategoryTheory.Core.NaturalTransformations.
+Require Import UniMath.CategoryTheory.Core.TransportMorphisms.
+Require Import UniMath.CategoryTheory.Core.Univalence.
 Require Import UniMath.CategoryTheory.limits.initial.
 Require Import UniMath.CategoryTheory.limits.bincoproducts.
 Require Import UniMath.CategoryTheory.limits.coequalizers.
 Require Import UniMath.CategoryTheory.Epis.
+Require Import UniMath.CategoryTheory.Core.Functors.
 
 Local Open Scope cat.
 
@@ -551,3 +556,16 @@ Section EpiPushoutId.
   Qed.
 
 End EpiPushoutId.
+
+Lemma induced_precategory_reflects_pushouts {M : precategory} {X:Type} (j : X -> ob M)
+      {a b c d : induced_precategory M j}
+      (f : b <-- a) (g : c <-- a) (p1 : d <-- b) (p2 : d <-- c)
+      (H : p1 ∘ f = p2 ∘ g) :
+  isPushout (# (induced_precategory_incl j) f)
+            (# (induced_precategory_incl j) g)
+            (# (induced_precategory_incl j) p1)
+            (# (induced_precategory_incl j) p2) H ->
+  isPushout f g p1 p2 H.
+Proof.
+  exact (λ pb T, pb (j T)).
+Qed.

@@ -19,12 +19,13 @@ Require Import UniMath.Foundations.Sets.
 Require Import UniMath.Foundations.NaturalNumbers.
 
 Require Import UniMath.Algebra.BinaryOperations.
-Require Import UniMath.Algebra.Monoids_and_Groups.
+Require Import UniMath.Algebra.Monoids.
 
 Require Import UniMath.NumberSystems.Integers.
 
 Require Import UniMath.CategoryTheory.total2_paths.
-Require Import UniMath.CategoryTheory.Categories.
+Require Import UniMath.CategoryTheory.Core.Categories.
+Require Import UniMath.CategoryTheory.Core.Isos.
 Local Open Scope cat.
 
 Require Import UniMath.CategoryTheory.limits.zero.
@@ -39,7 +40,7 @@ Require Import UniMath.CategoryTheory.limits.pullbacks.
 Require Import UniMath.CategoryTheory.limits.BinDirectSums.
 Require Import UniMath.CategoryTheory.Monics.
 Require Import UniMath.CategoryTheory.Epis.
-Require Import UniMath.CategoryTheory.functor_categories.
+Require Import UniMath.CategoryTheory.Core.Functors.
 
 Require Import UniMath.CategoryTheory.Abelian.
 Require Import UniMath.CategoryTheory.ShortExactSequences.
@@ -147,7 +148,7 @@ In this section we define
 *)
 Section def_triangles.
 
-  Context {A : Additive}.
+  Context {A : CategoryWithAdditiveStructure}.
   Context {T : AddEquiv A A}.
 
 
@@ -539,20 +540,20 @@ Section def_triangles.
 
   (** ** Cone data *)
 
-  Definition ConeData {A : Additive} (T : AddEquiv A A) (x y : ob A) : UU :=
+  Definition ConeData {A : CategoryWithAdditiveStructure} (T : AddEquiv A A) (x y : ob A) : UU :=
     ∑ (z : ob A), A⟦y, z⟧ × A⟦z, (AddEquiv1 T x)⟧.
 
-  Definition mk_ConeData {A : Additive} (T : AddEquiv A A) {x y z : ob A} (g : y --> z)
+  Definition mk_ConeData {A : CategoryWithAdditiveStructure} (T : AddEquiv A A) {x y z : ob A} (g : y --> z)
              (h : z --> (AddEquiv1 T x)) : ConeData T x y := (z,,(g,,h)).
 
-  Definition ConeDataOb {A : Additive} {T : AddEquiv A A} {x y : ob A} (C : ConeData T x y) :
+  Definition ConeDataOb {A : CategoryWithAdditiveStructure} {T : AddEquiv A A} {x y : ob A} (C : ConeData T x y) :
     ob A := pr1 C.
   Coercion ConeDataOb : ConeData >-> ob.
 
-  Definition ConeData1 {A : Additive} {T : AddEquiv A A} {x y : ob A} (C : ConeData T x y) :
+  Definition ConeData1 {A : CategoryWithAdditiveStructure} {T : AddEquiv A A} {x y : ob A} (C : ConeData T x y) :
     A⟦y, C⟧ := dirprod_pr1 (pr2 C).
 
-  Definition ConeData2 {A : Additive} {T : AddEquiv A A} {x y : ob A} (C : ConeData T x y) :
+  Definition ConeData2 {A : CategoryWithAdditiveStructure} {T : AddEquiv A A} {x y : ob A} (C : ConeData T x y) :
     A⟦C, (AddEquiv1 T x)⟧ := dirprod_pr2 (pr2 C).
 
 End def_triangles.
@@ -569,9 +570,9 @@ Section def_pretriang_data.
    - A subtype for triangles in (A, T), called the distinguished triangles.
    *)
   Definition PreTriangData : UU :=
-    ∑ D : (∑ A : (Additive), (AddEquiv A A)), hsubtype (@Tri (pr1 D) (pr2 D)).
+    ∑ D : (∑ A : (CategoryWithAdditiveStructure), (AddEquiv A A)), hsubtype (@Tri (pr1 D) (pr2 D)).
 
-  Definition mk_PreTriangData (A : Additive) (T : AddEquiv A A) (H : hsubtype (@Tri A T)) :
+  Definition mk_PreTriangData (A : CategoryWithAdditiveStructure) (T : AddEquiv A A) (H : hsubtype (@Tri A T)) :
     PreTriangData.
   Proof.
     use tpair.
@@ -581,8 +582,8 @@ Section def_pretriang_data.
     - exact H.
   Defined.
 
-  Definition PreTriangData_Additive (PTD : PreTriangData) : Additive := pr1 (pr1 PTD).
-  Coercion PreTriangData_Additive : PreTriangData >-> Additive.
+  Definition PreTriangData_Additive (PTD : PreTriangData) : CategoryWithAdditiveStructure := pr1 (pr1 PTD).
+  Coercion PreTriangData_Additive : PreTriangData >-> CategoryWithAdditiveStructure.
 
   Definition Trans {PTD : PreTriangData} : AddEquiv PTD PTD := pr2 (pr1 PTD).
 

@@ -5,16 +5,18 @@
 
 Require Import
         UniMath.Foundations.Preamble.
+Require Import UniMath.CategoryTheory.Core.Categories.
+Require Import UniMath.CategoryTheory.Core.Isos.
+Require Import UniMath.CategoryTheory.Core.Functors.
+Require Import UniMath.CategoryTheory.Core.NaturalTransformations.
+Require Import UniMath.CategoryTheory.Core.Univalence.
 Require Import
         UniMath.Foundations.Sets
-        UniMath.CategoryTheory.Categories
-        UniMath.CategoryTheory.functor_categories
         UniMath.Ktheory.Utilities
         UniMath.Combinatorics.FiniteSets
         UniMath.Ktheory.Representation
         UniMath.Ktheory.Precategories.
 Require UniMath.Ktheory.RawMatrix.
-Unset Automatic Introduction.
 Local Open Scope cat.
 
 Definition identity_matrix {C:category} (h:ZeroMaps C)

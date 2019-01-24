@@ -20,11 +20,16 @@ Require Import UniMath.Foundations.Propositions.
 
 Require Import UniMath.MoreFoundations.Tactics.
 
-Require Import UniMath.CategoryTheory.Categories.
-Require Import UniMath.CategoryTheory.functor_categories.
+Require Import UniMath.CategoryTheory.Core.Categories.
+Require Import UniMath.CategoryTheory.Core.Isos.
+Require Import UniMath.CategoryTheory.Core.NaturalTransformations.
+Require Import UniMath.CategoryTheory.Core.TransportMorphisms.
+Require Import UniMath.CategoryTheory.Core.Univalence.
+Require Import UniMath.CategoryTheory.Core.Functors.
 Require Import UniMath.CategoryTheory.limits.terminal.
 Require Import UniMath.CategoryTheory.limits.binproducts.
 Require Import UniMath.CategoryTheory.limits.equalizers.
+Require Import UniMath.CategoryTheory.FunctorCategory.
 Require Import UniMath.CategoryTheory.Monics.
 
 Local Open Scope cat.
@@ -247,6 +252,18 @@ Definition iso_from_Pullback_to_Pullback {a b c : C}{f : b --> a} {g : c --> a}
    (Pb Pb': Pullback f g) : iso Pb Pb' :=
   tpair _ _ (isiso_from_Pullback_to_Pullback Pb Pb').
 
+Lemma pullbackiso {A B D:C} {f : A --> D} {g : B --> D}
+      (pb : Pullback f g) (pb' : Pullback f g)
+  : ∑ (t : z_iso (PullbackObject pb) (PullbackObject pb')),
+    t · PullbackPr1 pb' = PullbackPr1 pb ×
+    t · PullbackPr2 pb' = PullbackPr2 pb.
+Proof.
+  use tpair.
+  - apply iso_to_z_iso. use iso_from_Pullback_to_Pullback.
+  - cbn beta. split.
+    + use PullbackArrow_PullbackPr1.
+    + use PullbackArrow_PullbackPr2.
+Defined.
 
 (** pullback lemma *)
 
@@ -716,7 +733,14 @@ Defined.
 
 End pullback_iso.
 
+
 End lemmas_on_pullbacks.
+
+Definition switchPullback {C:category} {A B D:C} {f : A --> D} {g : B --> D} (pb : Pullback f g) : Pullback g f.
+Proof.
+  induction pb as [[P [r s]] [e ip]]; simpl in e.
+  use (mk_Pullback _ _ _ _ _ (!e) (is_symmetric_isPullback (homset_property C) _ ip)).
+Defined.
 
 (** * A fully faithful functor reflects limits *)
 Section functor_on_square.
@@ -1239,3 +1263,16 @@ Section pullback_paths.
   Qed.
 
 End pullback_paths.
+
+Lemma induced_precategory_reflects_pullbacks {M : precategory} {X:Type} (j : X -> ob M)
+      {a b c d : induced_precategory M j}
+      (f : b --> a) (g : c --> a) (p1 : d --> b) (p2 : d --> c)
+      (H : p1 · f = p2 · g) :
+  isPullback (# (induced_precategory_incl j) f)
+             (# (induced_precategory_incl j) g)
+             (# (induced_precategory_incl j) p1)
+             (# (induced_precategory_incl j) p2) H ->
+  isPullback f g p1 p2 H.
+Proof.
+  exact (λ pb T, pb (j T)).
+Qed.

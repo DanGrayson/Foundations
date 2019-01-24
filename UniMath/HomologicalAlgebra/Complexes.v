@@ -18,12 +18,15 @@ Require Import UniMath.Foundations.Sets.
 Require Import UniMath.Foundations.NaturalNumbers.
 
 Require Import UniMath.Algebra.BinaryOperations.
-Require Import UniMath.Algebra.Monoids_and_Groups.
+Require Import UniMath.Algebra.Monoids.
+Require Import UniMath.Algebra.Groups.
 
 Require Import UniMath.NumberSystems.Integers.
 
 Require Import UniMath.CategoryTheory.total2_paths.
-Require Import UniMath.CategoryTheory.Categories.
+Require Import UniMath.CategoryTheory.Core.Categories.
+Require Import UniMath.CategoryTheory.Core.Isos.
+Require Import UniMath.CategoryTheory.Core.TransportMorphisms.
 Local Open Scope cat.
 
 Require Import UniMath.CategoryTheory.limits.zero.
@@ -49,7 +52,7 @@ Require Import UniMath.CategoryTheory.AbelianToAdditive.
 
 Unset Kernel Term Sharing.
 
-Open Scope hz_scope.
+Local Open Scope hz_scope.
 Opaque hz isdecrelhzeq hzplus hzminus hzone hzzero iscommringops ZeroArrow.
 
 (** * Definition of complexes *)
@@ -77,7 +80,7 @@ Section def_complexes.
 
   (** ** Basics of complexes *)
 
-  Variable A : Additive.
+  Variable A : CategoryWithAdditiveStructure.
 
   (** Complex *)
   Definition Complex : UU :=
@@ -638,7 +641,7 @@ End transport_section'.
 
 Section acyclic_complexes.
 
-  Variable A : Additive.
+  Variable A : CategoryWithAdditiveStructure.
 
   (** ** Construction of a complexes with one object *)
   (** ... -> 0 -> X -> 0 -> ... *)
@@ -1017,7 +1020,7 @@ End acyclic_complexes.
 *)
 Section complexes_precat.
 
-  Variable A : Additive.
+  Variable A : CategoryWithAdditiveStructure.
 
   (** ** Construction of the category of complexes *)
 
@@ -1231,7 +1234,7 @@ Section complexes_precat.
 End complexes_precat.
 
 
-(** * The category of complexes over Additive is Additive *)
+(** * The category of complexes over CategoryWithAdditiveStructure is CategoryWithAdditiveStructure *)
 (** ** Introduction
    We give the category of complexes over an additive category a natural structure as an additive
    category. Addition of morphisms is given by indexwise addition, [MorphismOp], [ZeroComplex] is a
@@ -1240,7 +1243,7 @@ End complexes_precat.
 *)
 Section complexes_additive.
 
-  Variable A : Additive.
+  Variable A : CategoryWithAdditiveStructure.
 
   Definition ComplexPreCat_precategoryWithBinOps : precategoryWithBinOps.
   Proof.
@@ -1322,11 +1325,11 @@ Section complexes_additive.
   Qed.
 
   (** The category of complexes over an additive category is additive *)
-  Definition ComplexPreCat_Additive : Additive.
+  Definition ComplexPreCat_Additive : CategoryWithAdditiveStructure.
   Proof.
     use mk_Additive.
     - exact ComplexPreCat_PreAdditive.
-    - use mk_isAdditive.
+    - use mk_AdditiveStructure.
       + use mk_Zero.
         * exact ZeroComplex.
         * exact ComplexPreCat_isZero.
@@ -1955,7 +1958,7 @@ End complexes_abelian.
 (** * Transport binary direct sums *)
 Section transport_hz_toBinDirectSums.
 
-  Context {A : Additive}.
+  Context {A : CategoryWithAdditiveStructure}.
 
   Lemma transport_to_BinDirectSums (f f' : hz -> ob A) {i i' : hz} (e : i' = i) :
     @maponpaths hz A (λ i0 : hz, to_BinDirectSums A (f i0) (f' i0)) _ _ e =

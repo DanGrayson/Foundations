@@ -1,19 +1,15 @@
-Require Import
-        UniMath.Foundations.Preamble.
-Require Import
-        UniMath.CategoryTheory.Categories
-        UniMath.CategoryTheory.functor_categories
-        UniMath.Ktheory.Utilities
-        UniMath.Ktheory.Precategories.
+Require Import UniMath.Foundations.Preamble.
+Require Import UniMath.CategoryTheory.Core.Categories.
+Require Import UniMath.CategoryTheory.Core.Isos.
+Require Import UniMath.CategoryTheory.Core.Functors.
+Require Import UniMath.Ktheory.Utilities.
+Require Import UniMath.Ktheory.Precategories.
 
 Require Import UniMath.MoreFoundations.Tactics.
 
-Require Export UniMath.CategoryTheory.Categories.
 Require Export UniMath.CategoryTheory.opp_precat
                UniMath.CategoryTheory.yoneda
-               UniMath.CategoryTheory.categories.category_hset.
-Require Export UniMath.CategoryTheory.functor_categories.
-Require Export UniMath.CategoryTheory.categories.category_hset.
+               UniMath.CategoryTheory.categories.HSET.Core.
 
 
 Local Open Scope cat.
@@ -194,7 +190,7 @@ Definition θ_1 {B C:category} (F : [B, C]) (X : [B, [C^op, SET]]) : hSet
 
 Definition θ_2 {B C:category} (F : [B, C]) (X : [B, [C^op, SET]])
            (x : θ_1 F X) : hSet
-  := (∏ (b' b:B) (f:b'-->b), x b ⟲ F ▭ f = X ▭ f ⟳ x b' ) % set.
+  := (∏ (b' b:B) (f:b'-->b), hProp_to_hSet (x b ⟲ F ▭ f = X ▭ f ⟳ x b' )) % set.
 
 Definition θ {B C:category} (F : [B, C]) (X : [B, [C^op, SET]]) : hSet
   := ( ∑ x : θ_1 F X, θ_2 F X x ) % set.

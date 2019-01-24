@@ -1,17 +1,18 @@
-(** * AbelianPreCat is Additive *)
+(** * AbelianPreCat is CategoryWithAdditiveStructure *)
 (** ** Contents
-- AbelianPreCat is Additive
+- AbelianPreCat is CategoryWithAdditiveStructure
  - Preliminaries
- - AbelianPreCat is Additive
+ - AbelianPreCat is CategoryWithAdditiveStructure
 *)
 Require Import UniMath.Foundations.PartD.
 Require Import UniMath.Foundations.Propositions.
 Require Import UniMath.Foundations.Sets.
 
-Require Import UniMath.Algebra.Monoids_and_Groups.
+Require Import UniMath.Algebra.Monoids.
 
 Require Import UniMath.CategoryTheory.total2_paths.
-Require Import UniMath.CategoryTheory.Categories.
+Require Import UniMath.CategoryTheory.Core.Categories.
+Require Import UniMath.CategoryTheory.Core.Isos.
 Require Import UniMath.CategoryTheory.PrecategoryBinProduct.
 
 Require Import UniMath.CategoryTheory.limits.zero.
@@ -35,7 +36,7 @@ Require Import UniMath.CategoryTheory.Abelian.
 
 Local Open Scope cat.
 
-(** * AbelianPreCat is Additive. *)
+(** * AbelianPreCat is CategoryWithAdditiveStructure. *)
 Section abelian_is_additive.
 
   Variable A : AbelianPreCat.
@@ -514,7 +515,7 @@ Section abelian_is_additive.
   Qed.
 
 
-  (** ** AbelianPreCat is Additive *)
+  (** ** AbelianPreCat is CategoryWithAdditiveStructure *)
 
   (** The zero element in a homset of A is given by the ZeroArrow. *)
   Definition AbelianPreCat_homset_zero (X Y : A) : A⟦X, Y⟧ := ZeroArrow (to_Zero A) X Y.
@@ -817,12 +818,12 @@ Section abelian_is_additive.
   Definition AbelianToPreAdditive :
     PreAdditive := mk_PreAdditive AbelianTocategoryWithAbgrops AbelianToisPreAdditive.
 
-  (** Finally, we show that Abelian_precategories are Additive. *)
-  Definition AbelianToAdditive : Additive.
+  (** Finally, we show that Abelian_precategories are CategoryWithAdditiveStructure. *)
+  Definition AbelianToAdditive : CategoryWithAdditiveStructure.
   Proof.
     use mk_Additive.
     - exact AbelianToPreAdditive.
-    - use mk_isAdditive.
+    - use mk_AdditiveStructure.
       + exact (to_Zero A).
       + exact (BinDirectSums_from_BinProducts
                  AbelianToPreAdditive (to_Zero A) (to_BinProducts A)).

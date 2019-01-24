@@ -59,11 +59,6 @@ prefrred choice in this situation.
 
 (** ** Preamble *)
 
-(** Settings *)
-
-(* The following line has to be removed for the file to compile with Coq8.2 *)
-Unset Automatic Introduction.
-
 (** Imports *)
 
 Require Export UniMath.Foundations.PartD.
@@ -104,20 +99,6 @@ Definition propproperty (P : hProp) := pr2 P : isaprop (pr1 P).
 Definition tildehProp := total2 (λ P : hProp, P).
 Definition tildehProppair {P : hProp} (p : P) : tildehProp := tpair _ P p.
 
-Section negProp_to_hProp.
-
-  Universe i u.
-  (* Constraint uu1 < i. *)
-
-  Definition negProp_to_hProp@{} {P : Type@{i}} (Q : negProp@{i u} P) : hProp.
-  Proof.
-    intros. use (hProppair@{i} (negProp_to_type@{i u} Q)). apply negProp_to_isaprop.
-  Defined.
-
-  Coercion negProp_to_hProp : negProp >-> hProp.
-
-End negProp_to_hProp.
-
 (* convenient corollaries of some theorems that take separate isaprop
    arguments: *)
 
@@ -130,7 +111,7 @@ Defined.
 Corollary subtypeEquality_prop {A : UU} {B : A -> hProp}
    {s s' : total2 (λ x, B x)} : pr1 s = pr1 s' -> s = s'.
 Proof.
-  intros A B s s'. apply invmap. apply subtypeInjectivity_prop.
+  apply invmap. apply subtypeInjectivity_prop.
 Defined.
 
 Section Foo.
@@ -211,7 +192,9 @@ Definition ishinh_UU@{i} (X : Type@{i}) : Type@{i}
 
 Lemma isapropishinh@{i} (X : Type@{i}) : isaprop@{i} (ishinh_UU@{i} X).
 Proof.
-  intro. apply impred. intros P. apply impred. intros _. apply propproperty.
+  apply impred.
+  intro P. apply impred.
+  intros _. apply propproperty.
 Qed.
 
 Definition ishinh@{i} (X : Type@{i}) : hProp
@@ -238,12 +221,12 @@ Definition hinhuniv {X : UU} {P : hProp} (f : X -> P) (wit : ∥ X ∥) : P
 
 Corollary factor_through_squash {X Q : UU} : isaprop Q -> (X -> Q) -> ∥ X ∥ -> Q.
 Proof.
-  intros ? ? i f h. exact (@hinhuniv X (Q,,i) f h).
+  intros i f h. exact (@hinhuniv X (Q,,i) f h).
 Defined.
 
 Corollary squash_to_prop@{i} {X Q : Type@{i}} : ishinh@{i} X -> isaprop Q -> (X -> Q) -> Q.
 Proof.
-  intros ? ? h i f. exact (@hinhuniv X (tpair@{i} _ (ResizeProp Q i) i) f h).
+  intros h i f. exact (@hinhuniv X (tpair@{i} _ (ResizeProp Q i) i) f h).
 Defined.
 
 Definition hinhand {X Y : UU} (inx1 : ∥ X ∥) (iny1 : ∥ Y ∥) : ∥ X × Y ∥
@@ -266,7 +249,6 @@ Notation hinhprinv := hinhunivcor1.
 
 Lemma weqishinhnegtoneg (X : UU) : ∥ ¬ X ∥ ≃ ¬ X.
 Proof.
-  intro.
   assert (lg : logeq (ishinh (neg X)) (neg X)).
   {
     split.
@@ -279,7 +261,6 @@ Defined.
 
 Lemma weqnegtonegishinh (X : UU) : ¬ X ≃ ¬ ∥ X ∥.
 Proof.
-  intro.
   assert (lg : logeq (neg (ishinh X)) (neg X)).
   {
     split.
@@ -297,7 +278,7 @@ Defined.
 
 Lemma hinhcoprod (X Y : UU) : ∥ (∥ X ∥ ⨿ ∥ Y ∥) ∥ -> ∥ X ⨿ Y ∥.
 Proof.
-  intros ? ? is. unfold ishinh. intro P. intro CP.
+  intros is. unfold ishinh. intro P. intro CP.
   set (CPX := λ x : X, CP (ii1 x)).
   set (CPY := λ y : Y, CP (ii2 y)).
   set (is1P := is P).
@@ -310,7 +291,7 @@ Defined.
 
 Lemma decidable_ishinh {X} : decidable X → decidable(∥X∥).
 Proof.
-  intros ? d.
+  intros d.
   unfold decidable in *.
   induction d as [x|x'].
   - apply ii1. apply hinhpr. assumption.
@@ -334,7 +315,7 @@ Definition pr1image@{i j} {X Y : Type@{i}} (f : X -> Y) : image@{i} f → Y
 
 Definition prtoimage {X Y : UU} (f : X -> Y) : X -> image f.
 Proof.
-  intros X Y f X0.
+  intros X0.
   apply (imagepair _ (f X0) (hinhpr (hfiberpair f X0 (idpath _)))).
 Defined.
 
@@ -391,7 +372,7 @@ Defined.
 Lemma isweqinclandsurj {X Y : UU} (f : X -> Y) :
   isincl f -> issurjective f -> isweq f.
 Proof.
-  intros X Y f Hincl Hsurj.
+  intros Hincl Hsurj.
   intro y.
   set (H := hProppair (iscontr (hfiber f y)) (isapropiscontr _)).
   apply (Hsurj y H).
@@ -406,7 +387,7 @@ Defined.
 
 Lemma issurjectiveweq (X Y : UU) (f : X -> Y) : isweq f -> issurjective f.
 Proof.
-  intros X Y f H y.
+  intros H y.
   apply hinhpr.
   apply (pr1 (H y)).
 Defined.
@@ -446,7 +427,7 @@ Defined.
 
 Lemma disjoint_disjunction (P Q : hProp) : (P -> Q -> ∅) -> hProp.
 Proof.
-  intros ? ? n.
+  intros n.
   exact (hProppair (P ⨿ Q) (isapropcoprod P Q (propproperty P) (propproperty Q) n)).
 Defined.
 
@@ -521,7 +502,7 @@ Defined.
 
 Lemma hconjtohdisj (P Q : UU) (R : hProp) : (P ⇒ R) ∧ (Q ⇒ R) -> (P ∨ Q) ⇒ R.
 Proof.
-  intros P Q R X0.
+  intros X0.
   assert (s1: hdisj P Q -> R).
   {
     intro X1.
@@ -551,7 +532,7 @@ implications hold see ???. *)
 Lemma hexistsnegtonegforall {X : UU} (F : X -> UU) :
   (∃ x : X, neg (F x)) -> neg (∏ x : X, F x).
 Proof.
-  intros X F. simpl.
+  simpl.
   apply (@hinhuniv _ (hProppair _ (isapropneg (∏ x : X, F x)))).
   simpl. intros t2 f2. induction t2 as [ x d2 ]. apply (d2 (f2 x)).
 Defined.
@@ -559,7 +540,7 @@ Defined.
 Lemma forallnegtoneghexists {X : UU} (F : X -> UU) :
   (∏ x : X, neg (F x)) -> neg (∃ x, F x).
 Proof.
-  intros X F nf.
+  intros nf.
   change ((ishinh_UU (total2 F)) -> hfalse).
   apply hinhuniv. intro t2. induction t2 as [ x f ]. apply (nf x f).
 Defined.
@@ -567,7 +548,7 @@ Defined.
 Lemma neghexisttoforallneg {X : UU} (F : X -> UU) :
   ¬ (∃ x, F x) -> ∏ x : X, ¬ (F x).
 Proof.
-  intros X F nhe x. intro fx.
+  intros nhe x. intro fx.
   apply (nhe (hinhpr (tpair F x fx))).
 Defined.
 
@@ -592,7 +573,7 @@ names [fromneganddecx] and [fromneganddecy]. *)
 
 Lemma tonegdirprod {X Y : UU} : ¬ X ∨ ¬ Y -> ¬ (X × Y).
 Proof.
-  intros X Y. simpl.
+  simpl.
   apply (@hinhuniv _ (hProppair _ (isapropneg (X × Y)))).
   intro c. induction c as [ nx | ny ].
   - simpl. intro xy. apply (nx (pr1 xy)).
@@ -602,7 +583,7 @@ Defined.
 Lemma weak_fromnegdirprod (P Q: hProp) : ¬ (P ∧ Q) -> ¬¬(¬ P ∨ ¬ Q).
 (* this is also called a weak deMorgan law *)
 Proof.
-  intros ? ? npq k.
+  intros npq k.
   assert (e : ¬¬ Q).
   {
     intro n. apply k. apply hdisj_in2. assumption.
@@ -618,14 +599,14 @@ Defined.
 
 Lemma tonegcoprod {X Y : UU} : ¬ X × ¬ Y -> ¬ (X ⨿ Y).
 Proof.
-  intros ? ? is. intro c. induction c as [ x | y ].
+  intros is. intro c. induction c as [ x | y ].
   - apply (pr1 is x).
   - apply (pr2 is y).
 Defined.
 
 Lemma toneghdisj {X Y : UU} : ¬ X × ¬ Y -> ¬ (X ∨ Y).
 Proof.
-  intros ? ? is. unfold hdisj.
+  intros is. unfold hdisj.
   apply weqnegtonegishinh.
   apply tonegcoprod.
   apply is.
@@ -633,14 +614,14 @@ Defined.
 
 Lemma fromnegcoprod {X Y : UU} : ¬ (X ⨿ Y) -> ¬X × ¬Y.
 Proof.
-  intros ? ? is. split.
+  intros is. split.
   - exact (λ x, is (ii1 x)).
   - exact (λ y, is (ii2 y)).
 Defined.
 
 Corollary fromnegcoprod_prop {X Y : hProp} : ¬ (X ∨ Y) -> ¬ X ∧ ¬ Y.
 Proof.
-  intros ? ? n.
+  intros n.
   simpl in *.
   assert (n' := negf hinhpr n); simpl in n'; clear n.
   apply fromnegcoprod. assumption.
@@ -648,7 +629,6 @@ Defined.
 
 Lemma hdisjtoimpl {P : UU} {Q : hProp} : P ∨ Q -> ¬ P -> Q.
 Proof.
-  intros P Q.
   assert (int : isaprop (¬ P -> Q)).
   {
     apply impred. intro.

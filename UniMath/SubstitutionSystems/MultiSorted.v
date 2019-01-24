@@ -33,8 +33,11 @@ Require Import UniMath.MoreFoundations.Tactics.
 
 Require Import UniMath.Combinatorics.Lists.
 
-Require Import UniMath.CategoryTheory.Categories.
-Require Import UniMath.CategoryTheory.functor_categories.
+Require Import UniMath.CategoryTheory.Core.Categories.
+Require Import UniMath.CategoryTheory.Core.Isos.
+Require Import UniMath.CategoryTheory.Core.NaturalTransformations.
+Require Import UniMath.CategoryTheory.Core.Functors.
+Require Import UniMath.CategoryTheory.FunctorCategory.
 Require Import UniMath.CategoryTheory.whiskering.
 Require Import UniMath.CategoryTheory.limits.graphs.limits.
 Require Import UniMath.CategoryTheory.limits.graphs.colimits.
@@ -47,11 +50,14 @@ Require Import UniMath.CategoryTheory.limits.initial.
 Require Import UniMath.CategoryTheory.limits.pullbacks.
 Require Import UniMath.CategoryTheory.FunctorAlgebras.
 Require Import UniMath.CategoryTheory.exponentials.
-Require Import UniMath.CategoryTheory.Adjunctions.
+Require Import UniMath.CategoryTheory.Adjunctions.Core.
 Require Import UniMath.CategoryTheory.Chains.All.
 Require Import UniMath.CategoryTheory.Monads.Monads.
-Require Import UniMath.CategoryTheory.categories.category_hset.
-Require Import UniMath.CategoryTheory.categories.category_hset_structures.
+Require Import UniMath.CategoryTheory.categories.HSET.Core.
+Require Import UniMath.CategoryTheory.categories.HSET.Colimits.
+Require Import UniMath.CategoryTheory.categories.HSET.Limits.
+Require Import UniMath.CategoryTheory.categories.HSET.Slice.
+Require Import UniMath.CategoryTheory.categories.HSET.Structures.
 Require Import UniMath.CategoryTheory.HorizontalComposition.
 Require Import UniMath.CategoryTheory.slicecat.
 
@@ -62,6 +68,7 @@ Require Import UniMath.SubstitutionSystems.SubstitutionSystems.
 Require Import UniMath.SubstitutionSystems.LiftingInitial_alt.
 Require Import UniMath.SubstitutionSystems.MonadsFromSubstitutionSystems.
 Require Import UniMath.SubstitutionSystems.Notation.
+Local Open Scope subsys.
 Require Import UniMath.SubstitutionSystems.SignatureExamples.
 Require Import UniMath.SubstitutionSystems.BindingSigToMonad.
 Require Import UniMath.SubstitutionSystems.MonadsMultiSorted.
@@ -537,13 +544,13 @@ End MBindingSig.
 (** Alternative version using [X,SET] instead of SET/X below. There is no proof that the
     functor we obtain using this approach is omega-cocontinuous yet. *)
 Require UniMath.CategoryTheory.categories.StandardCategories.
-Require UniMath.CategoryTheory.EquivalencesExamples.
+Require UniMath.CategoryTheory.Adjunctions.Examples.
 
 Module alt.
 
 Import UniMath.CategoryTheory.Groupoids.
 Import UniMath.CategoryTheory.categories.StandardCategories.
-Import UniMath.CategoryTheory.EquivalencesExamples.
+Import UniMath.CategoryTheory.Adjunctions.Examples.
 
 (** * Definition of multisorted binding signatures *)
 Section MBindingSig.
@@ -612,7 +619,7 @@ Definition args (M : MultiSortedSig) (s : sort) : indices M s → list (list sor
   pr2 (M s).
 
 Local Notation "'1'" := (TerminalObject TC).
-Local Notation "a ⊕ b" := (BinCoproductObject _ (BC a b)) (at level 50).
+Local Notation "a ⊕ b" := (BinCoproductObject _ (BC a b)).
 
 (* Code for option as a function, below is the definition as a functor *)
 Local Definition option_fun : sort -> sortToC -> sortToC.
