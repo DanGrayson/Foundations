@@ -21,3 +21,4 @@ Acknowledgments
 I thank the Center for Advanced Study of the Norwegian Academy of Science and
 Letters, for its support for this work was done as part of the project
 "Homotopy Type Theory and Univalent Foundations", October-March, 2018-19.
+See <https://cas.oslo.no/research-groups/homotopy-type-theory-and-univalent-foundations-article2083-827.html>.
