@@ -23,6 +23,11 @@ Global Set Polymorphic Inductive Cumulativity.
 Global Unset Universe Minimization ToSet.
 Global Unset Cumulativity Weak Constraints.
 
+(* Forthcoming feature:
+   Don't hide polymorphic universes if they appear only in the body of some opaque definition. See
+   https://github.com/coq/coq/pull/8850 *)
+(* Global Unset Private Polymorphic Universes. *)
+
 Notation UU  := Type (only parsing).
 Notation UU0 := Type@{uu0} (only parsing).
 Notation UU1 := Type@{uu1} (only parsing).
@@ -86,6 +91,7 @@ Monomorphic Inductive nat : UU1 :=
 
 Definition succ := S.
 
+Declare Scope nat_scope.
 Delimit Scope nat_scope with nat.
 Bind Scope nat_scope with nat.
 Arguments S _%nat.

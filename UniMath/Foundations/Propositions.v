@@ -455,9 +455,10 @@ Definition hneg (P : UU) : hProp := hProppair (¬ P) (isapropneg P).
 
 (* use scope "logic" for notations that might conflict with others *)
 
+Declare Scope logic.
+Delimit Scope logic with logic.
 Notation "'¬' X" := (hneg X) (at level 35, right associativity) : logic.
   (* type this in emacs in agda-input method with \neg *)
-Delimit Scope logic with logic.
 
 Definition himpl@{i} (P : Type@{i}) (Q : hProp) : hProp.
 Proof.

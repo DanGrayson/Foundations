@@ -1305,7 +1305,7 @@ Defined.
 
 (** **** General definitions *)
 
-Definition setwithbinop@{i j} : Type@{j} := total2 (λ X : hSet@{i j}, binop X).
+Definition setwithbinop@{i j|i<j} : Type@{j} := total2 (λ X : hSet@{i j}, binop X).
 
 Definition setwithbinoppair (X : hSet) (opp : binop X) : setwithbinop :=
   tpair (λ X : hSet, binop X) X opp.
@@ -1323,6 +1323,8 @@ Proof.
 Defined.
 Opaque isasetbinoponhSet.
 
+Declare Scope addoperation_scope.
+Declare Scope multoperation_scope.
 Notation "x + y" := (op x y) : addoperation_scope.
 Notation "x * y" := (op x y) : multoperation_scope.
 
@@ -1782,7 +1784,7 @@ Coercion carrierofasubsetwithbinop : subsetswithbinop >-> setwithbinop.
 
 (** **** Relations compatible with a binary operation and quotient objects *)
 
-Definition isbinophrel@{i j} {X : setwithbinop@{i j}} (R : hrel@{i} X) : Type@{i} :=
+Definition isbinophrel@{i j|uu1<=i,i<j} {X : setwithbinop@{i j}} (R : hrel@{i} X) : Type@{i} :=
   dirprod@{i} (∏ a b c : X, R a b -> R (op c a) (op c b)) (∏ a b c : X, R a b -> R (op a c) (op b c)).
 
 Definition mk_isbinophrel {X : setwithbinop} {R : hrel X}
@@ -1885,7 +1887,7 @@ Definition binopeqrel_resp_right {X : setwithbinop} (R : binopeqrel X)
            {a b : X} (c : X) (r : R a b) : R (op a c) (op b c) :=
   pr2 (pr2 R) a b c r.
 
-Definition setwithbinopquot@{i j} {X : setwithbinop@{i j}} (R : binopeqrel X) : setwithbinop@{i j}.
+Definition setwithbinopquot@{i j|uu1<=i,i<j} {X : setwithbinop@{i j}} (R : binopeqrel X) : setwithbinop@{i j}.
 Proof.
   split with (setquotinset R).
   set (qt  := setquot R). set (qtset := setquotinset R).
@@ -1894,9 +1896,9 @@ Proof.
   simpl. unfold binop. apply qtmlt.
 Defined.
 
-Definition setwithbinopquot_test@{i j|uu1<i+} {X : setwithbinop@{i j}} := @setwithbinopquot X.
+Definition setwithbinopquot_test@{i j|uu1<i} {X : setwithbinop@{i j}} := @setwithbinopquot X.
 
--- got to here --
+} --- got to here --
 
 Definition ispartbinophrel {X : setwithbinop} (S : hsubtype X) (R : hrel X) : UU :=
   dirprod (∏ a b c : X, S c -> R a b -> R (op c a) (op c b))
@@ -2220,6 +2222,7 @@ Definition setwithbinop1 (X : setwith2binop) : setwithbinop := setwithbinoppair 
 
 Definition setwithbinop2 (X : setwith2binop) : setwithbinop := setwithbinoppair (pr1 X) (@op2 X).
 
+Declare Scope twobinops_scope.
 Notation "x + y" := (op1 x y) : twobinops_scope.
 Notation "x * y" := (op2 x y) : twobinops_scope.
 

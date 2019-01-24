@@ -169,6 +169,7 @@ Definition idfun (T : UU) := λ t:T, t.
 
 Definition funcomp {X Y : UU} {Z:Y->UU} (f : X -> Y) (g : ∏ y:Y, Z y) := λ x, g (f x).
 
+Declare Scope functions.
 Delimit Scope functions with functions.
 
 Open Scope functions.
@@ -636,6 +637,7 @@ Definition transportf_eq {X : UU} (P : X -> UU) {x x' : X} (e : x = x') ( p : P 
 Definition transportb@{i} {X : Type@{i}} (P : X -> Type@{i}) {x x' : X}
            (e : x = x') : P x' -> P x := transportf P (!e).
 
+Declare Scope transport.
 Notation "p #  x" := (transportf _ p x) (only parsing) : transport.
 Notation "p #' x" := (transportb _ p x) (only parsing) : transport.
 Delimit Scope transport with transport.
@@ -2201,9 +2203,10 @@ Definition weqcontrcontr {X Y : UU} (isx : iscontr X) (isy : iscontr Y) :=
 Definition weqcomp@{i} {X Y Z : Type@{i}} (w1 : X ≃ Y) (w2 : Y ≃ Z) : X ≃ Z :=
   weqpair (λ (x : X), w2 (w1 x)) (twooutof3c w1 w2 (pr2 w1) (pr2 w2)).
 
-Notation "g ∘ f" := (weqcomp f g) : weq_scope.
-
+Declare Scope weq_scope.
 Delimit Scope weq_scope with weq.
+
+Notation "g ∘ f" := (weqcomp f g) : weq_scope.
 
 Ltac intermediate_weq Y' := apply (weqcomp (Y := Y')).
 

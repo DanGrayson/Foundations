@@ -94,12 +94,14 @@ Definition hSetRaise@{i j u v | i<j, j<u} (X:hSet@{i u}) : hSet@{j u} := hSetpai
 
 Definition eqset {X : hSet} (x x' : X) : hProp
   := hProppair (x = x') (pr2 X x x').
+
+Declare Scope set.
+Delimit Scope set with set.
 Notation "a = b" := (eqset a b) (at level 70, no associativity) : set.
 
 Definition neqset {X : hSet} (x x' : X) : hProp
   := hProppair (x != x') (isapropneg _). (* uses funextemptyAxiom *)
 Notation "a != b" := (neqset a b) (at level 70, no associativity) : set.
-Delimit Scope set with set.
 
 Definition setproperty (X : hSet) := pr2 X.
 
@@ -300,12 +302,13 @@ Defined.
 Definition carrier_subset {X : hSet} (Y : hsubtype X) : hSet
   := hSetpair (∑ x, Y x) (isaset_carrier_subset X Y).
 
+Declare Scope subset.
+Delimit Scope subset with subset.
+
 Notation "'∑' x .. y , P"
   := (carrier_subset (λ x,.. (carrier_subset (λ y, P))..))
   (at level 200, x binder, y binder, right associativity) : subset.
   (* type this in emacs in agda-input method with \sum *)
-
-Delimit Scope subset with subset.
 
 Lemma isinclpr1carrier@{i} {X : Type@{i}} (A : hsubtype@{i} X) : isincl (@pr1carrier X A).
 Proof.
@@ -826,6 +829,7 @@ Proof.
   intros ? x y l m. exact (pr2 (pr2 (pr2 X)) x y l m).
 Defined.
 
+Declare Scope poset.
 Delimit Scope poset with poset.
 Notation "m ≤ n" := (posetRelation _ m n) (no associativity, at level 70) :
                       poset.

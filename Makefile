@@ -85,10 +85,6 @@ ifeq ($(VERBOSE),yes)
 OTHERFLAGS += -verbose
 endif
 
-# this dependency is duplicated in UniMath/.dir-locals.el :
-.coq_makefile_output.local : Makefile
-	echo "UniMath/Foundations/Resizing.vo : OTHERFLAGS += -type-in-type" >$@
-
 ENHANCEDDOCTARGET = enhanced-html
 ENHANCEDDOCSOURCE = util/enhanced-doc
 LATEXDIR = latex
@@ -187,9 +183,11 @@ build/CoqMakefile.make .coq_makefile_output.conf: $(COQBIN)coq_makefile
 else
 build/CoqMakefile.make .coq_makefile_output.conf: $(shell command -v coq_makefile)
 endif
-build/CoqMakefile.make .coq_makefile_output.conf: .coq_makefile_input
+build/CoqMakefile.make .coq_makefile_output.conf: .coq_makefile_input Makefile
 	$(COQBIN)coq_makefile -f .coq_makefile_input -o .coq_makefile_output
 	mv .coq_makefile_output build/CoqMakefile.make
+	: this dependency is duplicated in UniMath/.dir-locals.el
+	echo "UniMath/Foundations/Resizing.vo : OTHERFLAGS += -type-in-type" >>.coq_makefile_output.conf
 
 # "clean::" occurs also in build/CoqMakefile.make, hence both colons
 clean::
