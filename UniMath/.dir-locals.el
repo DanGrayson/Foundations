@@ -9,7 +9,7 @@
 				   "-noinit"
 				   "-indices-matter"
 				   "-Q" ,(concat unimath-topdir "UniMath") "UniMath"
-				   "-w" "-notation-overridden,-local-declaration,+uniform-inheritance,-deprecated-option"
+				   "-w" "-notation-overridden"
 				   ))
 	     (if (equal buffer-file-name (concat unimath-topdir "UniMath/Foundations/Resizing.v"))
 		 (setq coq-prog-args (cons "-type-in-type" coq-prog-args)))

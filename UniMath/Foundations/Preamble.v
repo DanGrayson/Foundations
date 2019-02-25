@@ -91,7 +91,7 @@ Monomorphic Inductive nat : UU1 :=
 
 Definition succ := S.
 
-Declare Scope nat_scope.
+(* Declare Scope nat_scope. *)
 Delimit Scope nat_scope with nat.
 Bind Scope nat_scope with nat.
 Arguments S _%nat.
@@ -168,7 +168,7 @@ Notation "1000" := (10 * 100) : nat_scope.
 
 Inductive paths@{i} {A:Type@{i}} (a:A) : A -> Type@{i} := idpath : paths a a.
 Hint Resolve idpath : core .
-Notation "a = b" := (paths a b) (at level 70, no associativity) : type_scope.
+Notation "a = b" := (paths a b) : type_scope.
 
 (* Remark: in general we strive to use only paths_rect and not the direct "match" construction on
 paths. By adding a constant in paths for the computation rule for paths_rect and then making both

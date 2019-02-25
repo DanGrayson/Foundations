@@ -4,14 +4,18 @@ Installation of UniMath
 NB: This file describes the default method for installing UniMath.  An
 alternative method using the [Nix Package Manager](https://nixos.org/nix/) is available in the file [INSTALL\_NIX.md](https://github.com/UniMath/UniMath/blob/master/INSTALL_NIX.md).
 
-Prepare for installation by installing the OCAML compiler and a more modern
-version of `bash` on your system.
+## Preparing your computer
 
-## Preparing for the installation under Mac OS X
+In this section, we explain how to prepare your computer for the compilation of
+UniMath under [Mac OS X](#preparing-for-the-installation-under-mac-os-x),
+under [Ubuntu/Debian](#preparing-for-the-installation-under-ubuntu-or-debian-linux),
+and under [Arch/Manjaro Linux](#preparing-for-the-installation-under-arch-linux-or-manjaro-linux).
+
+### Preparing for the installation under Mac OS X
 
 To prepare for the installation under Mac OS X, there are two methods.
 
-### First method (recommended for beginners)
+#### First method (recommended for beginners)
 
 Under Mac OS X, the most convenient way to
 do that is with "Homebrew", available from http://brew.sh/, with the following
@@ -24,9 +28,9 @@ $ brew install objective-caml ocaml-num camlp4 camlp5 lablgtk bash ocaml-findlib
 If installing `lablgtk` fails, you can omit it, but you won't be able to build
 the program `coqide` and will have to depend on ProofGeneral instead.
 
-Now proceed with "Installation of ProofGeneral" and "Installing UniMath" below.
+Now proceed with [Installation of ProofGeneral](#installation-of-proofgeneral-all-operating-systems) and [Installing UniMath](#installing-unimath) below.
 
-### Second method (allows more flexibility, but is more involved than first method)
+#### Second method (allows more flexibility, but is more involved than first method)
 
 Under Mac OS X, the most convenient way to do that is with "Homebrew",
 available from http://brew.sh/, with the following command:
@@ -72,16 +76,16 @@ $ camlp5 -v
 Camlp5 version 7.03 (ocaml 4.02.3)
 ```
 
-## Preparing for the installation under Ubuntu or Debian (Linux)
+### Preparing for the installation under Ubuntu or Debian (Linux)
 
-Under Ubuntu or Debian, you may install ocaml (and ProofGeneral) with the
+Under Ubuntu or Debian, you may install ocaml with the
 following shell command.
 
 ```bash
- sudo apt-get install build-essential git ocaml ocaml-nox ocaml-native-compilers camlp4-extra camlp5 proofgeneral proofgeneral-doc libgtk2.0 libgtksourceview2.0 liblablgtk-extras-ocaml-dev ocaml-findlib
+ sudo apt-get install build-essential git ocaml ocaml-nox ocaml-native-compilers camlp4-extra camlp5 libgtk2.0 libgtksourceview2.0 liblablgtk-extras-ocaml-dev ocaml-findlib
 ```
 
-## Preparing for the installation under Arch Linux or Manjaro Linux
+### Preparing for the installation under Arch Linux or Manjaro Linux
 
 Under Arch Linux or Manjaro Linux you may install ocaml with the following
 shell commands.
@@ -92,16 +96,15 @@ shell commands.
  sudo pacman --sync --needed ocaml camlp5 ocaml-findlib ocaml-num
 ```
 
-## Installation of ProofGeneral
+## Installation of ProofGeneral (all operating systems)
 
-Install ProofGeneral, if it hasn't been installed in one of the steps above.
 You may obtain ProofGeneral from by using the quick installation instructions
 at http://proofgeneral.inf.ed.ac.uk/ or at https://proofgeneral.github.io/.
 Your version of emacs determines which version of ProofGeneral you need,
 roughly, so some experimentation may be required; you may even need the current
 development version if your emacs is recent.
 
-Some useful ProofGeneral add-ons are available for installation at
+Optional: some useful ProofGeneral add-ons are available for installation at
 https://github.com/cpitclaudel/company-coq/.
 
 ## Installing UniMath
@@ -336,3 +339,18 @@ If you get the error message ```Error: cannot find 'ocamlc.opt' in your path!```
 $ sudo apt-get install ocaml-native-compilers
 ```
 This package is not among the build dependencies for older versions of Coq.
+
+### Hints for developers
+
+- To regularly update the TAGS file, you may build with the command `make TAGS all`.
+
+- Before submitting a pull request, developers should run the sanity checks that are specified
+  in the Makefile by adding `sanity-checks` to the "make" command line.
+  
+- One of the sanity checks checks that all proof files in the directory tree
+  are listed in the corresponding package, but it will complain even about
+  files you haven't checked in; to disable the test, add `-o
+  check-listing-of-proof-files` to the "make" command line.  Other sanity
+  checks can be skipped the same way.  For example, if you intend to make a
+  change to the Foundations package, then you can add `-o
+  check-for-change-to-Foundations` to the "make" command line.
