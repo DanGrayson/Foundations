@@ -1540,11 +1540,11 @@ Proof.
   apply (iscontrpathsinunit tt tt).
 Defined.
 
-Lemma isweqcontrtounit@{i} {T : Type@{i}} (is : iscontr@{i} T) : isweq@{i} (λ _:T, tt).
+Lemma isweqcontrtounit {T : Type} (is : iscontr T) : isweq (λ _:T, tt).
 Proof.
   intros. unfold isweq. intro y. induction y.
   induction is as [c h].
-  set (hc := hfiberpair@{i} _ c (idpath tt)).
+  set (hc := hfiberpair _ c (idpath tt)).
   split with hc.
   intros ha.
   induction ha as [x e].

@@ -85,9 +85,6 @@ Definition hProp@{} : Type@{uu1} := @total2@{uu1} Type@{uu0} isaprop@{uu0}.
 Definition hProppair@{i} (X : Type@{i}) (is : isaprop@{i} X) : hProp
   := tpair@{uu1} isaprop@{uu0} (ResizeProp@{uu0 i} X is) is.
 
-Definition hProppair_uu0@{} (X : Type@{uu0}) (is : isaprop@{uu0} X) : hProp
-  := tpair@{uu1} isaprop@{uu0} X is.
-
 Definition hProptoType@{} := @pr1@{uu1} _ _ : hProp -> Type@{uu0}.
 
 Coercion hProptoType : hProp >-> Sortclass.
@@ -179,18 +176,19 @@ Definition isdecEq (X : UU) : hProp := hProppair _ (isapropisdeceq X).
 
 (** *** The [hProp] version of the "inhabited" construction. *)
 
-Definition ishinh_UU@{i} (X : Type@{i}) : Type@{i}
+Definition ishinh_UU (X : Type) : Type
+  (* Note the use here of two universe levels, so we can be agnostic about whether i>=uu1. *)
   := ∏ P : hProp, ((X -> P) -> P).
 
-Lemma isapropishinh@{i} (X : Type@{i}) : isaprop@{i} (ishinh_UU@{i} X).
+Lemma isapropishinh (X : Type) : isaprop (ishinh_UU X).
 Proof.
   apply impred.
   intro P. apply impred.
   intros _. apply propproperty.
 Qed.
 
-Definition ishinh@{i} (X : Type@{i}) : hProp
-  := hProppair (ishinh_UU@{i} X) (isapropishinh@{i} X).
+Definition ishinh (X : Type) : hProp
+  := hProppair (ishinh_UU X) (isapropishinh X).
 
 Notation nonempty := ishinh (only parsing).
 
@@ -208,29 +206,29 @@ Definition hinhfun {X Y : UU} (f : X -> Y) : ∥ X ∥ -> ∥ Y ∥ :=
   placed in [hProp UU1]). The first place where RR1 is essentially required is
   in application of [hinhuniv] to a function [X -> ishinh Y] *)
 
-Definition hinhuniv@{i} {X : Type@{i}} {P : hProp} (f : X -> P) (wit : ishinh@{i} X) : P
+Definition hinhuniv {X : Type} {P : hProp} (f : X -> P) (wit : ishinh X) : P
   := wit P f.
 
-Corollary factor_through_squash@{i} {X Q : Type@{i}} :
-  isaprop Q -> (X -> Q) -> ishinh@{i} X -> Q.
+Corollary factor_through_squash {X Q : Type} :
+  isaprop Q -> (X -> Q) -> ishinh X -> Q.
 Proof.
   intros i f h. exact (@hinhuniv X (hProppair Q i) f h).
 Defined.
 
-Corollary squash_to_prop@{i} {X Q : Type@{i}} : ishinh@{i} X -> isaprop Q -> (X -> Q) -> Q.
+Corollary squash_to_prop {X Q : Type} : ishinh X -> isaprop Q -> (X -> Q) -> Q.
 Proof.
-  intros h i f. exact (@hinhuniv X (tpair@{i} _ (ResizeProp Q i) i) f h).
+  intros h i f. exact (@hinhuniv X (hProppair Q i) f h).
 Defined.
 
 Definition hinhand {X Y : UU} (inx1 : ∥ X ∥) (iny1 : ∥ Y ∥) : ∥ X × Y ∥
   := λ P : _, ddualand (inx1 P) (iny1 P).
 
-Definition hinhuniv2@{i} {X Y : Type@{i}} {P : hProp} (f : X -> Y -> P)
+Definition hinhuniv2 {X Y : Type} {P : hProp} (f : X -> Y -> P)
            (isx : ∥ X ∥) (isy : ∥ Y ∥) : P
-  := hinhuniv@{i} (λ xy : X × Y, f (pr1 xy) (pr2 xy)) (hinhand isx isy).
+  := hinhuniv (λ xy : X × Y, f (pr1 xy) (pr2 xy)) (hinhand isx isy).
 
-Definition hinhfun2@{i} {X Y Z : Type@{i}} (f : X -> Y -> Z)
-           (isx : ∥ X ∥) (isy : ∥ Y ∥) : ishinh@{i} Z
+Definition hinhfun2 {X Y Z : Type} (f : X -> Y -> Z)
+           (isx : ∥ X ∥) (isy : ∥ Y ∥) : ishinh Z
   := hinhfun (λ xy: X × Y, f (pr1 xy) (pr2 xy)) (hinhand isx isy).
 
 Definition hinhunivcor1 (P : hProp) : ∥ P ∥ -> P := hinhuniv (idfun P).
@@ -298,12 +296,12 @@ Defined.
 (both depend only on the behavior of the corresponding function between the sets
 of connected components) **)
 
-Definition image@{i} {X Y : Type@{i}} (f : X -> Y) : Type@{i}
-  := total2 (λ y : Y, ishinh@{i} (hfiber f y)).
+Definition image {X Y : Type} (f : X -> Y) : Type
+  := total2 (λ y : Y, ishinh (hfiber f y)).
 Definition imagepair {X Y : UU} (f : X -> Y) :
   ∏ (t : Y), (λ y : Y, ∥ hfiber f y ∥) t → ∑ y : Y, ∥ hfiber f y ∥
   := tpair (λ y : Y, ishinh (hfiber f y)).
-Definition pr1image@{i j} {X Y : Type@{i}} (f : X -> Y) : image@{i} f → Y
+Definition pr1image {X Y : Type} (f : X -> Y) : image f → Y
   := @pr1 _  (λ y : Y, ishinh (hfiber f y)).
 
 Definition prtoimage {X Y : UU} (f : X -> Y) : X -> image f.
@@ -395,14 +393,14 @@ Definition htrue : hProp := hProppair unit isapropunit.
 
 Definition hfalse : hProp := hProppair empty isapropempty.
 
-Definition hconj@{} (P Q : hProp) : hProp
-  := hProppair_uu0 (P × Q) (isapropdirprod _ _ (pr2 P) (pr2 Q)).
+Definition hconj (P Q : hProp) : hProp
+  := hProppair (P × Q) (isapropdirprod _ _ (pr2 P) (pr2 Q)).
 
 Notation "A ∧ B" := (hconj A B) (at level 80, right associativity) : type_scope.
   (* precedence same as /\ *)
   (* in agda-input method, type \and or \wedge *)
 
-Definition hdisj@{i} (P Q : Type@{i}) : hProp := ishinh@{i} (coprod P Q).
+Definition hdisj (P Q : Type) : hProp := ishinh (coprod P Q).
 
 Notation "X ∨ Y" := (hdisj X Y) (at level 85, right associativity) : type_scope.
   (* in agda-input method, type \or *)
@@ -434,14 +432,14 @@ Delimit Scope logic with logic.
 Notation "'¬' X" := (hneg X) (at level 35, right associativity) : logic.
   (* type this in emacs in agda-input method with \neg *)
 
-Definition himpl@{i} (P : Type@{i}) (Q : hProp) : hProp.
+Definition himpl (P : Type) (Q : hProp) : hProp.
 Proof.
-  intros. use (hProppair@{i} (P → Q)). apply impred. intro. apply propproperty.
+  intros. use (hProppair (P → Q)). apply impred. intro. apply propproperty.
 Defined.
 
-Definition himpl_uu0@{} (P : Type@{uu0}) (Q : hProp) : hProp.
+Definition himpl_uu0 (P : Type) (Q : hProp) : hProp.
 Proof.
-  intros. use (tpair@{uu1} isaprop (P → Q)). apply impred. intro. apply propproperty.
+  intros. use (tpair isaprop (P → Q)). apply impred. intro. apply propproperty.
 Defined.
 
 Local Notation "A ⇒ B" := (himpl A B) : logic.
@@ -451,7 +449,7 @@ Local Notation "A ⇒ B" := (himpl A B) : logic.
      CategoryTheory/UnicodeNotations.v *)
 Local Open Scope logic.
 
-Definition hexists@{i} {X : Type@{i}} (P : X -> Type@{i}) := ishinh@{i} (total2 P).
+Definition hexists {X : Type} (P : X -> Type) := ishinh (total2 P).
 
 Notation "'∃' x .. y , P"
   := (ishinh (∑ x ,.. (∑ y , P)..))
@@ -783,8 +781,8 @@ Definition logeqweq (P Q : hProp) : (P -> Q) -> (Q -> P) -> P ≃ Q :=
   λ f g, weqimplimpl f g (pr2 P) (pr2 Q).
 
 (* ** A variant of a lemma proved in uu0b.v *)
-Theorem total2_paths_hProp_equiv@{i} {A : Type@{i}} (B : A -> hProp)
-   (x y : total2@{i} B) : (paths@{i} x y) ≃ (paths@{i} (pr1 x) (pr1 y)).
+Theorem total2_paths_hProp_equiv {A : Type} (B : A -> hProp)
+   (x y : total2 B) : (paths x y) ≃ (paths (pr1 x) (pr1 y)).
 Proof.
   intros.
   apply subtypeInjectivity.
