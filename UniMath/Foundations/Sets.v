@@ -782,14 +782,14 @@ Definition PreorderedSetRelation (X : PreorderedSet) : hrel X := pr1 (pr2 X).
 
 (* partial orderings *)
 Definition PartialOrder@{i j} (X : hSet@{i j}) : Type@{i} := ∑ R : hrel@{i} X, isPartialOrder R.
-Definition PartialOrderpair {X : hSet} (R : hrel X) (is : isPartialOrder R) :
+Definition PartialOrderpair@{i j} {X : hSet@{i j}} (R : hrel@{i} X) (is : isPartialOrder R) :
   PartialOrder X
   := tpair isPartialOrder R is.
 Definition carrierofPartialOrder {X : hSet} : PartialOrder X -> hrel X := pr1.
 Coercion carrierofPartialOrder : PartialOrder >-> hrel.
 
 Definition Poset@{i j} : Type@{j} := ∑ X : hSet@{i j}, PartialOrder X.
-Definition Posetpair (X : hSet) (R : PartialOrder X) : Poset
+Definition Posetpair@{i j} (X : hSet) (R : PartialOrder X) : Poset@{i j}
   := tpair PartialOrder X R.
 Definition carrierofposet@{i j} : Poset@{i j} -> hSet@{i j} := pr1.
 Coercion carrierofposet : Poset >-> hSet.

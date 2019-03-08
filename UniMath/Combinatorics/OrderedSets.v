@@ -413,7 +413,7 @@ Proof.
       + exists X. apply (isofhlevelweqb 2 w). apply setproperty.
       + unfold PartialOrder; simpl. simple refine (_,,_).
         -- intros x y. exact (w x ≤ w y).
-        -- exact (inducedPartialOrder_weq w (posetRelation (⟦ n ⟧)) pr221 (pr1 (⟦ n ⟧))).
+        -- exact (inducedPartialOrder_weq w (posetRelation (⟦ n ⟧)) (pr221 (pr1 (⟦ n ⟧)))).
     * intros x y. apply (pr2 (pr1 (⟦ n ⟧))).
   - simpl.
     apply (isfiniteweqb w).
