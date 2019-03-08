@@ -2,14 +2,14 @@ Require Export UniMath.Foundations.All.
 
 (** *** Propositions equivalent to negations of propositions *)
 
-Definition negProp P := ∑ Q, isaprop Q × (¬P <-> Q).
+Definition negProp@{i u} P := total2@{u} (λ (Q:Type@{i}), isaprop Q × (neg@{i} P <-> Q)).
 
 Definition negProp_to_isaprop {P} (nP : negProp P) : isaprop (pr1 nP)
   := pr1 (pr2 nP).
 
 Definition negProp_to_hProp {P : UU} (Q : negProp P) : hProp.
 Proof.
-  intros. exists (pr1 Q). apply negProp_to_isaprop.
+  intros. apply (hProppair (pr1 Q)). apply negProp_to_isaprop.
 Defined.
 Coercion negProp_to_hProp : negProp >-> hProp.
 

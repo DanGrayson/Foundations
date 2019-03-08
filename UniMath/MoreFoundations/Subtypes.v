@@ -118,20 +118,13 @@ Definition subtype_intersection {X I:UU} (S : I -> hsubtype X) : hsubtype X := �
 
 Notation "⋂ S" := (subtype_intersection S) (at level 100, no associativity) : subtype.
 
-Section hsubtype_univalence.
-
-  Universe i.
-  (* Constraint uu1 < i. *)
-
-  Theorem hsubtype_univalence@{} {X:Type@{i}} (S T : hsubtype@{i} X) : (S = T) ≃ (S ≡ T).
-  Proof.
-    intros. intermediate_weq (∏ x, S x = T x).
-    - apply weqtoforallpaths.
-    - unfold subtype_equal. apply weqonsecfibers; intro x.
-      use weqlogeq.
-  Defined.
-
-End hsubtype_univalence.
+Theorem hsubtype_univalence@{i} {X:Type@{i}} (S T : hsubtype@{i} X) : (S = T) ≃ (S ≡ T).
+Proof.
+  intros. intermediate_weq (∏ x, S x = T x).
+  - apply weqtoforallpaths.
+  - unfold subtype_equal. apply weqonsecfibers; intro x.
+    use weqlogeq.
+Defined.
 
 Theorem hsubtype_rect {X:UU} (S T : hsubtype X) (P : S ≡ T -> UU) :
   (∏ e : S=T, P (hsubtype_univalence S T e)) ≃ ∏ f, P f.

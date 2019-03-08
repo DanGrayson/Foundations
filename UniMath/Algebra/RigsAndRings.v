@@ -2162,7 +2162,7 @@ Proof.
     }
 Defined.
 
-Definition commringfracunel1int_test@{i j|uu1<i+} (X : commring@{i j}) := commringfracunel1int X.
+Definition commringfracunel1int_test@{i j|uu1<i} (X : commring@{i j}) := commringfracunel1int X.
 
 Definition commringfracunel2int (X : commring) (S : @subabmonoid (ringmultabmonoid X)) :
   dirprod X S := dirprodpair 1 (unel S).
@@ -2241,7 +2241,7 @@ Definition commringfracop1@{i j} (X : commring@{i j}) (S : @subabmonoid@{i j} (r
   setquotfun2 (eqrelcommringfrac X S) (eqrelcommringfrac X S)
               (commringfracop1int X S) (commringfracop1comp X S).
 
-Definition commringfracop1_test@{i j|uu1 < i +} (X : commring@{i j}) := commringfracop1 X.
+Definition commringfracop1_test@{i j|uu1 < i} (X : commring@{i j}) := commringfracop1 X.
 
 Lemma commringfracl2 (X : commring) (x x' x'' s s' s'' : X) :
   paths ((s'' * ((s' * x) + (s * x'))) + ((s * s') * x''))
@@ -2313,7 +2313,7 @@ Opaque commringfraccomm1.
 Definition commringfracunel1@{i j} (X : commring@{i j}) (S : @subabmonoid (ringmultabmonoid X)) :
   setquot (eqrelcommringfrac X S) := setquotpr (eqrelcommringfrac X S) (commringfracunel1int X S).
 
-Definition commringfracunel1_test@{i j|uu1<i+} (X : commring@{i j}) := commringfracunel1 X.
+Definition commringfracunel1_test@{i j|uu1<i} (X : commring@{i j}) := commringfracunel1 X.
 
 Definition commringfracunel2 (X : commring) (S : @subabmonoid (ringmultabmonoid X)) :
   setquot (eqrelcommringfrac X S) := setquotpr (eqrelcommringfrac X S) (commringfracunel2int X S).
@@ -2398,7 +2398,7 @@ Proof.
 Defined.
 Opaque commringfraclunit1.
 
-Definition commringfraclunit1_test@{i j|uu1<i+}  (X : commring@{i j}) := commringfraclunit1 X.
+Definition commringfraclunit1_test@{i j|uu1<i}  (X : commring@{i j}) := commringfraclunit1 X.
 
 Lemma commringfracrunit1@{i j} (X : commring@{i j}) (S : @subabmonoid (ringmultabmonoid X)) :
   isrunit (commringfracop1 X S) (commringfracunel1 X S).
@@ -2415,7 +2415,7 @@ Definition commringfracunit1@{i j} (X : commring@{i j}) (S : @subabmonoid (ringm
         (tpair _ (commringfracunel1 X S)
                (dirprodpair (commringfraclunit1 X S) (commringfracrunit1 X S))).
 
-Definition commringfracrunit1_test@{i j|uu1<i+} (X:commring@{i j}) := commringfracrunit1 X.
+Definition commringfracrunit1_test@{i j|uu1<i} (X:commring@{i j}) := commringfracrunit1 X.
 
 Definition commringfracop2@{i j} (X : commring@{i j}) (S : @subabmonoid (ringmultabmonoid X)) :
   binop (setquotinset (eqrelcommringfrac X S)) := abmonoidfracop (ringmultabmonoid X) S.

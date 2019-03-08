@@ -510,27 +510,21 @@ Defined.
 
 (** *** h-fibers of [ ii1 ] and [ ii2 ] *)
 
-Section isinclii1.
-  Universe i.
-  (* Constraint uu1 < i.           (* without this we get uu1 = i below *) *)
-
-  Theorem isinclii1@{} (X Y : Type@{i}) : isincl@{i} (@ii1 X Y).
-  Proof.
-    intros.
-    set (f := @ii1 X Y). set (g := coprodtoboolsum@{i i i i} X Y).
-    set (gf := λ x : X, (g (f x))).
-    set (gf' := λ x : X, tpair@{i} (boolsumfun@{i i i} X Y) true x).
-    assert (h : ∏ x : X, paths@{i} (gf' x) (gf x))
-      by (intro; apply idpath).
-    assert (is1 : isofhlevelf@{i} (S O) gf')
-      by apply (isofhlevelfsnfib O (boolsumfun X Y) true (isasetbool true true)).
-    assert (is2 : isofhlevelf (S O) gf)
-      by apply (isofhlevelfhomot (S O) gf' gf h is1).
-    apply (isofhlevelff (S O) _ _ is2 (isofhlevelfweq (S (S O))
-                                                      (weqcoprodtoboolsum X Y))).
-  Defined.
-
-End isinclii1.
+Theorem isinclii1@{i} (X Y : Type@{i}) : isincl@{i} (@ii1 X Y).
+Proof.
+  intros.
+  set (f := @ii1 X Y). set (g := coprodtoboolsum@{i i i i} X Y).
+  set (gf := λ x : X, (g (f x))).
+  set (gf' := λ x : X, tpair@{i} (boolsumfun@{i i i} X Y) true x).
+  assert (h : ∏ x : X, paths@{i} (gf' x) (gf x))
+    by (intro; apply idpath).
+  assert (is1 : isofhlevelf@{i} (S O) gf')
+    by apply (isofhlevelfsnfib O (boolsumfun X Y) true (isasetbool true true)).
+  assert (is2 : isofhlevelf (S O) gf)
+    by apply (isofhlevelfhomot (S O) gf' gf h is1).
+  apply (isofhlevelff (S O) _ _ is2 (isofhlevelfweq (S (S O))
+                                                    (weqcoprodtoboolsum X Y))).
+Defined.
 
 Corollary iscontrhfiberii1x (X Y : UU) (x : X) :
   iscontr (hfiber (@ii1 X Y) (ii1 x)).

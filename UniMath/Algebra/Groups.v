@@ -35,7 +35,7 @@ Require Import UniMath.MoreFoundations.All.
 
 (** *** Basic definitions *)
 
-Definition gr : UU := total2 (λ X : setwithbinop, isgrop (@op X)).
+Definition gr@{i j} : Type@{j} := total2@{j} (λ X : setwithbinop@{i j}, isgrop (@op X)).
 
 Definition grpair :
   ∏ (t : setwithbinop), (λ X : setwithbinop, isgrop op) t → ∑ X : setwithbinop, isgrop op :=

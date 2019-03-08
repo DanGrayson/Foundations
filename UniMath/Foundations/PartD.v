@@ -1300,8 +1300,8 @@ Definition weqcompweqr@{i} {X Y Z:Type@{i}} (g:Y ≃ Z) :
 Proof.
   intros. simple refine (isweq_iso _ _ _ _).
   { intro h. exact (weqcomp@{i} h (invweq@{i i i} g)). }
-  { intro f. simpl. rewrite weqcompassoc@{i}. rewrite weqcompinvr. apply weqcompidr@{i}. }
-  { intro h. simpl. rewrite weqcompassoc@{i}. rewrite weqcompinvl. apply weqcompidr@{i}. }
+  { intro f. simpl. rewrite weqcompassoc. rewrite weqcompinvr. apply weqcompidr. }
+  { intro h. simpl. rewrite weqcompassoc. rewrite weqcompinvl. apply weqcompidr. }
 Defined.
 
 Definition weqcompinjr@{i} {X Y Z:Type@{i}} {f f':X ≃ Y} (g:Y ≃ Z) :
@@ -1324,7 +1324,7 @@ Proof.
   rewrite weqcompinvl. rewrite weqcompidl. rewrite weqcompinvl. apply idpath.
 Defined.
 
-Definition invmapweqcomp {X Y Z} (f:X ≃ Y) (g:Y ≃ Z) :
+Definition invmapweqcomp@{i} {X Y Z:Type@{i}} (f:X ≃ Y) (g:Y ≃ Z) :
   invmap (weqcomp f g) = weqcomp (invweq g) (invweq f).
 Proof.
   intros. exact (maponpaths pr1weq (invweqcomp f g)).

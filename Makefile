@@ -79,16 +79,29 @@ ifeq ($(BUILD_COQ),yes)
 $(VOFILES) : $(COQBIN)coqc
 endif
 
-all html install uninstall $(VOFILES): build/CoqMakefile.make ; $(MAKE) -f build/CoqMakefile.make $@
-clean:: build/CoqMakefile.make; $(MAKE) -f build/CoqMakefile.make $@
-distclean:: build/CoqMakefile.make; $(MAKE) -f build/CoqMakefile.make cleanall archclean
+COMPILE_OPTIONS := COQBIN=$(COQBIN)
+all html install uninstall $(VOFILES): build/CoqMakefile.make
+	$(MAKE) $(COMPILE_OPTIONS) -f build/CoqMakefile.make $@
+clean:: build/CoqMakefile.make
+	$(MAKE) $(COMPILE_OPTIONS) -f build/CoqMakefile.make $@
+distclean:: build/CoqMakefile.make
+	$(MAKE) $(COMPILE_OPTIONS) -f build/CoqMakefile.make cleanall archclean
 
-WARNING_FLAGS := -notation-overridden
+WARNING_FLAGS = -notation-overridden
 OTHERFLAGS += $(MOREFLAGS)
-OTHERFLAGS += -noinit -indices-matter -w '\'"$(WARNING_FLAGS)"\''
+OTHERFLAGS += -noinit -indices-matter -w $(WARNING_FLAGS)
 ifeq ($(VERBOSE),yes)
 OTHERFLAGS += -verbose
 endif
+
+foo :
+	: "COQBIN        = $(COQBIN)"
+	: "WARNING_FLAGS = $(WARNING_FLAGS)"
+	: "OTHERFLAGS    = $(OTHERFLAGS)"
+	type coqc
+	type coqtop
+	coqc -v
+	coqtop -v
 
 ENHANCEDDOCTARGET = enhanced-html
 ENHANCEDDOCSOURCE = util/enhanced-doc
@@ -209,7 +222,6 @@ distclean::          ; - $(MAKE) -C sub/lablgtk arch-clean
 
 #############################################################################
 # building coq:
-export PATH:=$(shell pwd)/sub/coq/bin:$(PATH)
 CONFIGURE_OPTIONS := -coqide "$(COQIDE_OPTION)" -with-doc no -local -no-custom
 BUILD_TARGETS := coqbinaries tools states
 ifeq ($(DEBUG_COQ),yes)
@@ -469,11 +481,14 @@ endef
 $(foreach P, $(PACKAGES), $(eval $(call make-summary-file,$P)))
 
 # Running the debugger.
-# (Hint: use the emacs package tuareg to make debugging easier.)
+# Hints:
+#     - Run the debugger with "make debug FILE=UniMath/..."
+#     - Run "source db" after starting the debug (see sub/coq/dev/README.md)
+#     - Use the emacs package tuareg to make debugging easier.
 ifeq ($(BUILD_COQ),yes)
-debug: sub/coq/bin/coqtop.byte
-	sub/coq/dev/ocamldebug-coq $< $(OTHERFLAGS) $(COQ_PATH) -compile $(FILE)
-sub/coq/bin/coqtop.byte:	# need dependencies here
+debug: sub/coq/bin/coqc.byte
+	sub/coq/dev/ocamldebug-coq $< $(OTHERFLAGS) $(COQ_PATH) $(FILE)
+sub/coq/bin/coqc.byte sub/coq/bin/coqtop.byte:	# would be good to have some dependencies here
 	$(MAKE) -C sub/coq byte
 endif
 

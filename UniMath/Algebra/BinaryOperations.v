@@ -1305,7 +1305,7 @@ Defined.
 
 (** **** General definitions *)
 
-Definition setwithbinop@{i j|i<j} : Type@{j} := total2 (λ X : hSet@{i j}, binop X).
+Definition setwithbinop@{i j} : Type@{j} := total2 (λ X : hSet@{i j}, binop X).
 
 Definition setwithbinoppair (X : hSet) (opp : binop X) : setwithbinop :=
   tpair (λ X : hSet, binop X) X opp.
@@ -1873,9 +1873,7 @@ Definition binopeqrelpair@{i j} {X : setwithbinop@{i j}} :
   ∏ (t : eqrel X), (λ R : eqrel X, isbinophrel R) t → ∑ R : eqrel X, isbinophrel R :=
   tpair (λ R : eqrel X, isbinophrel R).
 
-Definition binopeqrelpair_test@{i j|uu1<i+} {X : setwithbinop@{i j}} := @binopeqrelpair X.
-
-Definition pr1binopeqrel (X : setwithbinop) : binopeqrel X -> eqrel X :=
+Definition pr1binopeqrel@{i j} (X : setwithbinop@{i j}) : binopeqrel X -> eqrel X :=
   @pr1 _ (λ R : eqrel X, isbinophrel R).
 Coercion pr1binopeqrel : binopeqrel >-> eqrel.
 
@@ -1887,7 +1885,7 @@ Definition binopeqrel_resp_right {X : setwithbinop} (R : binopeqrel X)
            {a b : X} (c : X) (r : R a b) : R (op a c) (op b c) :=
   pr2 (pr2 R) a b c r.
 
-Definition setwithbinopquot@{i j|uu1<=i,i<j} {X : setwithbinop@{i j}} (R : binopeqrel X) : setwithbinop@{i j}.
+Definition setwithbinopquot@{i j} {X : setwithbinop@{i j}} (R : binopeqrel X) : setwithbinop@{i j}.
 Proof.
   split with (setquotinset R).
   set (qt  := setquot R). set (qtset := setquotinset R).
@@ -1895,10 +1893,6 @@ Proof.
   set (qtmlt := setquotfun2 R R op iscomp).
   simpl. unfold binop. apply qtmlt.
 Defined.
-
-Definition setwithbinopquot_test@{i j|uu1<i} {X : setwithbinop@{i j}} := @setwithbinopquot X.
-
-} --- got to here --
 
 Definition ispartbinophrel {X : setwithbinop} (S : hsubtype X) (R : hrel X) : UU :=
   dirprod (∏ a b c : X, S c -> R a b -> R (op c a) (op c b))

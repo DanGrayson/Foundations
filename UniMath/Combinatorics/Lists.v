@@ -12,7 +12,7 @@ Require Import UniMath.Combinatorics.StandardFiniteSets.
 
 Section preamble.
 
-Definition iterprod (n : nat) (A : UU) : UU.
+Definition iterprod@{i} (n : nat) (A : Type@{i}) : Type@{i}.
 Proof.
 induction n as [|n IHn].
 - apply unit.
@@ -353,21 +353,14 @@ Proof.
   exact (weqpair _ (isweqlistfun _)).
 Defined.
 
-Section isofhleveliterprod.
-
-  Universe i.
-  Constraint uu0 < i.           (* without this, we get uu0 = i in the next definition *)
-
-  Lemma isofhleveliterprod (n : nat) (k : nat) {X : Type@{i}} (is1 : isofhlevel n X) : isofhlevel n (iterprod k X).
-  Proof.
-    induction k as [|k IH].
-    - apply isofhlevelcontr, iscontrunit.
-    - apply isofhleveldirprod.
-      + apply is1.
-      + apply IH.
-  Qed.
-
-End isofhleveliterprod.
+Lemma isofhleveliterprod (n : nat) (k : nat) {X : Type} (is1 : isofhlevel n X) : isofhlevel n (iterprod k X).
+Proof.
+  induction k as [|k IH].
+  - apply isofhlevelcontr, iscontrunit.
+  - apply isofhleveldirprod.
+    + apply is1.
+    + apply IH.
+Qed.
 
 Lemma isofhlevellist (n : nat) {X : UU} (is1 : isofhlevel (S (S n)) X) : isofhlevel (S (S n)) (list X).
 Proof.

@@ -205,7 +205,7 @@ Definition adjev2 {X Y : UU} (phi : ((X -> Y) -> Y) -> Y) : X -> Y :=
 
 (** *** Pairwise direct products *)
 
-Definition dirprod@{i +} (X Y : Type@{i}) : Type@{i} := ∑ x:X, Y.
+Definition dirprod@{i} (X Y : Type@{i}) : Type@{i} := ∑ x:X, Y.
 
 Notation "A × B" := (dirprod A B) : type_scope.
 
@@ -232,7 +232,7 @@ Defined.
 
 (** *** Negation and double negation *)
 
-Definition neg (X : UU) : UU := X -> empty.
+Definition neg@{i} (X : Type@{i}) : Type@{i} := X -> empty.
 
 Notation "'¬' X" := (neg X).
 (* type this in emacs in agda-input method with \neg *)
@@ -292,7 +292,7 @@ Proof.
   - intros y'. exact x.
 Defined.
 
-Definition logeq_both_false@{i} {X Y : Type@{i}} : neg@{i i} X -> neg@{i i} Y -> (X <-> Y).
+Definition logeq_both_false@{i} {X Y : Type@{i}} : neg@{i} X -> neg@{i} Y -> (X <-> Y).
 Proof.
   intros nx ny.
   split.
@@ -1030,7 +1030,7 @@ Defined.
 
 Definition hfiber@{i} {X Y : Type@{i}} (f : X -> Y) (y : Y) : Type@{i} := total2 (λ x, f x = y).
 
-Definition hfiberpair {X Y : UU} (f : X -> Y) {y : Y}
+Definition hfiberpair@{i} {X Y : Type@{i}} (f : X -> Y) {y : Y}
            (x : X) (e : f x = y) : hfiber f y :=
   tpair _ x e.
 
@@ -1240,7 +1240,7 @@ Definition weq@{i} (X Y : Type@{i}) : Type@{i} := ∑ f:X->Y, isweq@{i} f.
 Notation "X ≃ Y" := (weq X Y) : type_scope.
 (* written \~- or \simeq in Agda input method *)
 
-Definition pr1weq {X Y : UU} := pr1 : X ≃ Y -> (X -> Y).
+Definition pr1weq@{i} {X Y : Type@{i}} := pr1 : X ≃ Y -> (X -> Y).
 Coercion pr1weq : weq >-> Funclass.
 
 Definition weqproperty {X Y} (f:X≃Y) : isweq f := pr2 f.
@@ -1543,25 +1543,18 @@ Proof.
   apply (iscontrpathsinunit tt tt).
 Defined.
 
-Section isweqcontrtounit.
-
-  Universe i.
-  (* Constraint uu0 < i.           (* without this, we get i = uu0 in the next definition *) *)
-
-  Lemma isweqcontrtounit@{} {T : Type@{i}} (is : iscontr@{i} T) : isweq@{i} (λ _:T, tt).
-  Proof.
-    intros. unfold isweq. intro y. induction y.
-    induction is as [c h].
-    set (hc := hfiberpair@{i i i} _ c (idpath tt)).
-    split with hc.
-    intros ha.
-    induction ha as [x e].
-    unfold hc. unfold hfiberpair. unfold isProofIrrelevantUnit.
-    apply (λ q, two_arg_paths_f (h x) q).
-    use ifcontrthenunitl0.
-  Defined.
-
-End isweqcontrtounit.
+Lemma isweqcontrtounit@{i} {T : Type@{i}} (is : iscontr@{i} T) : isweq@{i} (λ _:T, tt).
+Proof.
+  intros. unfold isweq. intro y. induction y.
+  induction is as [c h].
+  set (hc := hfiberpair@{i} _ c (idpath tt)).
+  split with hc.
+  intros ha.
+  induction ha as [x e].
+  unfold hc. unfold hfiberpair. unfold isProofIrrelevantUnit.
+  apply (λ q, two_arg_paths_f (h x) q).
+  use ifcontrthenunitl0.
+Defined.
 
 Definition weqcontrtounit {T : UU} (is : iscontr T) : T ≃ unit :=
   weqpair _ (isweqcontrtounit is).

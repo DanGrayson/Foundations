@@ -114,17 +114,13 @@ Proof.
   apply invmap. apply subtypeInjectivity_prop.
 Defined.
 
-Section Foo.
-
-  Universe i.
-  Constraint uu0<i.
-
-Corollary impred_prop@{} {T : Type@{i}} (P : T -> hProp) : isaprop@{i} (∏ t : T, P t).
+Corollary impred_prop@{i|uu0<i+} {T : Type@{i}} (P : T -> hProp) : isaprop@{i} (∏ t : T, P t).
+(* the inequality works around the bug reported at https://github.com/coq/coq/issues/8196 *)
 Proof.
-  intros. apply impred@{i}; intro. apply propproperty.
+  intros. apply impred; intro. apply propproperty.
 Defined.
 
-End Foo.
+Goal @impred_prop Type@{uu0} = @impred_prop Type@{uu0}. (* ensure that i=uu0 is not imposed *) Abort.
 
 Corollary isaprop_total2 (X : hProp) (Y : X -> hProp) : isaprop (∑ x, Y x).
 Proof.
@@ -134,17 +130,13 @@ Proof.
   - intro x. apply propproperty.
 Defined.
 
-Section forall_hProp.
+Lemma isaprop_forall_hProp@{i|uu0<i+} (X : Type@{i}) (Y : X -> hProp) : isaprop@{i} (∏ x, Y x).
+(* the inequality works around the bug reported at https://github.com/coq/coq/issues/8196 *)
+Proof.
+  intros. apply impred_isaprop. intro x. apply propproperty.
+Defined.
 
-  Universe i.
-  Constraint uu0 < i.           (* without this, the next def'n gives i = uu0 *)
-
-  Lemma isaprop_forall_hProp@{} (X : Type@{i}) (Y : X -> hProp) : isaprop@{i} (∏ x, Y x).
-  Proof.
-    intros. apply impred_isaprop. intro x. apply propproperty.
-  Defined.
-
-End forall_hProp.
+Goal isaprop_forall_hProp Type@{uu0} = isaprop_forall_hProp Type@{uu0}. Abort.
 
 Definition forall_hProp@{i} {X : Type@{i}} (Y : X -> hProp) : hProp
   := hProppair@{i} (∏ x, Y x) (isaprop_forall_hProp X Y).
@@ -216,12 +208,13 @@ Definition hinhfun {X Y : UU} (f : X -> Y) : ∥ X ∥ -> ∥ Y ∥ :=
   placed in [hProp UU1]). The first place where RR1 is essentially required is
   in application of [hinhuniv] to a function [X -> ishinh Y] *)
 
-Definition hinhuniv {X : UU} {P : hProp} (f : X -> P) (wit : ∥ X ∥) : P
+Definition hinhuniv@{i} {X : Type@{i}} {P : hProp} (f : X -> P) (wit : ishinh@{i} X) : P
   := wit P f.
 
-Corollary factor_through_squash {X Q : UU} : isaprop Q -> (X -> Q) -> ∥ X ∥ -> Q.
+Corollary factor_through_squash@{i} {X Q : Type@{i}} :
+  isaprop Q -> (X -> Q) -> ishinh@{i} X -> Q.
 Proof.
-  intros i f h. exact (@hinhuniv X (Q,,i) f h).
+  intros i f h. exact (@hinhuniv X (hProppair Q i) f h).
 Defined.
 
 Corollary squash_to_prop@{i} {X Q : Type@{i}} : ishinh@{i} X -> isaprop Q -> (X -> Q) -> Q.
@@ -232,12 +225,12 @@ Defined.
 Definition hinhand {X Y : UU} (inx1 : ∥ X ∥) (iny1 : ∥ Y ∥) : ∥ X × Y ∥
   := λ P : _, ddualand (inx1 P) (iny1 P).
 
-Definition hinhuniv2 {X Y : UU} {P : hProp} (f : X -> Y -> P)
+Definition hinhuniv2@{i} {X Y : Type@{i}} {P : hProp} (f : X -> Y -> P)
            (isx : ∥ X ∥) (isy : ∥ Y ∥) : P
-  := hinhuniv (λ xy : X × Y, f (pr1 xy) (pr2 xy)) (hinhand isx isy).
+  := hinhuniv@{i} (λ xy : X × Y, f (pr1 xy) (pr2 xy)) (hinhand isx isy).
 
-Definition hinhfun2 {X Y Z : UU} (f : X -> Y -> Z)
-           (isx : ∥ X ∥) (isy : ∥ Y ∥) : ∥ Z ∥
+Definition hinhfun2@{i} {X Y Z : Type@{i}} (f : X -> Y -> Z)
+           (isx : ∥ X ∥) (isy : ∥ Y ∥) : ishinh@{i} Z
   := hinhfun (λ xy: X × Y, f (pr1 xy) (pr2 xy)) (hinhand isx isy).
 
 Definition hinhunivcor1 (P : hProp) : ∥ P ∥ -> P := hinhuniv (idfun P).

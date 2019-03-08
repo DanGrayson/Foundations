@@ -305,20 +305,12 @@ Proof.
   intros. apply (isinclpr1 A (λ x : _, pr2 (A x))).
 Defined.
 
-Section isasethsubtype.
-
-  Universe i.
-  (* Constraint uu1 < i. *)
-  (* without the constraint we get uu1 = i below *)
-
-  Lemma isasethsubtype@{} (X : Type@{i}) : isaset (hsubtype@{i} X).
-  Proof.
-    change (isofhlevel 2 (hsubtype X)).
-    apply impred; intro x.
-    exact isasethProp.
-  Defined.
-
-End isasethsubtype.
+Lemma isasethsubtype@{i} (X : Type@{i}) : isaset (hsubtype@{i} X).
+Proof.
+  change (isofhlevel 2 (hsubtype X)).
+  apply impred; intro x.
+  exact isasethProp.
+Defined.
 
 Definition totalsubtype (X : UU) : hsubtype X := λ x, htrue.
 
@@ -1678,7 +1670,7 @@ Lemma isapropimeqclass@{i u} {X : Type@{i}} (R : hrel X) (Y : hSet@{i u}) (f : X
 Proof.
   intros. apply isapropsubtype@{i u}.
   intros y1 y2. simpl.
-  apply (@hinhuniv2@{i i i i i i} _ _ (hProppair@{i} (y1 = y2) (pr2 Y y1 y2))).
+  apply (@hinhuniv2@{i} _ _ (hProppair@{i} (y1 = y2) (pr2 Y y1 y2))).
   intros x1 x2. simpl.
   induction c as [ A iseq ].
   induction x1 as [ x1 is1 ]. induction x2 as [ x2 is2 ].
@@ -2273,15 +2265,8 @@ Proof.
   apply (is _ _ _ _ r r0).
 Defined.
 
-Section quotrel.
-
-  Universe i u.
-  (* Constraint uu1 < i.           (* without this, the next definition yields uu1=i *) *)
-
-  Definition quotrel@{} {X : Type@{i}} {R L : hrel@{i} X} (is : iscomprelrel@{i} R L) :
-    hrel (setquot@{i} R) := @setquotuniv2'@{i u} X hProp R isasethProp L is.
-
-End quotrel.
+Definition quotrel@{i u} {X : Type@{i}} {R L : hrel@{i} X} (is : iscomprelrel@{i} R L) :
+  hrel (setquot@{i} R) := @setquotuniv2'@{i u} X hProp R isasethProp L is.
 
 Lemma istransquotrel {X : UU} {R : eqrel X} {L : hrel X}
       (is : iscomprelrel R L) (isl : istrans L) : istrans (quotrel is).
@@ -2479,38 +2464,30 @@ Defined.
 
 (** Constructive proof of decidability of the quotient relation *)
 
-
-Section quotdecrelint.
-
-  Universe i u.
-  (* Constraint uu1 < i. (* without this, the next definition generates the constraint uu1 = i *) *)
-
-  Definition quotdecrelint@{} {X : Type@{i}} {R : hrel X} (L : decrel X)
-             (is : iscomprelrel R (pr1 L))  : brel (setquot@{i} R).
-  Proof.
-    intros.
-    set (f := decreltobrel@{i} L). unfold brel.
-    (* apply (setquotuniv2 R boolset f). *) apply (setquotuniv2'@{i u} R isasetbool@{} f).
-    intros x x' x0 x0' r r0. unfold f. unfold decreltobrel in *.
-    induction (pr2 L x x0') as [ l | nl ].
-    - induction (pr2 L x' x0') as [ l' | nl' ].
-      + induction (pr2 L x x0) as [ l'' | nl'' ].
-        * apply idpath.
-        * set (e := is x x' x0 x0' r r0).
-          induction e. induction (nl'' l').
-      + induction (pr2 L x x0) as [ l'' | nl'' ].
-        * set (e := is x x' x0 x0' r r0). induction e. induction (nl' l'').
-        * apply idpath.
-    - induction (pr2 L x x0) as [ l' | nl' ].
-      + induction (pr2 L x' x0') as [ l'' | nl'' ].
-        * apply idpath.
-        * set (e := is x x' x0 x0' r r0). induction e. induction (nl'' l').
-      + induction (pr2 L x' x0') as [ l'' | nl'' ].
-        * set (e := is x x' x0 x0' r r0). induction e. induction (nl' l'').
-        * apply idpath.
-  Defined.
-
-End quotdecrelint.
+Definition quotdecrelint@{i u} {X : Type@{i}} {R : hrel X} (L : decrel X)
+           (is : iscomprelrel R (pr1 L))  : brel (setquot@{i} R).
+Proof.
+  intros.
+  set (f := decreltobrel@{i} L). unfold brel.
+  (* apply (setquotuniv2 R boolset f). *) apply (setquotuniv2'@{i u} R isasetbool@{} f).
+  intros x x' x0 x0' r r0. unfold f. unfold decreltobrel in *.
+  induction (pr2 L x x0') as [ l | nl ].
+  - induction (pr2 L x' x0') as [ l' | nl' ].
+    + induction (pr2 L x x0) as [ l'' | nl'' ].
+      * apply idpath.
+      * set (e := is x x' x0 x0' r r0).
+        induction e. induction (nl'' l').
+    + induction (pr2 L x x0) as [ l'' | nl'' ].
+      * set (e := is x x' x0 x0' r r0). induction e. induction (nl' l'').
+      * apply idpath.
+  - induction (pr2 L x x0) as [ l' | nl' ].
+    + induction (pr2 L x' x0') as [ l'' | nl'' ].
+      * apply idpath.
+      * set (e := is x x' x0 x0' r r0). induction e. induction (nl'' l').
+    + induction (pr2 L x' x0') as [ l'' | nl'' ].
+      * set (e := is x x' x0 x0' r r0). induction e. induction (nl' l'').
+      * apply idpath.
+Defined.
 
 Definition quotdecrelintlogeq {X : Type} {R : eqrel X} (L : decrel X)
            (is : iscomprelrel R (pr1 L)) (x x' : setquot R) :

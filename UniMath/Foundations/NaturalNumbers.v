@@ -617,7 +617,7 @@ Definition natgehsnn (n : nat) : (S n) ≥ n := natlehnsn n.
 
 (** *** Comparison alternatives *)
 
-Definition natgthorleh@{+} (n m : nat) : coprod@{uu0} (n > m) (n ≤ m).
+Definition natgthorleh@{} (n m : nat) : coprod@{uu0} (n > m) (n ≤ m).
 Proof.
   intros.
   induction (isdecrelnatgth n m) as [a|a].

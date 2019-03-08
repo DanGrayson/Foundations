@@ -386,7 +386,7 @@ Proof.
   intros h x. simpl.  exact (assocax _ h x g).
 Defined.
 
-Lemma pr1weq_injectivity {X Y} (f g:X ≃ Y) : (f = g) ≃ (pr1weq f = pr1weq g).
+Lemma pr1weq_injectivity@{i j} {X Y} (f g:X ≃ Y) : (f = g) ≃ (pr1weq@{i} f = pr1weq g).
 Proof.
   intros. apply weqonpathsincl. apply isinclpr1weq.
 Defined.
