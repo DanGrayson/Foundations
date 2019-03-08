@@ -13,68 +13,18 @@ and under [Arch/Manjaro Linux](#preparing-for-the-installation-under-arch-linux-
 
 ### Preparing for the installation under Mac OS X
 
-To prepare for the installation under Mac OS X, there are two methods.
+NB: The method explained below is recommended for beginners.
+A more flexible, but complex, installation method is given in [INSTALL\_MACOS.md](./INSTALL_MACOS.md).
 
-#### First method (recommended for beginners)
-
-Under Mac OS X, the most convenient way to
-do that is with "Homebrew", available from http://brew.sh/, with the following
-command:
-
+1. Install "Homebrew", available from http://brew.sh/.
+2. Using Homebrew, install ocaml with the following command:
 ```bash
-$ brew install objective-caml ocaml-num camlp4 camlp5 lablgtk bash ocaml-findlib
+$ brew install objective-caml ocaml-num camlp4 camlp5 bash ocaml-findlib
 ```
-
-If installing `lablgtk` fails, you can omit it, but you won't be able to build
-the program `coqide` and will have to depend on ProofGeneral instead.
-
+3. Install Emacs from https://emacsformacosx.com/.
+  
 Now proceed with [Installation of ProofGeneral](#installation-of-proofgeneral-all-operating-systems) and [Installing UniMath](#installing-unimath) below.
 
-#### Second method (allows more flexibility, but is more involved than first method)
-
-Under Mac OS X, the most convenient way to do that is with "Homebrew",
-available from http://brew.sh/, with the following command:
-
-```bash
-$ brew install bash opam gtk+
-$ opam init --no-setup --compiler=4.02.3
-$ opam install --yes lablgtk camlp5 ocamlfind num
-```
-
-(Note: opam's camlp5 cannot be compiled with ocamlc 4.06.1 currently.)
-
-Now arrange for the programs installed by opam to be available to the currently
-running shell:
-
-```bash
-$ eval `opam config env`
-```
-
-If you haven't done it previously in connection with installing opam, as you
-have just done, arrange for the programs (such as ocamlc) that opam will
-install for you to be found by your shell, the next time you log in, by adding
-the line
-
-```bash
-$ eval `opam config env`
-```
-
-to your file `~/.profile`, after any lines in the file that add
-`/usr/local/bin` to the `PATH` environment variable.  (Homebrew and opam both
-know how to install `ocamlc`, and we intend to use `opam` to get a version of
-`ocamlc` appropriate for compiling the version of Coq used by UniMath.)
-
-The next time you log in, or now, you may check that the progams installed by
-opam are accessible by you as follows.
-
-```bash
-$ type ocamlc
-ocamlc is hashed (/Users/XXXXXXXX/.opam/4.02.3/bin/ocamlc)
-$ ocamlc -version
-4.02.3
-$ camlp5 -v
-Camlp5 version 7.03 (ocaml 4.02.3)
-```
 
 ### Preparing for the installation under Ubuntu or Debian (Linux)
 
@@ -82,20 +32,22 @@ Under Ubuntu or Debian, you may install ocaml with the
 following shell command.
 
 ```bash
- sudo apt-get install build-essential git ocaml ocaml-nox ocaml-native-compilers camlp4-extra camlp5 libgtk2.0 libgtksourceview2.0 liblablgtk-extras-ocaml-dev ocaml-findlib
+ sudo apt-get install build-essential git ocaml ocaml-nox ocaml-native-compilers camlp4-extra camlp5 libgtk2.0 libgtksourceview2.0 liblablgtk-extras-ocaml-dev ocaml-findlib emacs
 ```
+Now proceed with [Installation of ProofGeneral](#installation-of-proofgeneral-all-operating-systems) and [Installing UniMath](#installing-unimath) below.
 
 ### Preparing for the installation under Arch Linux or Manjaro Linux
 
-Under Arch Linux or Manjaro Linux you may install ocaml with the following
+Under Arch Linux or Manjaro Linux you may install ocaml and Emacs  with the following
 shell commands.
 
 ```bash
  sudo pacman --sync --needed archlinux-keyring
  sudo pacman-key --populate archlinux
  sudo pacman --sync --needed ocaml camlp5 ocaml-findlib ocaml-num
+ sudo pacman -S emacs
 ```
-
+Now proceed with [Installation of ProofGeneral](#installation-of-proofgeneral-all-operating-systems) and [Installing UniMath](#installing-unimath) below.
 ## Installation of ProofGeneral (all operating systems)
 
 You may obtain ProofGeneral from by using the quick installation instructions
@@ -123,58 +75,48 @@ shell command (in this directory).
 $ make
 ```
 
-To compile an individual package and the files it depends on, e.g., the package `CategoryTheory`, issue
-```bash
-$ make CategoryTheory
-```
+Once this is done, you can start [browsing and editing UniMath](./USAGE.md).
+Below, we explain how to compile individual packages of UniMath, and how to
+create HTML documentation.
 
-To compile an individual file and the files it depends on, e.g., the file `CategoryTheory/Categories.v`, issue
-```bash
-$ make UniMath/CategoryTheory/Categories.vo
-```
-Note the extension `*.vo` required in the command.
+### Building individual packages and HTML documentation
 
-If you wish also to build the program ```coqide```, then issue the following
-command instead of the one above.
+- To compile an individual package and the files it depends on, e.g., the package `CategoryTheory`, issue
+   ```bash
+   $ make CategoryTheory
+   ```
 
-```bash
-$ make BUILD_COQIDE=yes
-```
+- To compile an individual file and the files it depends on, e.g., the file `CategoryTheory/Categories.v`, issue
+   ```bash
+   $ make UniMath/CategoryTheory/Categories.vo
+   ```
+   Note the extension `*.vo` required in the command.
 
-Alternatively, you can specify the value of the BUILD_COQIDE option more
-permanently by following the instructions in the file
-build/Makefile-configuration-template.
+- To create the standard HTML documentation provided by coqdoc:
+   ```bash
+   $ make html
+   ```
+   The documentation is created in the subdirectory ```html```.
 
-Later on, after running the command `make install` as instructed below, in
-order to run the program ```coqide```, you may use the following command.
+- To create HTML documentation with "hidden" proofs:
+   ```bash
+   $ make doc
+   ```
+   In this version of the documentation, any proof enclosed within ```Proof.``` and ```Qed.```/```Defined.``` is replaced by a button ```Show proof.```.
+   Clicking on this button unveils (unfolds) the corresponding proof. A ```Hide proof``` button can be used to fold the proof again.
+   The documentation is created in the subdirectory ```enhanced-html```.
+   (This feature requires the use of the otherwise optional ```Proof``` command of
+   the Coq vernacular language to indicate the beginning of the proof.  Toggling
+   of proofs requires an internet connection for downloading the ```jquery```
+   library.)
 
-```bash
-$ sub/coq/bin/coqide -indices-matter -type-in-type -Q UniMath UniMath
-```
+- To install UniMath in the ```user-contrib``` directory of Coq, for use by other developments:
+   ```bash
+   $ make install
+   ```
+   The path to that directory from here, by default, is ./sub/coq/user-contrib/.
 
-To create the standard HTML documentation provided by coqdoc:
-```bash
-$ make html
-```
-The documentation is created in the subdirectory ```html```.
-
-To create HTML documentation with "hidden" proofs:
-```bash
-$ make doc
-```
-In this version of the documentation, any proof enclosed within ```Proof.``` and ```Qed.```/```Defined.``` is replaced by a button ```Show proof.```.
-Clicking on this button unveils (unfolds) the corresponding proof. A ```Hide proof``` button can be used to fold the proof again.
-The documentation is created in the subdirectory ```enhanced-html```.
-(This feature requires the use of the otherwise optional ```Proof``` command of
-the Coq vernacular language to indicate the beginning of the proof.  Toggling
-of proofs requires an internet connection for downloading the ```jquery```
-library.)
-
-To install UniMath in the ```user-contrib``` directory of Coq, for use by other developments:
-```bash
-$ make install
-```
-The path to that directory from here, by default, is ./sub/coq/user-contrib/.
+- To install [CoqIDE](https://coq.inria.fr/refman/practical-tools/coqide.html), see [INSTALL\_COQIDE](./INSTALL_COQIDE.md).
 
 ## TAGS files
 
