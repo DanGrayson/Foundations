@@ -89,7 +89,7 @@ Definition hProptoType@{} := @pr1@{uu1} _ _ : hProp -> Type@{uu0}.
 
 Coercion hProptoType : hProp >-> Sortclass.
 
-Definition propproperty (P : hProp) := pr2 P : isaprop (pr1 P).
+Definition propproperty@{i} (P : hProp) := pr2 P : isaprop@{i} P.
 
 (** ** The type [tildehProp] of pairs (P, p : P) where [P : hProp] *)
 
@@ -320,8 +320,9 @@ Defined.
 
 Lemma isinclpr1image {X Y : Type} (f : X -> Y): isincl (pr1image f).
 Proof.
-  intros. refine (isofhlevelfpr1 _ _ _).
-  intro. apply (pr2 (ishinh (hfiber f x))).
+  refine (isofhlevelfpr1 _ _ _).
+  intro.
+  apply propproperty.
 Defined.
 
 Lemma issurjprtoimage {X Y : UU} (f : X -> Y) : issurjective (prtoimage f).
@@ -435,11 +436,6 @@ Notation "'¬' X" := (hneg X) (at level 35, right associativity) : logic.
 Definition himpl (P : Type) (Q : hProp) : hProp.
 Proof.
   intros. use (hProppair (P → Q)). apply impred. intro. apply propproperty.
-Defined.
-
-Definition himpl_uu0 (P : Type) (Q : hProp) : hProp.
-Proof.
-  intros. use (tpair isaprop (P → Q)). apply impred. intro. apply propproperty.
 Defined.
 
 Local Notation "A ⇒ B" := (himpl A B) : logic.

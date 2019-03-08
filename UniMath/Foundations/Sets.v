@@ -304,8 +304,13 @@ Notation "'∑' x .. y , P"
 
 Lemma isinclpr1carrier {X : Type} (A : hsubtype X) : isincl (@pr1carrier X A).
 Proof.
-  intros. apply (isinclpr1 A (λ x : _, pr2 (A x))).
+  intros.
+  apply isinclpr1.
+  intros x.
+  apply propproperty.
 Defined.
+
+Goal @isinclpr1carrier nat = @isinclpr1carrier nat. (* test universe constraints *) Abort.
 
 Lemma isasethsubtype (X : Type) : isaset (hsubtype X).
 Proof.
@@ -397,24 +402,21 @@ Defined.
 
 (** *** A subtype with paths between any two elements is an [hProp]. *)
 
-
 Lemma isapropsubtype {X : Type} (A : hsubtype X)
       (is : ∏ (x1 x2 : X), A x1 -> A x2 -> x1 = x2) : isaprop (carrier A).
 Proof.
-  intros. apply invproofirrelevance.
-  intros x x'.
-  assert (X0 : isincl (@pr1 _ A)).
-  {
-    apply isinclpr1.
-    intro x0.
-    apply (pr2 (A x0)).
-  }
-  apply (invmaponpathsincl (@pr1 _ A) X0).
-  induction x as [ x0 is0 ].
-  induction x' as [ x0' is0' ].
+  apply invproofirrelevance; intros x x'.
+  apply (invmaponpathsincl (pr1carrier A)).
+  { apply isinclpr1. intro x0.
+    exact (propproperty _). }
+  induction x as [ x0 is0 ], x' as [ x0' is0' ].
   simpl.
-  apply (is x0 x0' is0 is0').
+  exact (is x0 x0' is0 is0').
 Defined.
+
+Goal @isapropsubtype Type@{uu0} = @isapropsubtype Type@{uu0}.
+  (* the purpose of this is to test for bad constraints on the universe parameters of isapropsubtype, so don't delete it *)
+Abort.
 
 Definition squash_pairs_to_set {Y : UU} (F : Y -> UU) :
   (isaset Y) -> (∏ y y', F y -> F y' -> y = y') -> (∃ y, F y) -> Y.
@@ -2982,7 +2984,6 @@ Proof.
   apply (invmaponpathsincl _ (isinclpr1image (compevmapset R))
                            (setquot2pr R x) (setquot2pr R x') e1).
 Defined.
-
 
 (** *** Universal property of [seqtquot2 R] for functions to sets satisfying compatibility condition [iscomprelfun] *)
 

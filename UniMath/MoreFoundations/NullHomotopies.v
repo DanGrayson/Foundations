@@ -36,8 +36,8 @@ Proof.
   apply impred; intros x. apply is.
 Defined.
 
-Lemma isaprop_NullHomotopyTo@{i} {X Y:Type@{i}} (is:isaset Y) (f:X->Y) :
-  ishinh@{i} X -> isaprop (NullHomotopyTo f).
+Lemma isaprop_NullHomotopyTo {X Y:Type} (is:isaset Y) (f:X->Y) :
+  ishinh X -> isaprop (NullHomotopyTo f).
 Proof.
   apply factor_through_squash.
   apply isapropisaprop.

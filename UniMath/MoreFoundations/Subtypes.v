@@ -36,8 +36,8 @@ Notation " S ⊊ T " := (subtype_smallerThan S T) (at level 70) : subtype.
 
 Local Open Scope logic.
 
-Definition subtype_equal@{i} {X:Type@{i}} (S T : hsubtype@{i} X) : hProp
-  := forall_hProp@{i} (λ x, S x ⇔ T x).
+Definition subtype_equal {X:Type} (S T : hsubtype X) : hProp
+  := forall_hProp (λ x, S x ⇔ T x).
 
 Notation " S ≡ T " := (subtype_equal S T) (at level 70) : subtype.
 
@@ -118,7 +118,7 @@ Definition subtype_intersection {X I:UU} (S : I -> hsubtype X) : hsubtype X := �
 
 Notation "⋂ S" := (subtype_intersection S) (at level 100, no associativity) : subtype.
 
-Theorem hsubtype_univalence@{i} {X:Type@{i}} (S T : hsubtype@{i} X) : (S = T) ≃ (S ≡ T).
+Theorem hsubtype_univalence {X:Type} (S T : hsubtype X) : (S = T) ≃ (S ≡ T).
 Proof.
   intros. intermediate_weq (∏ x, S x = T x).
   - apply weqtoforallpaths.

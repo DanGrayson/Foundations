@@ -341,7 +341,7 @@ Proof.
     + intros ng1 ng2. apply (maponpaths S (IHn m ng1 ng2)).
 Defined.
 
-Lemma isdecrelnatgth@{} : isdecrel@{uu1} natgth.
+Lemma isdecrelnatgth : isdecrel natgth.
 Proof.
   intros n m. apply (isdeceqbool (natgtb n m) true).
 Defined.
