@@ -484,7 +484,7 @@ Proof.
     intermediate_weq (S ╝ T).
     - apply total2_paths_equiv.
     - intermediate_weq (∑ e : S ≡ T, S ≼ T ∧ T ≼ S)%prop.
-      + apply weqbandf.
+      + refine (weqbandf _ _ _ _).
         * apply hsubtype_univalence.
         * intro p. induction S as [S v], T as [T w]. simpl in p. induction p.
           change (v=w ≃ (S,, v ≼ S,, w ∧ S,, w ≼ S,, v)).
@@ -508,7 +508,7 @@ Proof.
             assert (triv : ∏ (f:∏ x : X, S x → S x) (x:carrier_set S), subtype_inc f x = x).
             { intros f s. apply subtypeEquality_prop. reflexivity. }
             apply funextfun; intros s. apply funextfun; intros t.
-            apply hPropUnivalence.
+            use hPropUnivalence.
             { intros le. assert (q := b s t le). rewrite 2 triv in q. exact q. }
             { intros le. assert (q := e s t le). rewrite 2 triv in q. exact q. } }
           { apply setproperty. }
@@ -612,7 +612,7 @@ Proof.
     generalize lt; clear lt.
     apply negf.
     intros le'.
-    apply (pr2 (wosub_fidelity ST (x,, Sx) (y,, Sy))).
+    use (pr2 (wosub_fidelity ST (x,, Sx) (y,, Sy))).
     now apply (h1'' (S := T) le').
   - intros [Ty lt].
     assert (Q := wosub_le_subi ST x y Sx Ty); simpl in Q.
@@ -723,10 +723,10 @@ Proof.
   apply (squash_to_hProp (chain i j)). intros [c|c].
   - split.
     + intro l. assert (q := wosub_le_comp c _ _ l); clear l. now apply (h1'' q).
-    + intro l. apply (pr2 ((wosub_fidelity c) (x,,xi) (y,,yi))).
+    + intro l. use (pr2 ((wosub_fidelity c) (x,,xi) (y,,yi))).
       now apply (@h1'' X (S j) _ _ _ _ l).
   - split.
-    + intro l. apply (pr2 ((wosub_fidelity c) (x,,xj) (y,,yj))).
+    + intro l. use (pr2 ((wosub_fidelity c) (x,,xj) (y,,yj))).
       now apply (@h1'' X (S i) _ _ _ _ l).
     + intro l. assert (q := wosub_le_comp c _ _ l); clear l. now apply (h1'' q).
 Defined.
@@ -856,7 +856,7 @@ Proof.
   intros [j [[ij [com ini]] tinSj]]. set (t' := (pr1 t,,tinSj) : S j). unfold sub_initial in ini.
   assert (K := ini (pr1 s) (pr1 t') (pr2 s) (pr2 t')); simpl in K. change (t' ≤ subtype_inc ij s → t ∈ S i) in K.
   apply K; clear K. unfold tosub_order_compat in com.
-  apply (pr2 (tosub_fidelity (chain_union_tosub_le Schain j) t' (subtype_inc ij s))).
+  use (pr2 (tosub_fidelity (chain_union_tosub_le Schain j) t' (subtype_inc ij s))).
   clear com ini.
   assert (p : t = subtype_inc (pr1 (chain_union_tosub_le _ j)) t').
   { now apply subtypeEquality_prop. }
@@ -1145,7 +1145,7 @@ Proof.
     use tpair.
     { exact WD. }
     split.
-    { intros x y le. apply (pr1 (WCD x y)). now apply (h1'' le). }
+    { intros x y le. use (pr1 (WCD x y)). now apply (h1'' le). }
     exact WDi.
   - apply ii2.
     assert (e : W = D).
@@ -1155,7 +1155,7 @@ Proof.
     use tpair.
     { exact WC. }
     split.
-    { intros x y le. apply (pr2 (WCD x y)). now apply (h1'' le). }
+    { intros x y le. use (pr2 (WCD x y)). now apply (h1'' le). }
     exact WCi.
   Unset Printing Coercions.
 Defined.
@@ -1449,7 +1449,7 @@ use tpair.
 - intros x y.
   use hProppair.
   + exact (x = y).
-  + abstract (apply isapropifcontr, isapropunit).
+  + abstract (use isapropifcontr; use isapropunit).
 - repeat split.
   + now intros x y z [].
   + now intros x.

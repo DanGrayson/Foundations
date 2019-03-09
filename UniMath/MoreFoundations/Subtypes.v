@@ -139,8 +139,8 @@ Proof.
   repeat split.
   - intros S T U i j x. exact (j x ∘ i x).
   - intros S x s. exact s.
-  - intros S T i j. apply (invmap (hsubtype_univalence S T)). apply subtype_equal_cond.
-    split; assumption.
+  - intros S T i j. apply (invmap (hsubtype_univalence S T)).
+    exact (pr1 (subtype_equal_cond _ _) (i,,j)).
 Defined.
 
 Lemma subtype_inc_comp {X:UU} {S T U : hsubtype X} (i:S⊆T) (j:T⊆U) (s:S) :
@@ -158,8 +158,8 @@ Defined.
 
 Definition isDecidablePredicate {X} (S:X->hProp) := ∏ x, decidable (S x).
 
-Definition subtype_plus@{i} {X:Type@{i}} (S:hsubtype@{i} X) (z:X) : hsubtype@{i} X
-  := λ x, hdisj@{i} (S x) (z = x).
+Definition subtype_plus {X:Type} (S:hsubtype X) (z:X) : hsubtype X
+  := λ x, hdisj (S x) (z = x).
 
 Definition subtype_plus_incl {X} (S:hsubtype X) (z:X) : S ⊆ subtype_plus S z.
 Proof.

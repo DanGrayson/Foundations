@@ -29,7 +29,7 @@ Proof.
   - exact q.
 Defined.
 
-Definition weqlogeq (P Q : hProp) : (P = Q) ≃ (P ⇔ Q).
+Definition weqlogeq@{i} (P Q : hProp) : weq@{i} (P = Q) (P ⇔ Q).
 Proof.
   intros.
   apply weqimplimpl.

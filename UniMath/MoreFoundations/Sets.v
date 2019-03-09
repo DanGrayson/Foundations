@@ -60,6 +60,8 @@ Proof.
     induction e. change ( f x y = f x' y ). exact (c x x' y). }
 Defined.
 
+Goal @squash_to_hSet_2' nat = @squash_to_hSet_2' nat. (* Test for needless universe constraints *) Abort.
+
 Definition eqset_to_path {X:hSet} (x y:X) : eqset x y -> x = y := λ e, e.
 
 Lemma isapropiscomprelfun {X : UU} {Y : hSet} (R : hrel X) (f : X -> Y) : isaprop (iscomprelfun R f).

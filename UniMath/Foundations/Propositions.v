@@ -90,6 +90,8 @@ Definition hProptoType@{} := @pr1@{uu1} _ _ : hProp -> Type@{uu0}.
 Coercion hProptoType : hProp >-> Sortclass.
 
 Definition propproperty@{i} (P : hProp) := pr2 P : isaprop@{i} P.
+(* The presence of i above offers an important advantage over simply using pr2,
+   which may lead to universes being needlessly identified. *)
 
 (** ** The type [tildehProp] of pairs (P, p : P) where [P : hProp] *)
 
@@ -782,5 +784,5 @@ Theorem total2_paths_hProp_equiv {A : Type} (B : A -> hProp)
 Proof.
   intros.
   apply subtypeInjectivity.
-  intro a. apply (pr2 (B a)).
+  intro a. apply (propproperty (B a)).
 Defined.

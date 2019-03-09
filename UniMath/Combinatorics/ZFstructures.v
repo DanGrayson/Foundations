@@ -80,17 +80,17 @@ Qed.
 
 Definition PointedGraph := ∑ (V : hSet) (E : hrel V), V.
 
-Definition isaroot@{i j} {V : hSet@{i j}} (E : hrel@{i} V) (r : V) : Type@{i} := (∏ w : V, E r w).
+Definition isaroot@{i j k} {V : hSet@{i j}} (E : hrel@{i k} V) (r : V) : Type@{k} := (∏ w : V, E r w).
 
-Lemma isaprop_isaroot@{i j} {V : hSet@{i j}} (E : hrel@{i} V) (r : V) : isaprop (isaroot E r).
+Lemma isaprop_isaroot@{i j k} {V : hSet@{i j}} (E : hrel@{i k} V) (r : V) : isaprop (isaroot E r).
 Proof.
   repeat (apply impred ; intros). apply propproperty.
 Qed.
 
-Definition isTRR@{i j} (V : hSet@{i j}) (E : hrel V) (r : V) : Type@{i} :=
-  isrefl E × istrans E × isaroot E r.
+Definition isTRR@{i j k} (V : hSet@{i j}) (E : hrel@{i k} V) (r : V) : Type@{k} :=
+  isrefl@{k k k} E × istrans@{k k k} E × isaroot@{i j k} E r.
 
-Lemma isaprop_isTRR@{i j} (V : hSet@{i j}) (E : hrel V) (r : V) : isaprop (isTRR@{i j} V E r).
+Lemma isaprop_isTRR@{i j k} (V : hSet@{i j}) (E : hrel V) (r : V) : isaprop (isTRR@{i j k} V E r).
 Proof.
   apply isapropdirprod.
   - apply (isaprop_isrefl E).
@@ -99,7 +99,7 @@ Proof.
     -- apply (isaprop_isaroot E r).
 Qed.
 
-Definition TRRGraphData@{i j} (V : hSet@{i j}) : Type@{i} := ∑ (E : hrel V) (r : V), isTRR V E r.
+Definition TRRGraphData@{i j k} (V : hSet@{i j}) : Type@{k} := ∑ (E : hrel V) (r : V), isTRR@{i j k} V E r.
 
 Lemma isaset_TRRGraphData (V : hSet) : isaset (TRRGraphData V).
 Proof.
@@ -112,28 +112,26 @@ Proof.
      -- intros.  apply hlevelntosn. apply isaprop_isTRR.
 Qed.
 
-Definition TRRGraph@{i j} : Type@{j} := ∑ (V : hSet@{i j}), TRRGraphData V.
+Definition TRRGraph@{i j k} : Type@{k} := ∑ (V : hSet@{i j}), TRRGraphData@{i j k} V.
 
-Definition TRRG_edgerel@{i j} (G : TRRGraph@{i j}) : hrel (pr1 G) := pr12 G.
+Definition TRRG_edgerel@{i j k} (G : TRRGraph@{i j k}) : hrel (pr1 G) := pr12 G.
 
 Local Notation "x ≤ y" := (TRRG_edgerel _ x y)(at level 70).
 
-Definition TRRG_root' (G : TRRGraph) := pr1 (pr2 (pr2 G)).
+Definition TRRG_root (G : TRRGraph) := pr1 (pr2 (pr2 G)).
 
-Definition TRRG_root@{i j} (G : TRRGraph@{i j}) := pr1 (pr2 (pr2 G)).
+Definition TRRG_transitivity@{i j k} (G : TRRGraph@{i j k}) : istrans@{k k k} (TRRG_edgerel@{i j k} G) := pr12 (pr222 G).
 
-Definition TRRG_transitivity@{i j} (G : TRRGraph@{i j}) : istrans (TRRG_edgerel@{i j} G) := pr12 (pr222 G).
-
-Definition selfedge@{i j} (G : TRRGraph@{i j}) (x : pr1 G) : pr1 (pr2 G) x x :=
+Definition selfedge (G : TRRGraph) (x : pr1 G) : pr1 (pr2 G) x x :=
   (pr1 (pr2 (pr2 (pr2 G))) x).
 
 (** Definition of [TRRGraph] homomorphisms [isTRRGhomo], isomorphisms [TRRGraphiso], and a proof
     that isomorphisms are equivalent to identities [TRRGraph_univalence] **)
 
-Definition isTRRGhomo@{i j} {G H : TRRGraph@{i j}} (f : pr1 G → pr1 H) : Type@{i} :=
+Definition isTRRGhomo {G H : TRRGraph} (f : pr1 G → pr1 H) : Type :=
   (∏ (x y : pr1 G), (x ≤ y) <-> (f x ≤ f y)) × (f (TRRG_root G) = TRRG_root H).
 
-Lemma isaprop_isTRRGhomo@{i j} {G H : TRRGraph@{i j}} (f : pr1 G → pr1 H) : isaprop (isTRRGhomo@{i j} f).
+Lemma isaprop_isTRRGhomo {G H : TRRGraph} (f : pr1 G → pr1 H) : isaprop (isTRRGhomo f).
 Proof.
   apply isapropdirprod.
   - repeat (apply impred ; intros). apply isapropdirprod.
@@ -142,9 +140,9 @@ Proof.
   - apply setproperty.
 Qed.
 
-Lemma TRRGhomo_frompath@{i j} (X Y : hSet@{i j}) (G : TRRGraphData@{i j} X) (H : TRRGraphData@{i j} Y) (p : X = Y) :
-  transportf (λ x : hSet, TRRGraphData@{i j} x) p G = H →
-  @isTRRGhomo@{i j} (X ,, G) (Y ,, H) (pr1weq (hSet_univalence _ _ p)).
+Lemma TRRGhomo_frompath (X Y : hSet) (G : TRRGraphData X) (H : TRRGraphData Y) (p : X = Y) :
+  transportf (λ x : hSet, TRRGraphData x) p G = H →
+  @isTRRGhomo (X ,, G) (Y ,, H) (pr1weq (hSet_univalence _ _ p)).
 Proof.
   simpl.
   induction p.
@@ -167,20 +165,20 @@ Qed.
 (* The lemma [helper] below is needed because of some buggy Coq behaviour - perhaps it can be
    eliminated with a different proof *)
 
-Lemma helper@{i j} (X : hSet@{i j}) (E E' : X → X → hProp) (r r' : X) (isE : isTRR@{i j} X E r)
-      (isE' : isTRR@{i j} X E' r') (q : E = E') (σ : r = r') :
-  transportf (λ x : X → X → hProp, ∑ r : X, isTRR@{i j} X x r) q (r ,, isE) = (r' ,, isE').
+Lemma helper (X : hSet) (E E' : X → X → hProp) (r r' : X) (isE : isTRR X E r)
+      (isE' : isTRR X E' r') (q : E = E') (σ : r = r') :
+  transportf (λ x : X → X → hProp, ∑ r : X, isTRR X x r) q (r ,, isE) = (r' ,, isE').
 Proof.
   induction q.
   rewrite idpath_transportf.
   apply total2_paths_equiv.
   exists σ.
   simpl.
-  apply (isaprop_isTRR@{i j} X E r').
+  apply (isaprop_isTRR X E r').
 Qed.
 
-Lemma TRRGhomo_topath@{i j} (X Y : hSet@{i j}) (G : TRRGraphData@{i j} X) (H : TRRGraphData@{i j} Y) (p : X = Y) :
-  @isTRRGhomo (X ,, G) (Y ,, H) (pr1weq (hSet_univalence@{i j} _ _ p)) →
+Lemma TRRGhomo_topath (X Y : hSet) (G : TRRGraphData X) (H : TRRGraphData Y) (p : X = Y) :
+  @isTRRGhomo (X ,, G) (Y ,, H) (pr1weq (hSet_univalence _ _ p)) →
   transportf (λ x : hSet, TRRGraphData x) p G = H.
 Proof.
   induction p.
@@ -204,11 +202,11 @@ Proof.
   apply (helper X (pr1 G) (pr1 H) (pr12 G) (pr12 H) _ _ q σ).
 Qed.
 
-Definition TRRGraphiso@{i j} (G H : TRRGraph@{i j}) : Type@{i} := ∑ (f : pr1 G ≃ pr1 H), isTRRGhomo@{i j} f.
+Definition TRRGraphiso (G H : TRRGraph) : Type := ∑ (f : pr1 G ≃ pr1 H), isTRRGhomo f.
 
 Local Notation "G ≅ H" := (TRRGraphiso G H).
 
-Definition id_TRRGraphiso@{i j} (G : TRRGraph@{i j}) : TRRGraphiso@{i j} G G.
+Definition id_TRRGraphiso (G : TRRGraph) : TRRGraphiso G G.
 Proof.
   exists (idweq (pr1 G)).
   split.
@@ -216,17 +214,17 @@ Proof.
   - reflexivity.
 Defined.
 
-Definition TRRGraph_univalence_map@{i j} (G H : TRRGraph@{i j}) : (G = H) → (G ≅ H).
+Definition TRRGraph_univalence_map (G H : TRRGraph) : (G = H) → (G ≅ H).
 Proof.
   intro p.
   induction p.
   exact (id_TRRGraphiso G).
 Defined.
 
-Definition TRRGraph_univalence_weq1@{i j} (G H : TRRGraph@{i j}) : G = H ≃ G ╝ H :=
+Definition TRRGraph_univalence_weq1 (G H : TRRGraph) : G = H ≃ G ╝ H :=
   total2_paths_equiv _ G H.
 
-Definition TRRGraph_univalence_weq2@{i j} (G H : TRRGraph@{i j}) : G ╝ H ≃ G ≅ H.
+Definition TRRGraph_univalence_weq2 (G H : TRRGraph) : G ╝ H ≃ G ≅ H.
 Proof.
   use weqbandf.
   - exact (hSet_univalence (pr1 G) (pr1 H)).
@@ -234,10 +232,19 @@ Proof.
     * intros q. exact (TRRGhomo_frompath (pr1 G) (pr1 H) (pr2 G) (pr2 H) p q).
     * intros q. exact (TRRGhomo_topath (pr1 G) (pr1 H) (pr2 G) (pr2 H) p q).
     * exact (isaset_TRRGraphData (pr1 H) ((p # pr2 G)%transport) (pr2 H)).
-    * exact (isaprop_isTRRGhomo (hSet_univalence_map (pr1 G) (pr1 H) p)).
+    * Check (isaprop_isTRRGhomo (hSet_univalence_map (pr1 G) (pr1 H) p)).
+      exact (isaprop_isTRRGhomo (hSet_univalence_map (pr1 G) (pr1 H) p)).
 Defined.
 
-Lemma TRRGraph_univalence_weq2_idpath@{i j} (G : TRRGraph@{i j}) :
+Section TestConstraints.
+  Universe i j k.
+  Constraint uu0 < i.
+  Context (T : TRRGraph@{i j k}).
+  Goal @TRRGraph_univalence_weq2 T = @TRRGraph_univalence_weq2 T.
+  Abort.
+End TestConstraints.
+
+Lemma TRRGraph_univalence_weq2_idpath (G : TRRGraph) :
   TRRGraph_univalence_weq2 G G (idpath (pr1 G) ,, idpath (((idpath (pr1 G)) # pr2 G)%transport)) =
   id_TRRGraphiso G.
 Proof.
@@ -246,7 +253,7 @@ Proof.
   apply isaprop_isTRRGhomo.
 Qed.
 
-Lemma TRRGraph_univalence_weq1_idpath@{i j} (G : TRRGraph@{i j}) :
+Lemma TRRGraph_univalence_weq1_idpath (G : TRRGraph) :
   ((TRRGraph_univalence_weq1 G G) (idpath G)) =
   (idpath (pr1 G) ,, idpath (((idpath (pr1 G)) # pr2 G)%transport)).
 Proof.
@@ -255,7 +262,7 @@ Proof.
   reflexivity.
 Qed.
 
-Theorem isweq_TRRGraph_univalence_map@{i j} (G H : TRRGraph@{i j}) : isweq (TRRGraph_univalence_map G H).
+Theorem isweq_TRRGraph_univalence_map (G H : TRRGraph) : isweq (TRRGraph_univalence_map G H).
 Proof.
   use isweqhomot.
   - exact (weqcomp (TRRGraph_univalence_weq1 G H) (TRRGraph_univalence_weq2 G H)).
@@ -268,14 +275,14 @@ Proof.
   - use weqproperty.
 Qed.
 
-Definition TRRGraph_univalence@{i j} (G H : TRRGraph@{i j}) : (G = H) ≃ (G ≅ H).
+Definition TRRGraph_univalence (G H : TRRGraph) : (G = H) ≃ (G ≅ H).
 Proof.
   use weqpair.
   - exact (TRRGraph_univalence_map G H).
   - exact (isweq_TRRGraph_univalence_map G H).
 Defined.
 
-Lemma TRRGraph_univalence_compute@{i j} (G H : TRRGraph@{i j}) :
+Lemma TRRGraph_univalence_compute (G H : TRRGraph) :
   pr1 (TRRGraph_univalence G H) = TRRGraph_univalence_map G H.
 Proof.
   reflexivity.
@@ -284,54 +291,54 @@ Qed.
 (** Definition of trees as a subtype [Tree] of [TRRGraph] and proof of univalence for trees
     [Tree_univalence] **)
 
-Definition DownwardClosure@{i j} {G : TRRGraph@{i j}} (x : pr1 G) : Type@{i} :=
+Definition DownwardClosure {G : TRRGraph} (x : pr1 G) : Type :=
   ∑ y : pr1 G, y ≤ x.
 
 Definition antisymmetric {G :TRRGraph} (y z : pr1 G) : hProp :=
   (y ≤ z) ∧ (z ≤ y) ⇒ (z = y) % set.
 
 Definition total' {G : TRRGraph} (y z : pr1 G) : hProp :=
-  hdisj@{uu1} (y ≤ z) (z ≤ y).            (* G ends up in uu1 !! *)
+  hdisj (y ≤ z) (z ≤ y).            (* G ends up in uu1 !! *)
 
-Definition total@{i j} {G : TRRGraph@{i j}} (y z : pr1 G) : hProp :=
-  hdisj@{uu1} (y ≤ z) (z ≤ y).
+Definition total {G : TRRGraph} (y z : pr1 G) : hProp :=
+  hdisj (y ≤ z) (z ≤ y).
 
-Definition isatree@{i j} (G : TRRGraph@{i j}) : hProp :=
-  ∀ (x : pr1 G) (y z : DownwardClosure x), antisymmetric@{i j i} (pr1 y) (pr1 z) ∧ total (pr1 y) (pr1 z).
+Definition isatree (G : TRRGraph) : hProp :=
+  ∀ (x : pr1 G) (y z : DownwardClosure x), antisymmetric (pr1 y) (pr1 z) ∧ total (pr1 y) (pr1 z).
 
-Definition Tree@{i j} : Type@{j} :=  ∑ G : TRRGraph@{i j}, isatree@{i j} G.
+Definition Tree : Type :=  ∑ G : TRRGraph, isatree G.
 
-Definition Tree_iso@{i j} (T1 T2 : Tree@{i j}) : Type@{i} := pr1 T1 ≅ pr1 T2.
+Definition Tree_iso (T1 T2 : Tree) : Type := pr1 T1 ≅ pr1 T2.
 
-Theorem Tree_univalence@{i j} (T1 T2 : Tree@{i j}) : (T1 = T2) ≃ (Tree_iso T1 T2).
+Theorem Tree_univalence (T1 T2 : Tree) : (T1 = T2) ≃ (Tree_iso T1 T2).
 Proof.
-  set (P := TRRGraph_univalence@{i j}).
-  set (Q := isatree@{i j}).
+  set (P := TRRGraph_univalence).
+  set (Q := isatree).
   apply (substructure_univalence _ _ P Q T1 T2).
 Qed.
 
 (** Definition of branches ("upward closures") for [Tree]s as a tree [Up x] for a point x of T **)
 
-Definition Upw_underlying@{i j} (T : Tree@{i j}) (x : pr11 T) := total2@{i} (λ y : pr11 T, x ≤ y).
+Definition Upw_underlying (T : Tree) (x : pr11 T) := total2 (λ y : pr11 T, x ≤ y).
 
-Lemma isaset_Upw_underlying@{i j} (T : Tree@{i j}) (x : pr11 T) : isaset@{i} (Upw_underlying@{i j} T x).
+Lemma isaset_Upw_underlying (T : Tree) (x : pr11 T) : isaset (Upw_underlying T x).
 Proof.
-  apply isaset_total2@{i i}.
-  apply setproperty@{i j}.
+  apply isaset_total2.
+  apply setproperty.
   intros y.
-  apply hProp_to_hSet@{j}.
+  apply hProp_to_hSet.
 Qed.
 
-Definition Upw@{i j} (T : Tree@{i j}) (x : pr11 T) : hSet@{i j}
-  := hSetpair (total2@{i} (λ y : pr11 T, pr121 T x y)) (isaset_Upw_underlying@{i j} T x).
+Definition Upw (T : Tree) (x : pr11 T) : hSet
+  := hSetpair (total2 (λ y : pr11 T, pr121 T x y)) (isaset_Upw_underlying T x).
 
-Definition Upw_E@{i j} (T : Tree@{i j}) (x : pr11 T) (y z : Upw@{i j} T x) : hProp :=
+Definition Upw_E (T : Tree) (x : pr11 T) (y z : Upw T x) : hProp :=
   pr121 T (pr1 y) (pr1 z).
 
-Definition Upw_to_PointedGraph@{i j} (T : Tree@{i j}) (x : pr11 T) : PointedGraph :=
+Definition Upw_to_PointedGraph (T : Tree) (x : pr11 T) : PointedGraph :=
   Upw T x ,, Upw_E T x ,, (x ,, selfedge (pr1 T) x).
 
-Lemma Upw_reflexive@{i j} (T : Tree@{i j}) (x : pr11 T) :
+Lemma Upw_reflexive (T : Tree) (x : pr11 T) :
   ∏ (y : pr1 (Upw_to_PointedGraph T x)), pr12 (Upw_to_PointedGraph T x) y y.
 Proof.
   intros y.
@@ -340,7 +347,7 @@ Proof.
   exact (selfedge (pr1 T) (pr1 y)).
 Qed.
 
-Lemma Upw_transitive@{i j} (T : Tree@{i j}) (x : pr11 T) :
+Lemma Upw_transitive (T : Tree) (x : pr11 T) :
   ∏ y z w, (Upw_E T x) y z → (Upw_E T x) z w → (Upw_E T x) y w.
 Proof.
   intros y z w P Q.
@@ -348,17 +355,17 @@ Proof.
   exact (TRRG_transitivity (pr1 T) (pr1 y) (pr1 z) (pr1 w) P Q).
 Qed.
 
-Lemma Upw_rooted@{i j} (T : Tree@{i j}) (x : pr11 T) : ∏ y, (Upw_E T x) (x ,, selfedge (pr1 T)  x) y.
+Lemma Upw_rooted (T : Tree) (x : pr11 T) : ∏ y, (Upw_E T x) (x ,, selfedge (pr1 T)  x) y.
 Proof.
   intros y.
   exact (pr2 y).
 Qed.
 
-Definition Upw_to_TRRGraph@{i j} (T : Tree@{i j}) (x : pr11 T) : TRRGraph :=
+Definition Upw_to_TRRGraph (T : Tree) (x : pr11 T) : TRRGraph :=
   pr1 (Upw_to_PointedGraph T x) ,, pr12 (Upw_to_PointedGraph T x) ,, pr22 (Upw_to_PointedGraph T x)
                                 ,, Upw_reflexive T x ,, Upw_transitive T x ,, Upw_rooted T x.
 
-Lemma isatree_Upw@{i j} (T : Tree@{i j}) (x : pr11 T) : isatree (Upw_to_TRRGraph T x).
+Lemma isatree_Upw (T : Tree) (x : pr11 T) : isatree (Upw_to_TRRGraph T x).
 Proof.
   unfold isatree. intros a. intros y z. simpl.
   set (zzz := ((pr1 (pr1 z)))). set (zz := (pr1 z)).
@@ -402,11 +409,11 @@ Proof.
      apply L.
 Qed.
 
-Definition Up@{i j} {T : Tree@{i j}} (x : pr11 T) : Tree := (Upw_to_TRRGraph T x ,, isatree_Upw T x).
+Definition Up {T : Tree} (x : pr11 T) : Tree := (Upw_to_TRRGraph T x ,, isatree_Upw T x).
 
 (** Definition of rigid [isrigid] and superrigid [issuperrigid] trees **)
 
-Definition isrigid@{i j} (T : Tree@{i j}) : Type@{j}
+Definition isrigid (T : Tree) : Type
   := iscontr (T = T).
 
 Lemma isaprop_isrigid (T : Tree) : isaprop (isrigid T).
@@ -729,7 +736,7 @@ Proof.
   apply (@contr_to_pr1contr _ isatree T).
 Qed.
 
-Definition Up_to_Up@{i j} (T : Tree@{i j}) (x : pr11 T) (y : pr11 (Up x)) :
+Definition Up_to_Up (T : Tree) (x : pr11 T) (y : pr11 (Up x)) :
   pr1 (Upw_to_TRRGraph T (pr1 y)) → pr1 (Upw_to_TRRGraph (Up x) y).
 Proof.
     simpl.
@@ -739,8 +746,8 @@ Proof.
     exact ((t ,, ((pr122 (pr221 T)) x y t σ π)) ,, π).
 Defined.
 
-Definition Up_to_Up_inv@{i j} (T : Tree@{i j}) (x : pr11 T) (y : pr11 (Up@{i j} x)) :
-  pr1 (Upw_to_TRRGraph@{i j} (Up@{i j} x) y) → pr1 (Upw_to_TRRGraph@{i j} T (pr1 y)).
+Definition Up_to_Up_inv (T : Tree) (x : pr11 T) (y : pr11 (Up x)) :
+  pr1 (Upw_to_TRRGraph (Up x) y) → pr1 (Upw_to_TRRGraph T (pr1 y)).
 Proof.
     simpl.
     intros X.
@@ -753,7 +760,7 @@ Proof.
     exact (tt ,, π).
 Defined.
 
-Lemma isweq_Up_to_Up@{i j}  (T : Tree@{i j}) (x : pr11 T) (y : pr11 (Up@{i j} x)): isweq (Up_to_Up@{i j} T x y).
+Lemma isweq_Up_to_Up  (T : Tree) (x : pr11 T) (y : pr11 (Up x)): isweq (Up_to_Up T x y).
 Proof.
   set (f := Up_to_Up T x y).
   set (g := Up_to_Up_inv T x y).

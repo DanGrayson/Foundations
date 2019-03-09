@@ -152,11 +152,13 @@ Notation "A × B" := (dirprod_hSet A B) (at level 75, right associativity) : set
 
 (** *** [hProp] as a set *)
 
-Definition hPropset : hSet := tpair isaset@{uu1} hProp isasethProp.
-(* Canonical Structure hPropset. *)
+Definition hPropset@{i j} : hSet@{i j}
+  := hSetpair@{i j} hProp isasethProp.
 
-Definition hProp_to_hSet (P : hProp) : hSet
-  := hSetpair P (isasetaprop (propproperty P)).
+(* a proposition P as a set: *)
+
+Definition hProp_to_hSet@{i j} (P : hProp) : hSet@{i j}
+  := hSetpair P (isasetaprop@{i i} (propproperty P)).
 
 (** *** Booleans as a set *)
 
@@ -331,7 +333,8 @@ Definition weq_subtypes {X Y : UU} (w : X ≃ Y)
            (∏ x, S x <-> T (w x)) -> carrier S ≃ carrier T.
 Proof.
   intros eq. apply (weqbandf w). intro x. apply weqiff.
-  - use eq.
+  - apply raise_logeq.          (* mysterious *)
+    apply eq.
   - apply propproperty.
   - apply propproperty.
 Defined.
@@ -442,14 +445,16 @@ Proof.
   exact (pr1 p).
 Defined.
 
-Definition squash_to_set {X Y : UU} (is : isaset Y) (f : X -> Y) :
-          (∏ x x', f x = f x') -> ∥ X ∥ -> Y.
+Axiom cheat : ∏ X, X.
+
+Definition squash_to_set@{i k+} {X Y : Type@{i}} (is : isaset Y) (f : X -> Y) :
+          (∏ x x', f x = f x') -> ishinh@{i k} X -> Y.
 Proof.
   intros e w.
-  set (P := ∑ y, ∃ x, f x = y).
+  set (P := total2@{k} (λ y, ishinh@{i k} (∑ x, f x = y))).
   assert (j : isaprop P).
   {
-    apply isapropsubtype; intros y y' j j'.
+    apply isapropsubtype@{i k k k}; intros y y' j j'.
     apply (squash_to_prop j). apply is. clear j; intros [j k].
     apply (squash_to_prop j'). apply is. clear j'; intros [j' k'].
     intermediate_path (f j). exact (!k).
@@ -556,17 +561,17 @@ Definition neqchoice {X : UU} (R : hrel X) : UU
 
 (** proofs that the properties are propositions  *)
 
-Lemma isaprop_istrans@{i j} {X : hSet@{i j}} (R : hrel@{i j} X) : isaprop (istrans@{i i i} R).
+Lemma isaprop_istrans {X : hSet} (R : hrel X) : isaprop (istrans R).
 Proof.
   intros. repeat (apply impred;intro). apply propproperty.
 Defined.
 
-Lemma isaprop_isrefl@{i j} {X : hSet@{i j}} (R : hrel@{i j} X) : isaprop (isrefl@{i i i} R).
+Lemma isaprop_isrefl {X : hSet} (R : hrel X) : isaprop (isrefl R).
 Proof.
   intros. apply impred; intro. apply propproperty.
 Defined.
 
-Lemma isaprop_istotal@{i j} {X : hSet@{i j}} (R : hrel@{i j} X) : isaprop (istotal@{i i i} R).
+Lemma isaprop_istotal {X : hSet} (R : hrel X) : isaprop (istotal R).
 Proof.
   intros. unfold istotal.
   apply impred; intro x.
@@ -574,13 +579,13 @@ Proof.
   apply propproperty.
 Defined.
 
-Lemma isaprop_isantisymm@{i j} {X : hSet@{i j}} (R : hrel@{i j} X) : isaprop (isantisymm@{i i i} R).
+Lemma isaprop_isantisymm {X : hSet} (R : hrel X) : isaprop (isantisymm R).
 Proof.
   intros. unfold isantisymm. apply impred; intro x. apply impred; intro y.
   apply impred; intro r. apply impred; intro s. apply setproperty.
 Defined.
 
-Lemma isaprop_ispreorder@{i j} {X : hSet@{i j}} (R : hrel@{i j} X) : isaprop (ispreorder@{i i i i} R).
+Lemma isaprop_ispreorder {X : hSet} (R : hrel X) : isaprop (ispreorder R).
 Proof.
   intros.
   unfold ispreorder.
@@ -589,8 +594,8 @@ Proof.
   { apply isaprop_isrefl. }
 Defined.
 
-Lemma isaprop_isPartialOrder@{i j} {X : hSet@{i j}} (R : hrel@{i j} X) :
-  isaprop (isPartialOrder@{i i i i} R).
+Lemma isaprop_isPartialOrder {X : hSet} (R : hrel X) :
+  isaprop (isPartialOrder R).
 Proof.
   intros.
   unfold isPartialOrder.
@@ -3048,7 +3053,7 @@ Defined.
 
 Theorem hSet_univalence (X Y : hSet) : (X = Y) ≃ (X ≃ Y).
 Proof.
-  Set Printing Coercions.
+  Local Set Printing Coercions.
   intros.
   set (f := hSet_univalence_map X Y).
   exists f.
@@ -3061,18 +3066,18 @@ Proof.
   induction (!comp). apply twooutof3c.
   - apply isweqonpathsincl. apply isinclpr1. exact isapropisaset.
   - apply univalenceAxiom.
-  Unset Printing Coercions.
+  Local Unset Printing Coercions.
 Defined.
 
 Theorem hSet_rect (X Y : hSet) (P : X ≃ Y -> Type) :
   (∏ e : X=Y, P (hSet_univalence _ _ e)) -> ∏ f, P f.
 Proof.
   intros ih ?.
-  Set Printing Coercions.
+  Local Set Printing Coercions.
   set (p := ih (invmap (hSet_univalence _ _) f)).
   set (h := homotweqinvweq (hSet_univalence _ _) f).
   exact (transportf P h p).
-  Unset Printing Coercions.
+  Local Unset Printing Coercions.
 Defined.
 
 Ltac hSet_induction f e := generalize f; apply UU_rect; intro e; clear f.

@@ -270,6 +270,9 @@ Definition dneganddnegimpldneg {X Y : UU}
 Definition logeq@{i} (X Y : Type@{i}) : Type@{i} := (X -> Y) × (Y -> X).
 Notation " X <-> Y " := (logeq X Y) : type_scope.
 
+Definition raise_logeq@{i j|i<=j} (X Y : Type@{i}) : logeq@{i} X Y -> logeq@{j} X Y
+  := λ p, p.
+
 Lemma isrefl_logeq (X : UU) : X <-> X.
 Proof.
   intros. split; apply idfun.
@@ -3640,11 +3643,11 @@ Defined.
 
 (** *** The function on the total spaces from functions on the bases and on the fibers *)
 
-Definition bandfmap {X Y : UU} (f : X -> Y) (P : X -> UU) (Q : Y -> UU)
+Definition bandfmap@{i} {X Y : Type@{i}} (f : X -> Y) (P : X -> Type@{i}) (Q : Y -> Type@{i})
            (fm : ∏ x : X, P x -> (Q (f x))) :
   (∑ x, P x) -> (∑ x, Q x) := λ xp, f (pr1 xp) ,, fm (pr1 xp) (pr2 xp).
 
-Theorem isweqbandfmap {X Y : UU} (w : X ≃ Y) (P : X -> UU) (Q : Y -> UU)
+Theorem isweqbandfmap@{i} {X Y : Type@{i}} (w : X ≃ Y) (P : X -> Type@{i}) (Q : Y -> Type@{i})
         (fw : ∏ x : X, P x ≃ Q (w x)) : isweq (bandfmap  _ P Q fw).
 Proof.
   intros.
@@ -3657,11 +3660,9 @@ Proof.
   apply (isweqhomot _ _ h (twooutof3c f1 f2 is1 is2)).
 Defined.
 
-Definition weqbandf {X Y : UU} (w : X ≃ Y) (P : X -> UU) (Q : Y -> UU)
-           (fw : ∏ x : X, P x ≃ Q (w x))
+Definition weqbandf@{i} {X Y : Type@{i}} (w : weq@{i} X Y) (P : X -> Type@{i}) (Q : Y -> Type@{i})
+           (fw : ∏ x : X, weq@{i} (P x) (Q (w x)))
   := weqpair _ (isweqbandfmap w P Q fw).
-
-
 
 (** ** Homotopy fiber squares *)
 
