@@ -356,9 +356,10 @@ Notation " x < y " := ( FiniteOrderedSetDecidableLessThan _ x y ) (at level 70, 
 Notation " x > y " := ( FiniteOrderedSetDecidableLessThan _ y x ) (at level 70, no associativity) : foset.
 
 Definition FiniteOrderedSet_segment {X:FiniteOrderedSet} (x:X) : FiniteSet.
-  intros. apply (@subsetFiniteSet X); intro y. exact (y < x)%foset.
+Proof.
+  intros. apply (@subsetFiniteSet X); intro y. apply raise_DecidableProposition. exact (y < x)%foset.
 Defined.
-}}}
+
 Definition height {X:FiniteOrderedSet} : X -> nat.
   intros x. exact (cardinalityFiniteSet (FiniteOrderedSet_segment x)).
 Defined.
@@ -367,15 +368,11 @@ Definition height_stn {X:FiniteOrderedSet} : X -> stn (cardinalityFiniteSet X).
 Proof.
   intros x.
   exists (height x).
-
-
-
-(* Defined. *)
 Abort.
 
 (** making finite ordered sets in various ways *)
 
-Definition standardFiniteOrderedSet@{j} (n:nat) : FiniteOrderedSet@{j uu1 uu1 uu1 uu1 uu1 uu1}.
+Definition standardFiniteOrderedSet@{j} (n:nat) : FiniteOrderedSet@{uu1 j j}.
 Proof.
   intros. simple refine (_,,_).
   - exists (stnposet n). intros x y; apply istotalnatleh.

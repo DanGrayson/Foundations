@@ -189,6 +189,11 @@ Defined.
 
 Definition DecidableProposition@{i j} : Type@{j} := ∑ X, isdecprop@{i j} X.
 
+Definition raise_DecidableProposition@{i j i' j'| i < j, i' < j', uu1 <= j, uu1 <= j', i <= i'} :
+  DecidableProposition@{i j} -> DecidableProposition@{i' j'}
+  (* we take care to avoid i=i' as a consequence *)
+  := λ P, tpair isdecprop@{i' j'} (pr1 P) (pr2 P).
+
 Definition isdecprop_to_DecidableProposition {X : UU} (i : isdecprop X) :
   DecidableProposition := X,,i.
 
@@ -323,7 +328,6 @@ Defined.
 Definition decidableSubtypeCarrier_weq {X : UU} (P : DecidableSubtype X) :
   decidableSubtypeCarrier' P ≃ decidableSubtypeCarrier P.
 Proof.
-  intros.
   apply weqfibtototal.
   intros x.
   unfold choice.

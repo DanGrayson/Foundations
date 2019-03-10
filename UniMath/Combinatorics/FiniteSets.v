@@ -157,7 +157,7 @@ Definition finstructondirprod { X Y : UU } ( sx : finstruct X ) ( sy : finstruct
 
 Definition finstructondecsubset@{i j} {X : Type@{i}}  ( f : X -> bool ) ( sx : finstruct@{i j} X ) : finstruct@{j j} ( hfiber@{j} f true ).
   simple refine (finstructpair _ ( pr1 ( weqfromdecsubsetofstn ( funcomp ( pr1 ( pr2 sx ) ) f ) ) ) _).
-  - refine (weqcomp _ _).
+  - refine (weqcomp@{_ _ i} _ _).
     + exact ( invweq ( pr2 ( weqfromdecsubsetofstn ( funcomp ( pr1 ( pr2 sx ) ) f ) ) ) ).
     + exact  ( weqhfibersgwtog ( pr2 sx ) f true ).
 Defined.
@@ -317,7 +317,7 @@ Defined.
 
 Definition subsetFiniteSet {X:FiniteSet} (P:DecidableSubtype X) : FiniteSet.
 Proof. exact (isfinite_to_FiniteSet (subsetFiniteness (pr2 X) P)). Defined.
-}}}
+
 Definition fincard_subset {X} (is : isfinite X) (P : DecidableSubtype X) : nat.
 Proof. exact (fincard (subsetFiniteness is P)). Defined.
 

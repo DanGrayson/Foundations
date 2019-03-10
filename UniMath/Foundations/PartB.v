@@ -1324,7 +1324,7 @@ Defined.
 
 (** **** [ bool ] is a set *)
 
-Theorem isasetbool@{}: isaset@{uu1} bool.
+Theorem isasetbool@{i}: isaset@{i} bool.
 Proof.
   apply (isasetifdeceq _ isdeceqbool).
 Defined.

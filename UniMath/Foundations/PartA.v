@@ -2185,8 +2185,9 @@ Definition weqcontrcontr {X Y : UU} (isx : iscontr X) (isy : iscontr Y) : X ≃ 
 
 (** *** Composition of weak equivalences *)
 
-Definition weqcomp@{i} {X Y Z : Type@{i}} (w1 : X ≃ Y) (w2 : Y ≃ Z) : X ≃ Z :=
-  weqpair (λ (x : X), w2 (w1 x)) (twooutof3c w1 w2 (pr2 w1) (pr2 w2)).
+Definition weqcomp@{i j k|i <= k, j <= k} {X : Type@{i}} {Y : Type@{j}} {Z : Type@{i}} (w1 : weq@{k} X Y) (w2 : weq@{k} Y Z)
+  : weq@{i} X Z
+  := weqpair (λ (x : X), w2 (w1 x)) (twooutof3c w1 w2 (pr2 w1) (pr2 w2)).
 
 (* Declare Scope weq_scope. *)
 Notation "g ∘ f" := (weqcomp f g) : weq_scope.

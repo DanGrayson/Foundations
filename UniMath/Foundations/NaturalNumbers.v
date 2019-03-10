@@ -173,7 +173,7 @@ Proof.
   unfold isisolated. intro x'. apply isdeceqnat.
 Defined.
 
-Theorem isasetnat: isaset nat.
+Theorem isasetnat@{i}: isaset@{i} nat.
 Proof.
   apply (isasetifdeceq _ isdeceqnat).
 Defined.
