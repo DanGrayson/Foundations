@@ -232,7 +232,7 @@ Defined.
 
 (** *** Negation and double negation *)
 
-Definition neg@{i} (X : Type@{i}) : Type@{i} := X -> empty.
+Definition neg (X : Type) : Type := X -> empty.
 
 Notation "'¬' X" := (neg X).
 (* type this in emacs in agda-input method with \neg *)
@@ -295,7 +295,7 @@ Proof.
   - intros y'. exact x.
 Defined.
 
-Definition logeq_both_false@{i} {X Y : Type@{i}} : neg@{i} X -> neg@{i} Y -> (X <-> Y).
+Definition logeq_both_false@{i j | i<=j, uu1<=j+} {X Y : Type@{i}} : neg@{i j} X -> neg@{i j} Y -> (X <-> Y).
 Proof.
   intros nx ny.
   split.

@@ -2,7 +2,7 @@ Require Export UniMath.Foundations.All.
 
 (** *** Propositions equivalent to negations of propositions *)
 
-Definition negProp@{i u} P := total2@{u} (λ (Q:Type@{i}), isaprop Q × (neg@{i} P <-> Q)).
+Definition negProp@{i u} P := total2@{u} (λ (Q:Type@{i}), isaprop Q × (neg@{i u} P <-> Q)).
 
 Definition negProp_to_isaprop {P} (nP : negProp P) : isaprop (pr1 nP)
   := pr1 (pr2 nP).
@@ -311,7 +311,7 @@ Definition natneq (m n : nat) : negProp (m = n).
 Proof.
   intros. exists (m ≠ n). split.
   - apply propproperty.
-  - apply natneq_iff_neq.
+  - use natneq_iff_neq.
 Defined.
 
 (* this replaces an earlier notation: *)

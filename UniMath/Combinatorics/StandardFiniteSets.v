@@ -94,7 +94,7 @@ Lemma stnneq {n : nat} : neqReln (⟦n⟧).
 Proof. (* here we use no axioms *)
   intros i j. exists (i ≠ j)%nat. split.
   - apply propproperty.
-  - apply stn_ne_iff_neq.
+  - use stn_ne_iff_neq.
 Defined.
 
 Notation " x ≠ y " := ( stnneq x y ) (at level 70, no associativity) : stn.
@@ -111,7 +111,7 @@ Defined.
 Lemma stnneq_iff_nopath {n : nat} (i j: ⟦n⟧ ) : ¬ (i = j) <-> i ≠ j.
 Proof.
   intros.
-  apply negProp_to_iff.
+  use negProp_to_iff.
 Defined.
 
 Definition stnneq_to_nopath {n : nat} (i j: ⟦n⟧ ) : ¬ (i = j) <- i ≠ j
@@ -1621,7 +1621,7 @@ Proof.
   - apply weqweq. apply invweq.
     intermediate_weq (compl_ne (⟦S n⟧) l (stnneq l)).
     + apply weqdnicompl.
-    + apply compl_weq_compl_ne.
+    + use compl_weq_compl_ne.
 Defined.
 
 Theorem weqfromweqstntostn ( n : nat ) : ( (⟦n⟧) ≃ (⟦n⟧) ) ≃ ⟦factorial n⟧.
@@ -1851,7 +1851,7 @@ Proof.
   - apply ( isdecpropweqb ( weqexistsnatlehn0 P' ) ).
     apply ( is 0 ).
   - use ( isdecpropweqb ( weqexistsnatlehnsn' _ P' ) ).
-    apply isdecprophdisj.
+    use isdecprophdisj.
     + apply IHn.
     + apply ( is ( S n ) ).
 Defined.

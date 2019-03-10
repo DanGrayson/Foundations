@@ -187,12 +187,12 @@ Defined.
 (* all of this stuff about decidable propositions will be replaced by the better code above *)
 (*****************************************************************************)
 
-Definition DecidableProposition : UU := ∑ X : UU, isdecprop X.
+Definition DecidableProposition@{i j} : Type@{j} := ∑ X, isdecprop@{i j} X.
 
 Definition isdecprop_to_DecidableProposition {X : UU} (i : isdecprop X) :
   DecidableProposition := X,,i.
 
-Definition decidable_to_isdecprop {X : hProp} : decidable X -> isdecprop X.
+Definition decidable_to_isdecprop@{} {X : hProp} : decidable X -> isdecprop X.
 Proof.
   intros dec. apply isdecpropif.
   - apply propproperty.
@@ -207,8 +207,8 @@ Proof.
   - exact dec.
 Defined.
 
-Definition decidable_to_DecidableProposition {X : hProp} :
-  decidable X -> DecidableProposition.
+Definition decidable_to_DecidableProposition@{} {X : hProp} :
+  decidable X -> DecidableProposition@{uu0 uu1}.
 Proof. intros dec. exists X. now apply decidable_to_isdecprop. Defined.
 
 Definition DecidableProposition_to_isdecprop (X : DecidableProposition) :
@@ -221,8 +221,7 @@ Proof.
   exact (hProppair (pr1 X) (isdecproptoisaprop (pr1 X) (pr2 X))).
 Defined.
 Coercion DecidableProposition_to_hProp : DecidableProposition >-> hProp.
-Definition decidabilityProperty (X : DecidableProposition) :
-  isdecprop X := pr2 X.
+Definition decidabilityProperty@{i j} (X : DecidableProposition@{i j}) : isdecprop@{j j} (DecidableProposition_to_hProp X) := pr2 X.
 
 Definition DecidableSubtype (X : UU) : UU := X -> DecidableProposition.
 Definition DecidableRelation (X : UU) : UU := X -> X -> DecidableProposition.

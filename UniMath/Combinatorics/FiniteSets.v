@@ -52,7 +52,7 @@ Definition nelstructoncompl {X} {n} (x:X) : nelstruct (S n) X -> nelstruct n (co
 Proof.
   intros sx.
   refine (invweq ( weqoncompl ( invweq sx ) x) ∘ _ ∘ weqdnicompl (invweq sx x))%weq.
-  apply compl_weq_compl_ne.
+  use compl_weq_compl_ne.
 Defined.
 
 Definition nelstructoncoprod { X  Y : UU } { n m : nat } ( sx : nelstruct n X ) ( sy : nelstruct m Y ) : nelstruct ( n + m ) ( coprod X Y ) := weqcomp ( invweq ( weqfromcoprodofstn n m ) ) ( weqcoprodf sx sy ) .
@@ -155,8 +155,14 @@ Definition finstructontotal2 { X : UU } ( P : X -> UU )   ( sx : finstruct X ) (
 
 Definition finstructondirprod { X Y : UU } ( sx : finstruct X ) ( sy : finstruct Y ) : finstruct ( dirprod X Y ) := tpair _ ( ( pr1 sx ) * ( pr1 sy ) ) ( nelstructondirprod ( pr2 sx ) ( pr2 sy ) ) .
 
-Definition finstructondecsubset { X : UU }  ( f : X -> bool ) ( sx : finstruct X ) : finstruct ( hfiber f true ) := tpair _ ( pr1 ( weqfromdecsubsetofstn ( funcomp ( pr1 ( pr2 sx ) ) f ) ) ) ( weqcomp ( invweq ( pr2 ( weqfromdecsubsetofstn ( funcomp ( pr1 ( pr2 sx ) ) f ) ) ) ) ( weqhfibersgwtog ( pr2 sx ) f true ) ) .
+Definition finstructondecsubset@{i j} {X : Type@{i}}  ( f : X -> bool ) ( sx : finstruct@{i j} X ) : finstruct@{j j} ( hfiber@{j} f true ).
+  simple refine (finstructpair _ ( pr1 ( weqfromdecsubsetofstn ( funcomp ( pr1 ( pr2 sx ) ) f ) ) ) _).
+  - refine (weqcomp _ _).
+    + exact ( invweq ( pr2 ( weqfromdecsubsetofstn ( funcomp ( pr1 ( pr2 sx ) ) f ) ) ) ).
+    + exact  ( weqhfibersgwtog ( pr2 sx ) f true ).
+Defined.
 
+Goal @finstructondecsubset Type@{uu1} = @finstructondecsubset Type@{uu1}. (* check for bad universe constraints *) Abort.
 
 Definition finstructonfun { X Y : UU } ( sx : finstruct X ) ( sy : finstruct Y ) : finstruct ( X -> Y ) := tpair _ ( natpower ( pr1 sy ) ( pr1 sx ) ) ( nelstructonfun ( pr2 sx ) ( pr2 sy ) ) .
 
@@ -311,7 +317,7 @@ Defined.
 
 Definition subsetFiniteSet {X:FiniteSet} (P:DecidableSubtype X) : FiniteSet.
 Proof. exact (isfinite_to_FiniteSet (subsetFiniteness (pr2 X) P)). Defined.
-
+}}}
 Definition fincard_subset {X} (is : isfinite X) (P : DecidableSubtype X) : nat.
 Proof. exact (fincard (subsetFiniteness is P)). Defined.
 

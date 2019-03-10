@@ -412,6 +412,19 @@ Section Test_ord.
     Goal choice (i ≐ j)%foset true false = false. reflexivity. Defined.
 
     Let X := (∑ i:⟦ 4 ⟧, ⟦ pr1 i ⟧)%foset.
+
+    Error: Found type
+"pr1hSet@{uu1 Top.1591}
+   (carrierofposet@{Top.1591 uu1 Top.1591}
+      (OrderedSets.underlyingPoset@{Top.1591 uu1 uu1 Top.1591 Top.1591}
+         (underlyingOrderedSet@{uu1 Top.1591 uu1 Top.1591 uu1 Top.1591}
+            (standardFiniteOrderedSet@{Top.1591 Top.1575} (S (S (S (S O))))))))" where
+"pr1hSet@{Top.1568 Top.1569}
+   (carrierofposet@{uu1 Top.1568 Top.1569}
+      (OrderedSets.underlyingPoset@{Top.1567 Top.1570 Top.1568 Top.1569 uu1}
+         (underlyingOrderedSet@{uu1 Top.1567 Top.1568 uu1 Top.1570 Top.1569} ?X)))" was expected.
+
+
     Let x := ( ●2 ,, ●1 ):X.
     Let y := ( ●3 ,, ●1 ):X.
 

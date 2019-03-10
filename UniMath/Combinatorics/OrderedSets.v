@@ -171,7 +171,7 @@ Defined.
 
 (** see Bourbaki, Set Theory, III.1, where they are called totally ordered sets *)
 
-Definition OrderedSet :Type := ∑ X:Poset, istotal (posetRelation X).
+Definition OrderedSet@{i j k} : Type@{k} := ∑ X:Poset@{i j k}, istotal@{i k} (posetRelation X).
 
 Ltac unwrap_OrderedSet X :=
   induction X as [X total];
@@ -305,7 +305,7 @@ Ltac oset_induction f e := generalize f; apply OrderedSetEquivalence_rect; intro
 
 (* standard ordered sets *)
 
-Definition FiniteOrderedSet : Type := total2 (λ X:OrderedSet, isfinite X).
+Definition FiniteOrderedSet@{i j k} : Type@{k} := total2@{k} (λ X:OrderedSet@{i j k}, isfinite@{i k} X).
 Definition underlyingOrderedSet (X:FiniteOrderedSet) : OrderedSet := pr1 X.
 Coercion underlyingOrderedSet : FiniteOrderedSet >-> OrderedSet.
 Definition finitenessProperty (X:FiniteOrderedSet) : isfinite X := pr2 X.
@@ -320,7 +320,7 @@ Lemma FiniteOrderedSet_isdeceq {X:FiniteOrderedSet} : isdeceq X.
 Proof. intros. apply isfinite_isdeceq. apply finitenessProperty. Defined.
 
 Lemma FiniteOrderedSet_isdec_ordering {X:FiniteOrderedSet} : isdec_ordering X.
-Proof. intros. apply isfinite_isdec_ordering. apply finitenessProperty. Defined.
+Proof. intros. apply isfinite_isdec_ordering. use finitenessProperty. Defined.
 
 Definition FiniteOrderedSetDecidableOrdering (X:FiniteOrderedSet) : DecidableRelation X :=
   λ (x y:X), decidable_to_DecidableProposition (FiniteOrderedSet_isdec_ordering x y).
@@ -335,7 +335,7 @@ Definition FiniteOrderedSetDecidableInequality (X:FiniteOrderedSet) : DecidableR
   apply neg_isdecprop.
   apply decidable_to_isdecprop_2.
   { apply setproperty. }
-  apply FiniteOrderedSet_isdeceq.
+  use FiniteOrderedSet_isdeceq.
 Defined.
 
 Definition FiniteOrderedSetDecidableLessThan (X:FiniteOrderedSet) : DecidableRelation X.
@@ -358,7 +358,7 @@ Notation " x > y " := ( FiniteOrderedSetDecidableLessThan _ y x ) (at level 70, 
 Definition FiniteOrderedSet_segment {X:FiniteOrderedSet} (x:X) : FiniteSet.
   intros. apply (@subsetFiniteSet X); intro y. exact (y < x)%foset.
 Defined.
-
+}}}
 Definition height {X:FiniteOrderedSet} : X -> nat.
   intros x. exact (cardinalityFiniteSet (FiniteOrderedSet_segment x)).
 Defined.
@@ -375,7 +375,7 @@ Abort.
 
 (** making finite ordered sets in various ways *)
 
-Definition standardFiniteOrderedSet (n:nat) : FiniteOrderedSet.
+Definition standardFiniteOrderedSet@{j} (n:nat) : FiniteOrderedSet@{j uu1 uu1 uu1 uu1 uu1 uu1}.
 Proof.
   intros. simple refine (_,,_).
   - exists (stnposet n). intros x y; apply istotalnatleh.

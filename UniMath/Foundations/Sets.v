@@ -516,7 +516,7 @@ Definition isasymm {X : UU} (R : hrel X) : UU
 
 Definition iscoasymm {X : UU} (R : hrel X) : UU := ∏ x1 x2, ¬ R x1 x2 -> R x2 x1.
 
-Definition istotal {X : UU} (R : hrel X) : UU := ∏ x1 x2, R x1 x2 ∨ R x2 x1.
+Definition istotal@{i k} {X : Type@{i}} (R : hrel@{i k} X) : Type@{k} := ∏ x1 x2, R x1 x2 ∨ R x2 x1.
 
 Definition isdectotal {X : UU} (R : hrel X) : UU := ∏ x1 x2, R x1 x2 ⨿ R x2 x1.
 

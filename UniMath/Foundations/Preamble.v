@@ -40,7 +40,7 @@ Global Unset Printing Notations.
 
 (** The empty type *)
 
-Monomorphic Inductive empty : UU1 := .
+Inductive empty : UU1 := .
 
 (* empty_rect eliminates into types at monomorphic universe level UniMath.Foundations.Preamble.3 *)
 
