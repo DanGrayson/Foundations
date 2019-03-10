@@ -493,16 +493,16 @@ Identity Coercion idbrel : brel >-> Funclass.
 
 
 
-Definition istrans {X : UU} (R : hrel X) : UU
+Definition istrans@{i k} {X : Type@{i}} (R : hrel@{i k} X) : Type@{k}
   := ∏ (x1 x2 x3 : X), R x1 x2 -> R x2 x3 -> R x1 x3.
 
-Definition isrefl {X : UU} (R : hrel X) : UU
+Definition isrefl@{i k} {X : Type@{i}} (R : hrel@{i k} X) : Type@{k}
   := ∏ x : X, R x x.
 
-Definition issymm {X : UU} (R : hrel X) : UU
+Definition issymm@{i k} {X : Type@{i}} (R : hrel@{i k} X) : Type@{k}
   := ∏ (x1 x2 : X), R x1 x2 -> R x2 x1.
 
-Definition ispreorder {X : UU} (R : hrel X) : UU := istrans R × isrefl R.
+Definition ispreorder@{i k} {X : Type@{i}} (R : hrel@{i k} X) : Type@{k} := istrans R × isrefl R.
 
 Definition iseqrel {X : UU} (R : hrel X) := ispreorder R × issymm R.
 Definition iseqrelconstr {X : UU} {R : hrel X}
@@ -537,10 +537,10 @@ Definition isnegrel {X : UU} (R : hrel X) : UU
   quotients of types - the quotient relation can be (co-)antisymmetric while
   the original relation was not. *)
 
-Definition isantisymm {X : UU} (R : hrel X) : UU
+Definition isantisymm@{i k} {X : Type@{i}} (R : hrel@{i k} X) : Type@{k}
   := ∏ (x1 x2 : X), R x1 x2 -> R x2 x1 -> x1 = x2.
 
-Definition isPartialOrder {X : UU} (R : hrel X) : UU
+Definition isPartialOrder@{i k+} {X : Type@{i}} (R : hrel@{i k} X) : Type@{k}
   := ispreorder R × isantisymm R.
 
 Ltac unwrap_isPartialOrder i :=
@@ -792,14 +792,14 @@ Coercion carrierofPreorderedSet : PreorderedSet >-> hSet.
 Definition PreorderedSetRelation (X : PreorderedSet) : hrel X := pr1 (pr2 X).
 
 (* partial orderings *)
-Definition PartialOrder (X : hSet) : Type := ∑ R : hrel X, isPartialOrder R.
-Definition PartialOrderpair {X : hSet} (R : hrel X) (is : isPartialOrder R) :
+Definition PartialOrder@{i j k} (X : hSet@{i j}) : Type@{k} := total2@{k} (λ R : hrel@{i k} X, isPartialOrder R).
+Definition PartialOrderpair@{i j k} {X : hSet@{i j}} (R : hrel@{i k} X) (is : isPartialOrder R) :
   PartialOrder X
   := tpair isPartialOrder R is.
 Definition carrierofPartialOrder {X : hSet} : PartialOrder X -> hrel X := pr1.
 Coercion carrierofPartialOrder : PartialOrder >-> hrel.
 
-Definition Poset : Type := ∑ X : hSet, PartialOrder X.
+Definition Poset@{i j k} : Type@{k} := total2@{k} (λ X : hSet@{i j}, PartialOrder@{i j k} X).
 Definition Posetpair (X : hSet) (R : PartialOrder X) : Poset
   := tpair PartialOrder X R.
 Definition carrierofposet : Poset -> hSet := pr1.

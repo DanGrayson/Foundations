@@ -88,7 +88,7 @@ Proof.
 Qed.
 
 Definition isTRR@{i j k} (V : hSet@{i j}) (E : hrel@{i k} V) (r : V) : Type@{k} :=
-  isrefl@{k k k} E × istrans@{k k k} E × isaroot@{i j k} E r.
+  isrefl@{i k} E × istrans@{i k} E × isaroot@{i j k} E r.
 
 Lemma isaprop_isTRR@{i j k} (V : hSet@{i j}) (E : hrel V) (r : V) : isaprop (isTRR@{i j k} V E r).
 Proof.
@@ -120,7 +120,7 @@ Local Notation "x ≤ y" := (TRRG_edgerel _ x y)(at level 70).
 
 Definition TRRG_root (G : TRRGraph) := pr1 (pr2 (pr2 G)).
 
-Definition TRRG_transitivity@{i j k} (G : TRRGraph@{i j k}) : istrans@{k k k} (TRRG_edgerel@{i j k} G) := pr12 (pr222 G).
+Definition TRRG_transitivity@{i j k} (G : TRRGraph@{i j k}) : istrans@{i k} (TRRG_edgerel@{i j k} G) := pr12 (pr222 G).
 
 Definition selfedge (G : TRRGraph) (x : pr1 G) : pr1 (pr2 G) x x :=
   (pr1 (pr2 (pr2 (pr2 G))) x).
@@ -128,10 +128,12 @@ Definition selfedge (G : TRRGraph) (x : pr1 G) : pr1 (pr2 G) x x :=
 (** Definition of [TRRGraph] homomorphisms [isTRRGhomo], isomorphisms [TRRGraphiso], and a proof
     that isomorphisms are equivalent to identities [TRRGraph_univalence] **)
 
-Definition isTRRGhomo {G H : TRRGraph} (f : pr1 G → pr1 H) : Type :=
-  (∏ (x y : pr1 G), (x ≤ y) <-> (f x ≤ f y)) × (f (TRRG_root G) = TRRG_root H).
+Definition isTRRGhomo@{i j k} {G H : TRRGraph@{i j k}} (f : pr1 G → pr1 H) : Type@{k} :=
+  dirprod@{k}
+         (∏ (x y : pr1 G), (x ≤ y) <-> (f x ≤ f y))
+         (f (TRRG_root G) = TRRG_root H).
 
-Lemma isaprop_isTRRGhomo {G H : TRRGraph} (f : pr1 G → pr1 H) : isaprop (isTRRGhomo f).
+Lemma isaprop_isTRRGhomo@{i j k} {G H : TRRGraph@{i j k}} (f : pr1 G → pr1 H) : isaprop (isTRRGhomo f).
 Proof.
   apply isapropdirprod.
   - repeat (apply impred ; intros). apply isapropdirprod.
@@ -202,7 +204,7 @@ Proof.
   apply (helper X (pr1 G) (pr1 H) (pr12 G) (pr12 H) _ _ q σ).
 Qed.
 
-Definition TRRGraphiso (G H : TRRGraph) : Type := ∑ (f : pr1 G ≃ pr1 H), isTRRGhomo f.
+Definition TRRGraphiso@{i j k} (G H : TRRGraph@{i j k}) : Type@{k} := ∑ (f : pr1 G ≃ pr1 H), isTRRGhomo f.
 
 Local Notation "G ≅ H" := (TRRGraphiso G H).
 
@@ -232,13 +234,12 @@ Proof.
     * intros q. exact (TRRGhomo_frompath (pr1 G) (pr1 H) (pr2 G) (pr2 H) p q).
     * intros q. exact (TRRGhomo_topath (pr1 G) (pr1 H) (pr2 G) (pr2 H) p q).
     * exact (isaset_TRRGraphData (pr1 H) ((p # pr2 G)%transport) (pr2 H)).
-    * Check (isaprop_isTRRGhomo (hSet_univalence_map (pr1 G) (pr1 H) p)).
-      exact (isaprop_isTRRGhomo (hSet_univalence_map (pr1 G) (pr1 H) p)).
+    * exact (isaprop_isTRRGhomo (hSet_univalence_map (pr1 G) (pr1 H) p)).
 Defined.
 
 Section TestConstraints.
   Universe i j k.
-  Constraint uu0 < i.
+  Constraint uu1 < i.
   Context (T : TRRGraph@{i j k}).
   Goal @TRRGraph_univalence_weq2 T = @TRRGraph_univalence_weq2 T.
   Abort.
