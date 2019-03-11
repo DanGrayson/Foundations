@@ -187,9 +187,9 @@ Defined.
 (* all of this stuff about decidable propositions will be replaced by the better code above *)
 (*****************************************************************************)
 
-Definition DecidableProposition@{i j} : Type@{j} := ∑ X, isdecprop@{i j} X.
+Definition DecidableProposition@{i i'0} : Type@{i'0} := ∑ X, isdecprop@{i i'0} X.
 
-Definition raise_DecidableProposition@{i j i' j'| i < j, i' < j', uu1 <= j, uu1 <= j', i <= i'} :
+Definition raise_DecidableProposition@{i j i' j'| i < j, i' < j', uu0 <= j, uu0 <= j', i <= i'} :
   DecidableProposition@{i j} -> DecidableProposition@{i' j'}
   (* we take care to avoid i=i' as a consequence *)
   := λ P, tpair isdecprop@{i' j'} (pr1 P) (pr2 P).
@@ -229,13 +229,13 @@ Coercion DecidableProposition_to_hProp : DecidableProposition >-> hProp.
 Definition decidabilityProperty@{i j} (X : DecidableProposition@{i j}) : isdecprop@{j j} (DecidableProposition_to_hProp X) := pr2 X.
 
 Definition DecidableSubtype (X : UU) : UU := X -> DecidableProposition.
-Definition DecidableRelation (X : UU) : UU := X -> X -> DecidableProposition.
+Definition DecidableRelation@{i i'0} (X : Type@{i}) : Type@{i'0} := X -> X -> DecidableProposition@{i i'0}.
 
-Definition decrel_to_DecidableRelation {X : UU} :
-  decrel X -> DecidableRelation X.
+Definition decrel_to_DecidableRelation@{i j k} {X : Type@{i}} :
+  decrel@{i j} X -> DecidableRelation@{j k} X.
 Proof.
   intros R x y. induction R as [R is]. exists (R x y).
-  apply isdecpropif. { apply propproperty. } apply is.
+  apply isdecpropif. { apply propproperty. } use is.
 Defined.
 
 Definition decidableAnd (P Q : DecidableProposition) : DecidableProposition.

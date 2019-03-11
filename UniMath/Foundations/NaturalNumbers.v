@@ -1164,7 +1164,7 @@ Proof.
   induction (natlehtonegnatgth _ _ (natlehmplusnm i n) is).
 Defined.
 
-Lemma isdecinclnatplusr@{} (n : nat) : isdecincl@{uu1 uu1 uu1 uu1} (λ i : nat, i + n).
+Lemma isdecinclnatplusr@{} (n : nat) : isdecincl@{uu0 uu0 uu0 uu0} (λ i : nat, i + n).
 Proof.
   intros. intro m. apply isdecpropif.
   - apply (isinclnatplusr _ m).

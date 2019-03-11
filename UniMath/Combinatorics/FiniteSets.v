@@ -24,7 +24,7 @@ Require Export UniMath.Combinatorics.StandardFiniteSets .
 
 (** *** Structure of a set with [ n ] elements on [ X ] defined as a term in [ weq ( stn n ) X ]  *)
 
-Definition nelstruct ( n : nat ) ( X : UU ) := weq ( stn n ) X .
+Definition nelstruct@{i i0} (n : nat) (X : Type@{i}) := weq@{i0} (stn n) X.
 
 Definition nelstructToFunction {n} {X} (S : nelstruct n X) : stn n -> X := pr1weq S.
 
@@ -118,7 +118,7 @@ Definition isofnelonweq { X : UU } { n : nat } ( sx : isofnel n X ) : isofnel ( 
 (** *** Finite structure on a type [ X ] defined as a pair [ ( n , w ) ] where [ n : nat ] and [ w : weq ( stn n ) X ] *)
 
 
-Definition finstruct  ( X : UU ) := total2 ( λ n : nat, nelstruct n X ) .
+Definition finstruct@{i i0}  ( X : Type@{i} ) := total2@{i0} ( λ n : nat, nelstruct@{i i0} n X ) .
 
 Definition finstructToFunction {X} (S : finstruct X) := pr2 S : nelstruct (pr1 S) X.
 
@@ -175,13 +175,14 @@ Definition finstructonweq { X : UU }  ( sx : finstruct X ) : finstruct ( X ≃ X
 
 (** *** The property of being finite *)
 
-Definition isfinite  ( X : UU ) := ishinh ( finstruct X ) .
+Definition isfinite@{i i1}  ( X : Type@{i} ) : Type@{i1} := ishinh@{i1 i1} ( finstruct@{i i1} X ) .
 
-Definition FiniteSet := ∑ X:UU, isfinite X.
+(* eventually put all finite sets into uu1 by resizing? *)
+Definition FiniteSet@{i i'1} : Type@{i'1} := total2@{i'1} (λ X:Type@{i}, isfinite@{i i'1} X).
 
 Definition isfinite_to_FiniteSet {X:UU} (f:isfinite X) : FiniteSet := X,,f.
 
-Lemma isfinite_isdeceq X : isfinite X -> isdeceq X.
+Lemma isfinite_isdeceq@{i i1+} (X:Type@{i}) : isfinite@{i i1} X -> isdeceq@{i i1} X.
 (* uses funextemptyAxiom *)
 Proof. intros isfin.
        apply (isfin (hProppair _ (isapropisdeceq X))); intro f; clear isfin; simpl.

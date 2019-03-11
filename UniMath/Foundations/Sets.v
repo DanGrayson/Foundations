@@ -80,7 +80,7 @@ Require Export UniMath.Foundations.Propositions.
 
 (** ** The type of sets, i.e., of types of h-level 2 in [UU] *)
 
-Definition hSet@{i u} : Type@{u} := @total2@{u} Type@{i} isaset@{i}.
+Definition hSet@{i i'} : Type@{i'} := @total2@{i'} Type@{i} isaset@{i}.
 Definition hSetpair (X : UU) (i : isaset X) := tpair isaset X i : hSet.
 Definition pr1hSet@{i u} : hSet@{i u} -> Type@{i} := pr1.
 Coercion pr1hSet: hSet >-> Sortclass.
@@ -445,19 +445,17 @@ Proof.
   exact (pr1 p).
 Defined.
 
-Axiom cheat : ∏ X, X.
-
-Definition squash_to_set@{i k+} {X Y : Type@{i}} (is : isaset Y) (f : X -> Y) :
-          (∏ x x', f x = f x') -> ishinh@{i k} X -> Y.
+Definition squash_to_set@{i i1} {X Y : Type@{i}} (is : isaset Y) (f : X -> Y) :
+          (∏ x x', f x = f x') -> ishinh@{i i1} X -> Y.
 Proof.
   intros e w.
-  set (P := total2@{k} (λ y, ishinh@{i k} (∑ x, f x = y))).
+  set (P := total2@{i1} (λ y, ishinh@{i i1} (∑ x, f x = y))).
   assert (j : isaprop P).
   {
-    apply isapropsubtype@{i k k k}; intros y y' j j'.
-    apply (squash_to_prop j). apply is. clear j; intros [j k].
+    apply isapropsubtype@{i i1 i1}; intros y y' j j'.
+    apply (squash_to_prop j). apply is. clear j; intros [j i1].
     apply (squash_to_prop j'). apply is. clear j'; intros [j' k'].
-    intermediate_path (f j). exact (!k).
+    intermediate_path (f j). exact (!i1).
     intermediate_path (f j'). apply e. exact k'.
   }
   assert (p : P).
@@ -481,11 +479,11 @@ Defined.
 
 (** *** Relations and boolean relations *)
 
-Definition hrel@{i j} (X : Type@{i}) : Type@{j} := X -> X -> hProp.
+Definition hrel@{i i1} (X : Type@{i}) : Type@{i1} := X -> X -> hProp.
 (* Note the use here of two universe levels, so we can be agnostic about whether i>=uu1. *)
 Identity Coercion idhrel : hrel >-> Funclass.
 
-Definition brel@{i j} (X : Type@{i}) : Type@{j} := X -> X -> bool.
+Definition brel@{i i1} (X : Type@{i}) : Type@{i1} := X -> X -> bool.
 (* Note the use here of two universe levels, so we can be agnostic about whether i>=uu1. *)
 Identity Coercion idbrel : brel >-> Funclass.
 
@@ -516,7 +514,7 @@ Definition isasymm {X : UU} (R : hrel X) : UU
 
 Definition iscoasymm {X : UU} (R : hrel X) : UU := ∏ x1 x2, ¬ R x1 x2 -> R x2 x1.
 
-Definition istotal@{i k} {X : Type@{i}} (R : hrel@{i k} X) : Type@{k} := ∏ x1 x2, R x1 x2 ∨ R x2 x1.
+Definition istotal@{i i1} {X : Type@{i}} (R : hrel@{i i1} X) : Type@{i1} := ∏ x1 x2, R x1 x2 ∨ R x2 x1.
 
 Definition isdectotal {X : UU} (R : hrel X) : UU := ∏ x1 x2, R x1 x2 ⨿ R x2 x1.
 
@@ -526,7 +524,7 @@ Definition iscotrans {X : UU} (R : hrel X) : UU
 Definition isdeccotrans {X : UU} (R : hrel X) : UU
   := ∏ x1 x2 x3, R x1 x3 -> R x1 x2 ⨿ R x2 x3.
 
-Definition isdecrel@{i j} {X : Type@{i}} (R : hrel@{i j} X) : Type@{i} := ∏ x1 x2, R x1 x2 ⨿ ¬ R x1 x2.
+Definition isdecrel@{i j} {X : Type@{i}} (R : hrel@{i j} X) : Type@{j} := ∏ x1 x2, R x1 x2 ⨿ ¬ R x1 x2.
 
 Definition isnegrel {X : UU} (R : hrel X) : UU
   := ∏ x1 x2, ¬ ¬ R x1 x2 -> R x1 x2.
@@ -540,7 +538,7 @@ Definition isnegrel {X : UU} (R : hrel X) : UU
 Definition isantisymm@{i k} {X : Type@{i}} (R : hrel@{i k} X) : Type@{k}
   := ∏ (x1 x2 : X), R x1 x2 -> R x2 x1 -> x1 = x2.
 
-Definition isPartialOrder@{i k+} {X : Type@{i}} (R : hrel@{i k} X) : Type@{k}
+Definition isPartialOrder@{i i1} {X : Type@{i}} (R : hrel@{i i1} X) : Type@{i1}
   := ispreorder R × isantisymm R.
 
 Ltac unwrap_isPartialOrder i :=
@@ -792,14 +790,15 @@ Coercion carrierofPreorderedSet : PreorderedSet >-> hSet.
 Definition PreorderedSetRelation (X : PreorderedSet) : hrel X := pr1 (pr2 X).
 
 (* partial orderings *)
-Definition PartialOrder@{i j k} (X : hSet@{i j}) : Type@{k} := total2@{k} (λ R : hrel@{i k} X, isPartialOrder R).
-Definition PartialOrderpair@{i j k} {X : hSet@{i j}} (R : hrel@{i k} X) (is : isPartialOrder R) :
-  PartialOrder X
+Definition PartialOrder@{i i' i1} (X : hSet@{i i'}) : Type@{i1}
+  := total2@{i1} (λ R : hrel@{i i1} X, isPartialOrder R).
+Definition PartialOrderpair@{i i' i1} {X : hSet@{i i'}} (R : hrel@{i i1} X) (is : isPartialOrder R) : PartialOrder X
   := tpair isPartialOrder R is.
 Definition carrierofPartialOrder {X : hSet} : PartialOrder X -> hrel X := pr1.
 Coercion carrierofPartialOrder : PartialOrder >-> hrel.
 
-Definition Poset@{i j k} : Type@{k} := total2@{k} (λ X : hSet@{i j}, PartialOrder@{i j k} X).
+Definition Poset@{i i' i'1} : Type@{i'1} := total2@{i'1} (λ X : hSet@{i i'}, PartialOrder@{i i' i'1} X).
+
 Definition Posetpair (X : hSet) (R : PartialOrder X) : Poset
   := tpair PartialOrder X R.
 Definition carrierofposet : Poset -> hSet := pr1.
@@ -1086,7 +1085,7 @@ Defined.
 (** *** Boolean representation of decidable relations *)
 
 
-Definition decrel (X : Type) : Type := total2 (λ R : hrel X, isdecrel R).
+Definition decrel@{i k} (X : Type@{i}) : Type@{k} := total2@{k} (λ R : hrel@{i k} X, isdecrel@{i k} R).
 Definition pr1decrel (X : Type) : decrel X -> hrel X := @pr1 _ _.
 Definition decrelpair {X : UU} {R : hrel X} (is : isdecrel R) : decrel X
   := tpair _ R is.

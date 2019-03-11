@@ -171,7 +171,8 @@ Defined.
 
 (** see Bourbaki, Set Theory, III.1, where they are called totally ordered sets *)
 
-Definition OrderedSet@{i j k} : Type@{k} := ∑ X:Poset@{i j k}, istotal@{i k} (posetRelation X).
+Definition OrderedSet@{i i' i'1| i < i', i <= i'1, i' <= i'1 + } : Type@{i'1}
+  := ∑ X:Poset, istotal@{i i'1} (posetRelation X).
 
 Ltac unwrap_OrderedSet X :=
   induction X as [X total];
@@ -305,7 +306,7 @@ Ltac oset_induction f e := generalize f; apply OrderedSetEquivalence_rect; intro
 
 (* standard ordered sets *)
 
-Definition FiniteOrderedSet@{i j k} : Type@{k} := total2@{k} (λ X:OrderedSet@{i j k}, isfinite@{i k} X).
+Definition FiniteOrderedSet@{i i' i'1} : Type@{i'1} := total2@{i'1} (λ X:OrderedSet@{i i' i'1}, isfinite@{i i'1} X).
 Definition underlyingOrderedSet (X:FiniteOrderedSet) : OrderedSet := pr1 X.
 Coercion underlyingOrderedSet : FiniteOrderedSet >-> OrderedSet.
 Definition finitenessProperty (X:FiniteOrderedSet) : isfinite X := pr2 X.
@@ -327,6 +328,10 @@ Definition FiniteOrderedSetDecidableOrdering (X:FiniteOrderedSet) : DecidableRel
 
 Definition FiniteOrderedSetDecidableEquality (X:FiniteOrderedSet) : DecidableRelation X :=
   λ (x y:X), @decidable_to_DecidableProposition (eqset x y) (FiniteOrderedSet_isdeceq x y).
+
+Section ConstraintCheck.
+  Context (X:FiniteOrderedSet@{uu1 _ _}) (foo := FiniteOrderedSetDecidableEquality X).
+End ConstraintCheck.
 
 Definition FiniteOrderedSetDecidableInequality (X:FiniteOrderedSet) : DecidableRelation X.
   intros x y.

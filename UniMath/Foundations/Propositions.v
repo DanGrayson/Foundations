@@ -178,7 +178,7 @@ Definition isdecEq (X : UU) : hProp := hProppair _ (isapropisdeceq X).
 
 (** *** The [hProp] version of the "inhabited" construction. *)
 
-Definition ishinh_UU (X : Type) : Type
+Definition ishinh_UU@{i i1} (X : Type@{i}) : Type@{i1}
   (* Note the use here of two universe levels, so we can be agnostic about whether i>=uu1. *)
   := ∏ P : hProp, ((X -> P) -> P).
 
@@ -189,8 +189,8 @@ Proof.
   intros _. apply propproperty.
 Qed.
 
-Definition ishinh (X : Type) : hProp
-  := hProppair (ishinh_UU X) (isapropishinh X).
+Definition ishinh@{i i1} (X : Type@{i}) : hProp
+  := hProppair (ishinh_UU@{i i1} X) (isapropishinh X).
 
 Notation nonempty := ishinh (only parsing).
 

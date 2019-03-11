@@ -232,7 +232,7 @@ Defined.
 
 (** *** Negation and double negation *)
 
-Definition neg (X : Type) : Type := X -> empty.
+Definition neg@{i i0} (X : Type@{i}) : Type@{i0} := X -> empty.
 
 Notation "'¬' X" := (neg X).
 (* type this in emacs in agda-input method with \neg *)
@@ -295,7 +295,7 @@ Proof.
   - intros y'. exact x.
 Defined.
 
-Definition logeq_both_false@{i j | i<=j, uu1<=j+} {X Y : Type@{i}} : neg@{i j} X -> neg@{i j} Y -> (X <-> Y).
+Definition logeq_both_false@{i i0 | i<=i0, uu0<=i0} {X Y : Type@{i}} : neg@{i i0} X -> neg@{i i0} Y -> (X <-> Y).
 Proof.
   intros nx ny.
   split.
@@ -2687,7 +2687,7 @@ Defined.
 
 (* Added by D. Grayson, Nov. 2015 *)
 
-Definition equality_cases {P Q : UU} (x x' : P ⨿ Q) : UU.
+Definition equality_cases@{i i0 i0'|i<=i0,uu0<=i0,i0<i0'} {P Q : Type@{i}} (x x' : P ⨿ Q) : Type@{i0}.
 Proof.
                            (* "codes" *)
   intros. induction x as [p|q].
@@ -2699,22 +2699,20 @@ Proof.
     + exact (q = q').
 Defined.
 
-Definition equality_by_case {P Q : UU} {x x' : P ⨿ Q} :
-  x = x'-> equality_cases x x'.
+Definition equality_by_case@{i i0 i0'|i<=i0,uu0<=i0,i0<i0'} {P Q : Type@{i}} {x x' : P ⨿ Q} :
+  x = x'-> equality_cases@{i i0 i0'} x x'.
 Proof.
   intros e. induction x as [p|q].
   - induction x' as [p'|q'].
     + simpl.
-      exact (maponpaths (@coprod_rect P Q (λ _, P) (λ p, p) (λ _, p)) e).
+      exact (maponpaths (coprod_rect _ (λ p:P, p) (λ _:Q, p)) e).
     + simpl.
-      exact (transportf (@coprod_rect P Q (λ _, UU) (λ _, unit) (λ _, empty))
-                        e tt).
+      exact (transportf (coprod_rect _ (λ _:P, unit) (λ _:Q, empty)) e tt).
   - induction x' as [p'|q'].
     + simpl.
-      exact (transportb (@coprod_rect P Q (λ _, UU) (λ _, unit) (λ _, empty))
-                        e tt).
+      exact (transportb (coprod_rect _ (λ _:P, unit) (λ _:Q, empty)) e tt).
     + simpl.
-      exact (maponpaths (@coprod_rect P Q (λ _,Q) (λ _, q) (λ q, q)) e).
+      exact (maponpaths (coprod_rect _ (λ _:P, q) (λ q:Q, q)) e).
 Defined.
 
 Definition inv_equality_by_case {P Q : UU} {x x' : P ⨿ Q} :
@@ -2841,7 +2839,7 @@ Proof.
   induction x. apply (ii1 (idpath _)). apply (ii2 (idpath _)).
 Defined.
 
-Definition bool_to_type : bool -> UU1.
+Definition bool_to_type : bool -> Type@{uu0}.
 Proof.
   intros b. induction b as [|]. { exact unit. } { exact empty. }
 Defined.

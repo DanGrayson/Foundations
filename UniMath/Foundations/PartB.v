@@ -499,10 +499,10 @@ Definition isapropunit : isaprop unit := iscontrpathsinunit.
 Definition isapropdirprod (X Y : UU) : isaprop X -> isaprop Y -> isaprop (X × Y)
   := isofhleveldirprod 1 X Y.
 
-Lemma isapropifcontr {X : UU} (is : iscontr X) : isaprop X.
+Lemma isapropifcontr@{i i0} {X : Type@{i}} : iscontr X -> isaprop X.
 Proof.
-  intros. set (f := λ x : X, tt).
-  assert (isw : isweq f)
+  intros is. set (f := λ x : X, tt).
+  assert (isw : isweq@{i0} f)
     by (apply isweqcontrtounit; assumption).
   apply (isofhlevelweqb (S O) (weqpair f isw)).
   intros x x'.
@@ -610,9 +610,9 @@ Proof.
   intros is x x'. unfold isaprop in is. unfold isofhlevel in is. exact (iscontrpr1 (is x x')).
 Defined.
 
-Lemma invproofirrelevance (X : UU) : isProofIrrelevant X -> isaprop X.
+Lemma invproofirrelevance@{i i0} (X : Type@{i}) : isProofIrrelevant@{i} X -> isaprop@{i} X.
 Proof.
-  intros ee x x'. apply isapropifcontr. exists x. intros t. exact (ee t x).
+  intros ee x x'. apply isapropifcontr@{i i0}. exists x. intros t. exact (ee t x).
 Defined.
 
 Lemma isProofIrrelevant_paths {X} (irr:isProofIrrelevant X) {x y:X} : isProofIrrelevant (x=y).
@@ -620,10 +620,10 @@ Proof.
   intros p q. assert (r := invproofirrelevance X irr x y). exact (pr2 r p @ ! pr2 r q).
 Defined.
 
-Lemma isapropcoprod (P Q : UU) :
+Lemma isapropcoprod@{i i0+} (P Q : Type@{i}) :
   isaprop P -> isaprop Q -> (P -> Q -> ∅) -> isaprop (P ⨿ Q).
 Proof.
-  intros i j n. apply invproofirrelevance.
+  intros i j n. apply invproofirrelevance@{i i0}.
   intros a b. apply inv_equality_by_case.
   induction a as [a|a].
   - induction b as [b|b].
@@ -1019,7 +1019,7 @@ Proof.
     * intros p. exact (n p q).
 Defined.
 
-Definition decidable@{i j} (X:Type@{i}) : Type@{j} := X ⨿ neg@{i j} X.
+Definition decidable@{i i0} (X:Type@{i}) : Type@{i0} := X ⨿ neg@{i i0} X.
 
 Definition decidable_to_complementary {X} : decidable X -> complementary X (¬X).
 Proof.
@@ -1041,12 +1041,13 @@ Defined.
 
 (** *** Decidable propositions [ isdecprop ] *)
 
-Definition isdecprop@{i j|uu1 <= j, i <= j} (P:Type@{i}) : Type@{j} := decidable@{i j} P × isaprop P.
+Definition isdecprop@{i i0|uu0 <= i0, i <= i0} (P:Type@{i}) : Type@{i0} := decidable@{i i0} P × isaprop P.
 
 Definition isdecproptoisaprop ( X : UU ) ( is : isdecprop X ) : isaprop X := pr2 is.
 Coercion isdecproptoisaprop : isdecprop >-> isaprop .
 
 Lemma isdecpropif ( X : UU ) : isaprop X -> X ⨿ ¬ X -> isdecprop X.
+(* this lemma is too trivial.  And it's neighbors from the same commit could be moved to MoreFoundations. *)
 Proof.
   intros i c. exact (c,,i).
 Defined.
@@ -1114,7 +1115,7 @@ Defined.
 
 (** *** Types with decidable equality *)
 
-Definition isdeceq@{i j|uu1 <= j, i <= j} (X:Type@{i}) : Type@{j} := ∏ (x x':X), decidable@{i j} (x=x').
+Definition isdeceq@{i i0|uu0 <= i0, i <= i0} (X:Type@{i}) : Type@{i0} := ∏ (x x':X), decidable@{i i0} (x=x').
 
 Lemma isdeceqweqf {X Y : UU} (w : X ≃ Y) (is : isdeceq X) : isdeceq Y.
 Proof.
@@ -1193,7 +1194,7 @@ Defined.
 
 (** *** Isolated points *)
 
-Definition isisolated (X:UU) (x:X) := ∏ x':X, (x = x') ⨿ (x != x').
+Definition isisolated@{i i0} (X:Type@{i}) (x:X) : Type@{i0} := ∏ x':X, (x = x') ⨿ neg@{i i0} (x = x').
 
 Definition isolated ( T : UU ) := ∑ t:T, isisolated _ t.
 

@@ -13,10 +13,11 @@ Require Export UniMath.Foundations.Init.
 
 (** Universe structure *)
 
-Monomorphic Universe uu0.       (* level 0 -- resized propositions and elements of hProp live here *)
-Monomorphic Universe uu1.       (* level 1 -- empty, unit, bool, nat, and hProp live here *)
+Monomorphic Universe uu0.       (* level 0 -- empty, unit, bool, nat, and resized propositions and elements of hProp live here *)
+Monomorphic Universe uu1.       (* level 1 -- hProp lives here *)
+Monomorphic Universe uu2.       (* level 2 -- the type of finite sets could live here *)
 
-Constraint uu0 < uu1.
+Constraint uu0 < uu1, uu1 < uu2.
 
 Global Set Universe Polymorphism.
 Global Set Polymorphic Inductive Cumulativity.
@@ -29,8 +30,6 @@ Global Unset Cumulativity Weak Constraints.
 (* Global Unset Private Polymorphic Universes. *)
 
 Notation UU  := Type (only parsing).
-Notation UU0 := Type@{uu0} (only parsing).
-Notation UU1 := Type@{uu1} (only parsing).
 
 (* for debugging, temporarily: *)
 Global Set Printing Universes.
@@ -40,7 +39,7 @@ Global Unset Printing Notations.
 
 (** The empty type *)
 
-Inductive empty : UU1 := .
+Inductive empty : Type@{uu0} := .
 
 (* empty_rect eliminates into types at monomorphic universe level UniMath.Foundations.Preamble.3 *)
 
@@ -48,14 +47,14 @@ Notation "∅" := empty.
 
 (** The one-element type *)
 
-Monomorphic Inductive unit : UU1 :=
+Monomorphic Inductive unit : Type@{uu0} :=
   | tt : unit.
 
 (* unit_rect eliminates into types at monomorphic universe level UniMath.Foundations.Preamble.4 *)
 
 (** The two-element type *)
 
-Monomorphic Inductive bool : UU1 :=
+Monomorphic Inductive bool : Type@{uu0} :=
   | true : bool
   | false : bool.
 
@@ -83,7 +82,7 @@ Notation "X ⨿ Y" := (coprod X Y).
 
 (* Declare ML Module "nat_syntax_plugin". *)
 
-Monomorphic Inductive nat : UU1 :=
+Monomorphic Inductive nat : Type@{uu0} :=
   | O : nat
   | S : nat -> nat.
 
