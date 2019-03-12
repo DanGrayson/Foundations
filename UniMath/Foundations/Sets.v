@@ -846,6 +846,10 @@ Proof.
   intros. apply impredtwice; intros. apply impred_prop.
 Defined.
 
+Section CheckUniverseConstraints.
+  Context (bar := @isaprop_isaposetmorphism@{uu0 _ _ _ _ _ _ _}).
+End CheckUniverseConstraints.
+
 (** the preorders on a set form a set *)
 
 Definition isaset_po (X : hSet) : isaset (po X).
@@ -877,6 +881,10 @@ Proof.
   intros. unfold isPosetEquivalence.
   apply isapropdirprod; apply isaprop_isaposetmorphism.
 Defined.
+
+Section CheckUniverseConstraints.
+  Context (foo := @isaprop_isPosetEquivalence@{uu0 _ _ _ _ _ _ _ _ _}).
+End CheckUniverseConstraints.
 
 Definition isPosetEquivalence_idweq (X : Poset) : isPosetEquivalence (idweq X).
 Proof.

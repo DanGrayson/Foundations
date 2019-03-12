@@ -234,8 +234,8 @@ Definition decidabilityProperty@{i j} (X : DecidableProposition@{i j}) : isdecpr
 Definition DecidableSubtype (X : UU) : UU := X -> DecidableProposition.
 Definition DecidableRelation@{i i'0} (X : Type@{i}) : Type@{i'0} := X -> X -> DecidableProposition@{i i'0}.
 
-Definition decrel_to_DecidableRelation@{i j k} {X : Type@{i}} :
-  decrel@{i j} X -> DecidableRelation@{j k} X.
+Definition decrel_to_DecidableRelation@{i i1 i1'} {X : Type@{i}} :
+  decrel@{i i1} X -> DecidableRelation@{i i1'} X.
 Proof.
   intros R x y. induction R as [R is]. exists (R x y).
   apply isdecpropif. { apply propproperty. } use is.
@@ -361,22 +361,22 @@ Definition DecidableRelation_to_hrel {X : UU} (P : DecidableRelation X) : hrel X
   := λ x y, DecidableProposition_to_hProp(P x y).
 Coercion DecidableRelation_to_hrel : DecidableRelation >-> hrel.
 
-Definition natlth_DecidableProposition : DecidableRelation nat :=
+Definition natlth_DecidableProposition : DecidableRelation@{uu0 uu1} nat :=
   decrel_to_DecidableRelation natlthdec.
 
-Definition natleh_DecidableProposition : DecidableRelation nat :=
+Definition natleh_DecidableProposition@{} : DecidableRelation@{uu0 uu1} nat :=
   decrel_to_DecidableRelation natlehdec.
 
-Definition natgth_DecidableProposition : DecidableRelation nat :=
+Definition natgth_DecidableProposition : DecidableRelation@{uu0 uu1} nat :=
   decrel_to_DecidableRelation natgthdec.
 
-Definition natgeh_DecidableProposition : DecidableRelation nat :=
+Definition natgeh_DecidableProposition : DecidableRelation@{uu0 uu1} nat :=
   decrel_to_DecidableRelation natgehdec.
 
-Definition nateq_DecidableProposition : DecidableRelation nat :=
+Definition nateq_DecidableProposition : DecidableRelation@{uu0 uu1} nat :=
   decrel_to_DecidableRelation natdeceq.
 
-Definition natneq_DecidableProposition : DecidableRelation nat :=
+Definition natneq_DecidableProposition : DecidableRelation@{uu0 uu1} nat :=
   decrel_to_DecidableRelation natdecneq.
 
 (* Declare Scope decidable_nat. *)

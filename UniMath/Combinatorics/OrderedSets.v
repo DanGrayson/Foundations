@@ -377,7 +377,7 @@ Abort.
 
 (** making finite ordered sets in various ways *)
 
-Definition standardFiniteOrderedSet@{j|uu1<j+} (n:nat) : FiniteOrderedSet@{uu0 uu1 uu1}.
+Definition standardFiniteOrderedSet@{j+} (n:nat) : FiniteOrderedSet@{uu0 uu1 uu1}.
 Proof.
   intros. simple refine (_,,_).
   - exists (stnposet n). intros x y; apply istotalnatleh.

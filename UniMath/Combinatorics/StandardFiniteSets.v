@@ -151,7 +151,7 @@ Definition stnset n := hSetpair (⟦n⟧) (isasetstn n).
 
 Definition stn_to_nat n : stnset n -> natset := pr1.
 
-Definition stnposet ( n : nat ) : Poset.
+Definition stnposet@{+} ( n : nat ) : Poset@{uu0 uu1 uu1}.
 Proof.
   unfold Poset.
   exists (_,,isasetstn n).

@@ -112,11 +112,14 @@ Proof.
   apply invmap. apply subtypeInjectivity_prop.
 Defined.
 
-Corollary impred_prop@{i|uu0<i+} {T : Type@{i}} (P : T -> hProp) : isaprop@{i} (∏ t : T, P t).
-(* the inequality works around the bug reported at https://github.com/coq/coq/issues/8196 *)
+Corollary impred_prop@{i} {T : Type@{i}} (P : T -> hProp) : isaprop@{i} (∏ t : T, P t).
 Proof.
   intros. apply impred; intro. apply propproperty.
 Defined.
+
+Section CheckUniverseConstraints.
+  Context (f := @impred_prop@{uu0}).
+End CheckUniverseConstraints.
 
 Goal @impred_prop Type@{uu0} = @impred_prop Type@{uu0}. (* ensure that i=uu0 is not imposed *) Abort.
 
