@@ -85,13 +85,12 @@ Definition hProp@{} : Type@{uu1} := @total2@{uu1} Type@{uu0} isaprop@{uu0}.
 Definition hProppair@{i} (X : Type@{i}) (is : isaprop@{i} X) : hProp
   := tpair@{uu1} isaprop@{uu0} (ResizeProp@{uu0 i} X is) is.
 
-Definition hProptoType@{} := @pr1@{uu1} _ _ : hProp -> Type@{uu0}.
+Definition hProptoType@{} : hProp -> Type@{uu0} := pr1@{uu1}.
 
 Coercion hProptoType : hProp >-> Sortclass.
 
 Definition propproperty@{i} (P : hProp) := pr2 P : isaprop@{i} P.
-(* The presence of i above offers an important advantage over simply using pr2,
-   which may lead to universes being needlessly identified. *)
+(* The presence of i above offers a mysterious advantage in avoiding universes being needlessly identified with low ones. *)
 
 (** ** The type [tildehProp] of pairs (P, p : P) where [P : hProp] *)
 
@@ -324,8 +323,13 @@ Lemma isinclpr1image {X Y : Type} (f : X -> Y): isincl (pr1image f).
 Proof.
   refine (isofhlevelfpr1 _ _ _).
   intro.
+  apply change_isaprop.
   apply propproperty.
 Defined.
+
+Section CheckConstraints.
+  Context (X Y : Type@{uu1}) (foo := @isinclpr1image X Y).
+End CheckConstraints.
 
 Lemma issurjprtoimage {X Y : UU} (f : X -> Y) : issurjective (prtoimage f).
 Proof.

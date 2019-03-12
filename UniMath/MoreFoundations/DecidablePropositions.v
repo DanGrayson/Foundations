@@ -189,10 +189,13 @@ Defined.
 
 Definition DecidableProposition@{i i'0} : Type@{i'0} := ∑ X, isdecprop@{i i'0} X.
 
-Definition raise_DecidableProposition@{i j i' j'| i < j, i' < j', uu0 <= j, uu0 <= j', i <= i'} :
-  DecidableProposition@{i j} -> DecidableProposition@{i' j'}
-  (* we take care to avoid i=i' as a consequence *)
-  := λ P, tpair isdecprop@{i' j'} (pr1 P) (pr2 P).
+Definition change_DecidableProposition@{i i'0 j j'0| i < i'0, j < j'0, uu0 <= i'0, uu0 <= j'0} :
+  DecidableProposition@{i _} -> DecidableProposition@{j _}.
+  (* universe level changing *)
+  (* we take care to avoid any relation between i and j as a consequence *)
+Proof.
+  intros P. exists (ResizeProp@{j i} (pr1 P) (pr22 P)). exact (pr2 P).
+Defined.
 
 Definition isdecprop_to_DecidableProposition {X : UU} (i : isdecprop X) :
   DecidableProposition := X,,i.

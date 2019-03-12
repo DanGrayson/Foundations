@@ -309,6 +309,7 @@ Proof.
   intros.
   apply isinclpr1.
   intros x.
+  apply change_isaprop.
   apply propproperty.
 Defined.
 
@@ -411,15 +412,16 @@ Proof.
   apply invproofirrelevance; intros x x'.
   apply (invmaponpathsincl (pr1carrier A)).
   { apply isinclpr1. intro x0.
-    exact (propproperty _). }
+    apply change_isaprop.       (* this makes the test below succeed *)
+    exact (propproperty (A x0)). }
   induction x as [ x0 is0 ], x' as [ x0' is0' ].
   simpl.
   exact (is x0 x0' is0 is0').
 Defined.
 
-Goal @isapropsubtype Type@{uu0} = @isapropsubtype Type@{uu0}.
-  (* the purpose of this is to test for bad constraints on the universe parameters of isapropsubtype, so don't delete it *)
-Abort.
+Section UniverseConstraintTest.
+  Context (foo := @isapropsubtype Type@{uu0}).
+End UniverseConstraintTest.
 
 Definition squash_pairs_to_set {Y : UU} (F : Y -> UU) :
   (isaset Y) -> (∏ y y', F y -> F y' -> y = y') -> (∃ y, F y) -> Y.
@@ -2989,6 +2991,10 @@ Proof.
                            (setquot2pr R x) (setquot2pr R x') e1).
 Defined.
 
+Section CheckConstraints.
+  Context (X:Type@{uu1}) (foo := @iscompsetquot2pr X).
+End CheckConstraints.
+
 (** *** Universal property of [seqtquot2 R] for functions to sets satisfying compatibility condition [iscomprelfun] *)
 
 Definition setquot2univ {X : UU} (R : hrel X) (Y : hSet) (F : X -> Y)
@@ -3024,7 +3030,7 @@ Proof.
                              (weqpathssetquot2l1 R x)).
     intro e. change (pr1 (int (setquot2pr R x'))).
     induction e.
-    change (R x x). apply (eqrelrefl R).
+    apply (eqrelrefl R).
   - apply (pr2 (R x x')).
   - apply isasetsetquot2.
 Defined.

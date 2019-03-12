@@ -327,7 +327,7 @@ Definition FiniteOrderedSetDecidableOrdering (X:FiniteOrderedSet) : DecidableRel
   λ (x y:X), decidable_to_DecidableProposition (FiniteOrderedSet_isdec_ordering x y).
 
 Definition FiniteOrderedSetDecidableEquality (X:FiniteOrderedSet) : DecidableRelation X :=
-  λ (x y:X), @decidable_to_DecidableProposition (eqset x y) (FiniteOrderedSet_isdeceq x y).
+  λ (x y:X), change_DecidableProposition (@decidable_to_DecidableProposition (eqset x y) (FiniteOrderedSet_isdeceq x y)).
 
 Section ConstraintCheck.
   Context (X:FiniteOrderedSet@{uu1 _ _}) (foo := FiniteOrderedSetDecidableEquality X).
@@ -362,7 +362,7 @@ Notation " x > y " := ( FiniteOrderedSetDecidableLessThan _ y x ) (at level 70, 
 
 Definition FiniteOrderedSet_segment {X:FiniteOrderedSet} (x:X) : FiniteSet.
 Proof.
-  intros. apply (@subsetFiniteSet X); intro y. apply raise_DecidableProposition. exact (y < x)%foset.
+  intros. apply (@subsetFiniteSet X); intro y. apply change_DecidableProposition. exact (y < x)%foset.
 Defined.
 
 Definition height {X:FiniteOrderedSet} : X -> nat.
@@ -377,7 +377,7 @@ Abort.
 
 (** making finite ordered sets in various ways *)
 
-Definition standardFiniteOrderedSet@{j} (n:nat) : FiniteOrderedSet@{uu1 j j}.
+Definition standardFiniteOrderedSet@{j|uu1<j+} (n:nat) : FiniteOrderedSet@{uu0 uu1 uu1}.
 Proof.
   intros. simple refine (_,,_).
   - exists (stnposet n). intros x y; apply istotalnatleh.

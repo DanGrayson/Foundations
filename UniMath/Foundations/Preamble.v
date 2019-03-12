@@ -15,9 +15,8 @@ Require Export UniMath.Foundations.Init.
 
 Monomorphic Universe uu0.       (* level 0 -- empty, unit, bool, nat, and resized propositions and elements of hProp live here *)
 Monomorphic Universe uu1.       (* level 1 -- hProp lives here *)
-Monomorphic Universe uu2.       (* level 2 -- the type of finite sets could live here *)
 
-Constraint uu0 < uu1, uu1 < uu2.
+Constraint uu0 < uu1.
 
 Global Set Universe Polymorphism.
 Global Set Polymorphic Inductive Cumulativity.
