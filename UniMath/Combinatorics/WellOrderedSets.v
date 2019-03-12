@@ -944,6 +944,12 @@ Proof.
                          hinhpr).
 Defined.
 
+Section CheckUniverseConstraints.
+  Universe j.
+  Context (X : hSet@{uu1 j}).
+  Context (foo := @AC_to_choice_fun X).
+End CheckUniverseConstraints.
+
 (** Given a choice function g, we single out well ordered subsets C of X that
     follow the choice functions advice when constructed by adding one element at
     a time to the top.  We may say that C is "guided" by g. *)

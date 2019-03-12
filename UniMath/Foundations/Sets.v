@@ -202,13 +202,13 @@ there are models which would validate a possibility of types other than sets
 to satisfy weak axiom of choice.
 *)
 
-Definition ischoicebase_type (X : Type) : Type
-  := ∏ P : X -> Type, (∏ x : X, ishinh (P x)) -> ishinh (∏ x : X, P x).
+Definition ischoicebase_type@{i i1 i'1} (X : Type@{i}) : Type@{i'1}
+  := ∏ P : X -> Type@{i}, (∏ x : X, ishinh@{i i1} (P x)) -> ishinh@{i i1} (∏ x : X, P x).
 
-Lemma isapropischoicebase (X : Type) : isaprop (ischoicebase_type X).
+Lemma isapropischoicebase@{i i1 i'0} (X : Type@{i}) : isaprop@{i'0} (ischoicebase_type@{i i1 i'0} X).
 Proof.
-  apply impred.
-  intro P. apply impred.
+  apply impred@{i'0}.
+  intro P. apply impred@{i'0}.
   intro fs.
   exact (propproperty (ishinh (forall x : X, P x))).
 Defined.
@@ -847,7 +847,7 @@ Proof.
 Defined.
 
 Section CheckUniverseConstraints.
-  Context (bar := @isaprop_isaposetmorphism@{uu0 _ _ _ _ _ _ _}).
+  Context (bar := @isaprop_isaposetmorphism@{uu0 _ _ _ _ _ _}).
 End CheckUniverseConstraints.
 
 (** the preorders on a set form a set *)
@@ -883,7 +883,7 @@ Proof.
 Defined.
 
 Section CheckUniverseConstraints.
-  Context (foo := @isaprop_isPosetEquivalence@{uu0 _ _ _ _ _ _ _ _ _}).
+  Context (foo := @isaprop_isPosetEquivalence@{uu0 _ _ _ _ _ _ _ _}).
 End CheckUniverseConstraints.
 
 Definition isPosetEquivalence_idweq (X : Poset) : isPosetEquivalence (idweq X).

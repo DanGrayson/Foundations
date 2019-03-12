@@ -611,8 +611,8 @@ Definition weqfunfromdirprod (X X' Y : UU) :
 
 (** *** General case *)
 
-Theorem impred (n : nat) {T : Type} (P : T -> Type) :
-  (∏ t : T, isofhlevel n (P t)) -> (isofhlevel n (∏ t : T, P t)).
+Theorem impred@{i} (n : nat) {T : Type@{i}} (P : T -> Type@{i}) :
+  (∏ t : T, isofhlevel@{i} n (P t)) -> (isofhlevel@{i} n (∏ t : T, P t)).
 Proof.
   revert T P. induction n as [ | n IHn ].
   - intros T P X. apply (funcontr P X).
