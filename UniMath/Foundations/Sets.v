@@ -493,18 +493,19 @@ Identity Coercion idbrel : brel >-> Funclass.
 
 
 
-Definition istrans@{i k} {X : Type@{i}} (R : hrel@{i k} X) : Type@{k}
+Definition istrans@{i i1} {X : Type@{i}} (R : hrel@{i i1} X) : Type@{i1}
   := ∏ (x1 x2 x3 : X), R x1 x2 -> R x2 x3 -> R x1 x3.
 
-Definition isrefl@{i k} {X : Type@{i}} (R : hrel@{i k} X) : Type@{k}
+Definition isrefl@{i i1} {X : Type@{i}} (R : hrel@{i i1} X) : Type@{i1}
   := ∏ x : X, R x x.
 
-Definition issymm@{i k} {X : Type@{i}} (R : hrel@{i k} X) : Type@{k}
+Definition issymm@{i i1} {X : Type@{i}} (R : hrel@{i i1} X) : Type@{i1}
   := ∏ (x1 x2 : X), R x1 x2 -> R x2 x1.
 
-Definition ispreorder@{i k} {X : Type@{i}} (R : hrel@{i k} X) : Type@{k} := istrans R × isrefl R.
+Definition ispreorder@{i i1} {X : Type@{i}} (R : hrel@{i i1} X) : Type@{i1} := istrans R × isrefl R.
 
-Definition iseqrel {X : UU} (R : hrel X) := ispreorder R × issymm R.
+Definition iseqrel@{i i1} {X : Type@{i}} (R : hrel@{i i1} X) := ispreorder R × issymm R.
+
 Definition iseqrelconstr {X : UU} {R : hrel X}
            (trans0 : istrans R) (refl0 : isrefl R) (symm0 : issymm R) :
   iseqrel R := dirprodpair (dirprodpair trans0 refl0) symm0.
@@ -947,7 +948,7 @@ Defined.
 
 (** *** Eqivalence relations and associated types. *)
 
-Definition eqrel (X : Type) : Type := total2 (λ R : hrel X, iseqrel R).
+Definition eqrel@{i i1} (X : Type@{i}) : Type@{i1} := total2 (λ R : hrel@{i i1} X, iseqrel@{i i1} R).
 Definition eqrelpair {X : UU} (R : hrel X) (is : iseqrel R) : eqrel X
   := tpair (λ R : hrel X, iseqrel R) R is.
 Definition eqrelconstr {X : UU} (R : hrel X)
@@ -1376,9 +1377,9 @@ apply (isofhleveldirprod 1).
 - exact (isapropishinh (carrier A)).
 - apply (isofhleveldirprod 1).
   + repeat (apply impred; intro).
-    exact (pr2 (A t0)).
+    exact (propproperty (A t0)).
   + repeat (apply impred; intro).
-    exact (pr2 (R t t0)).
+    exact (propproperty (R t t0)).
 Defined.
 
 (** *** Direct product of equivalence classes *)
