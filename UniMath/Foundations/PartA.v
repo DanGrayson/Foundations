@@ -163,7 +163,7 @@ Definition termfun {X : UU} (x : X) : unit -> X := λ _, x.
 
 Definition idfun (T : UU) := λ t:T, t.
 
-Definition funcomp {X Y : UU} {Z:Y->UU} (f : X -> Y) (g : ∏ y:Y, Z y) := λ x, g (f x).
+Definition funcomp@{i} {X Y : Type@{i}} {Z:Y->Type@{i}} (f : X -> Y) (g : ∏ y:Y, Z y) := λ x, g (f x).
 
 (* Declare Scope functions. *)
 Delimit Scope functions with functions.
@@ -2094,7 +2094,7 @@ Proof.
   apply (twooutof3b f g w int1).
 Defined.
 
-Theorem twooutof3c {X Y Z : UU} (f : X -> Y) (g : Y -> Z)
+Theorem twooutof3c@{i} {X Y Z : Type@{i}} (f : X -> Y) (g : Y -> Z)
         (isf : isweq f) (isg : isweq g) : isweq (g ∘ f).
 Proof.
   intros.
@@ -2185,7 +2185,7 @@ Definition weqcontrcontr {X Y : UU} (isx : iscontr X) (isy : iscontr Y) : X ≃ 
 
 (** *** Composition of weak equivalences *)
 
-Definition weqcomp@{i j k|i <= k, j <= k} {X : Type@{i}} {Y : Type@{j}} {Z : Type@{i}} (w1 : weq@{k} X Y) (w2 : weq@{k} Y Z)
+Definition weqcomp@{i j k+|i <= k, j <= k+} {X : Type@{i}} {Y : Type@{j}} {Z : Type@{i}} (w1 : weq@{k} X Y) (w2 : weq@{k} Y Z)
   : weq@{i} X Z
   := weqpair (λ (x : X), w2 (w1 x)) (twooutof3c w1 w2 (pr2 w1) (pr2 w2)).
 

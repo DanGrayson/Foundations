@@ -175,7 +175,7 @@ Definition finstructonweq { X : UU }  ( sx : finstruct X ) : finstruct ( X ≃ X
 
 (** *** The property of being finite *)
 
-Definition isfinite@{i i1}  ( X : Type@{i} ) : Type@{i1} := ishinh@{i1 i1} ( finstruct@{i i1} X ) .
+Definition isfinite@{i i1}  ( X : Type@{i} ) : hProp := ishinh@{i1 i1} ( finstruct@{i i1} X ) .
 
 (* eventually put all finite sets into uu1 by resizing? *)
 Definition FiniteSet@{i i'1} : Type@{i'1} := total2@{i'1} (λ X:Type@{i}, isfinite@{i i'1} X).
@@ -210,8 +210,17 @@ Defined.
 
 Definition cardinalityFiniteSet (X:FiniteSet) : nat := fincard (pr2 X).
 
-Theorem ischoicebasefiniteset { X : UU } ( is : isfinite X ) : ischoicebase X .
-Proof . intros . apply ( @hinhuniv ( finstruct X ) ( ischoicebase X ) ) .  intro nw . destruct nw as [ n w ] .   apply ( ischoicebaseweqf w ( ischoicebasestn n ) ) .  apply is .  Defined .
+Theorem ischoicebasefiniteset@{i i1 j j1 ij ij1 ij'1} { X : Type@{i} } ( is : isfinite@{i i1} X ) :
+  ischoicebase@{i j j1 ij ij1 ij'1} X .
+Proof.
+  apply ( @hinhuniv ( finstruct X ) ( ischoicebase X ) ) .
+  - intro nw. destruct nw as [ n w ] . apply (ischoicebaseweqf w). exact (ischoicebasestn n).
+  - exact is.
+Defined.
+
+Section CheckUniverseConstraints.
+  Context (X : Type@{uu1}) (foo := @ischoicebasefiniteset X).
+End CheckUniverseConstraints.
 
 Definition isfinitestn ( n : nat ) : isfinite ( stn n ) := hinhpr ( finstructonstn n ) .
 
@@ -238,7 +247,7 @@ Definition isfinitecompl { X : UU } ( x : X ) ( sx : isfinite X ) : isfinite ( c
 Definition isfinitecoprod { X  Y : UU } ( sx : isfinite X ) ( sy : isfinite Y ) : isfinite ( coprod X Y ) := hinhfun2 ( λ sx0 : _, λ sy0 : _, finstructoncoprod sx0 sy0 ) sx sy .
 
 Definition isfinitetotal2 { X : UU } ( P : X -> UU ) ( sx : isfinite X ) ( fs : ∏ x : X , isfinite ( P x ) ) : isfinite ( total2 P ) .
-Proof . intros . set ( fs' := ischoicebasefiniteset sx _ fs ) .  apply ( hinhfun2 ( fun fx0 : ∏ x : X , finstruct ( P x )  => λ sx0 : _, finstructontotal2 P sx0 fx0 ) fs' sx ) .  Defined .
+Proof . intros . set ( fs' := ischoicebasefiniteset sx _ (λ x, fs x)) .  apply ( hinhfun2 ( fun fx0 : ∏ x : X , finstruct ( P x )  => λ sx0 : _, finstructontotal2 P sx0 fx0 ) fs' sx ) .  Defined .
 
 Definition FiniteSetSum {I:FiniteSet} (X : I -> FiniteSet) : FiniteSet.
 Proof.

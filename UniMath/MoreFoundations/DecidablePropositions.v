@@ -16,7 +16,7 @@ Proof.
   - now apply ii2, (negf YtoX).
 Defined.
 
-Definition decidable_prop (X:hProp) := hProppair (decidable X) (isapropdec X (pr2 X)).
+Definition decidable_prop (X:hProp) := hProppair (decidable X) (isapropdec X (propproperty X)).
 
 Definition LEM : hProp := ∀ P : hProp, decidable_prop P.
 

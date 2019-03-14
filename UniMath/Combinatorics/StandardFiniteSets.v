@@ -57,7 +57,7 @@ Proof.
   use isdecinclpr1.
   intro x.
   apply isdecpropif.
-  use pr2.
+  apply propproperty.
   apply isdecrelnatgth.
 Defined.
 
@@ -1653,7 +1653,7 @@ Theorem ischoicebasestn ( n : nat ) : ischoicebase (⟦n⟧).
 Proof.
   induction n as [ | n IHn ].
   - apply ( ischoicebaseempty2 negstn0 ).
-  - apply ( ischoicebaseweqf ( weqdnicoprod n lastelement )
+  - apply ( ischoicebaseweqf ( weqdnicoprod@{uu1} n lastelement )
                              ( ischoicebasecoprod IHn ischoicebaseunit ) ).
 Defined.
 
@@ -1734,7 +1734,7 @@ Proof.
     intro l.
     apply ( pr2 ( F n ) ).
   }
-  apply ( weqimplimpl ( pr1 lg ) ( pr2 lg ) is1 ( pr2 ( F 0 ) ) ).
+  apply ( weqimplimpl ( pr1 lg ) ( pr2 lg ) is1 ( propproperty ( F 0 ) ) ).
 Defined.
 
 Lemma weqforallnatlehnsn' ( n' : nat ) ( F : nat -> hProp ) :
@@ -1796,7 +1796,7 @@ Proof.
       split with ( isreflnatleh 0 ).
       apply p.
   }
-  apply ( weqimplimpl ( pr1 lg ) ( pr2 lg ) ( pr2 _ ) ( pr2 _ ) ).
+  apply ( weqimplimpl ( pr1 lg ) ( pr2 lg ) ( propproperty _ ) ( propproperty _ ) ).
 Defined.
 
 Lemma weqexistsnatlehnsn' ( n' : nat ) ( P : nat -> hProp  ) :
@@ -1838,7 +1838,7 @@ Proof.
         split with ( isreflnatleh _ ).
         apply p.
   }
-  apply ( weqimplimpl ( pr1 lg ) ( pr2 lg ) ( pr2 _ ) ( pr2 _ ) ).
+  apply ( weqimplimpl ( pr1 lg ) ( pr2 lg ) ( propproperty _ ) ( propproperty _ ) ).
 Defined.
 
 

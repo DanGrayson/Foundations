@@ -202,26 +202,26 @@ there are models which would validate a possibility of types other than sets
 to satisfy weak axiom of choice.
 *)
 
-Definition ischoicebase_type@{i i1 i'1} (X : Type@{i}) : Type@{i'1}
-  := ∏ P : X -> Type@{i}, (∏ x : X, ishinh@{i i1} (P x)) -> ishinh@{i i1} (∏ x : X, P x).
+Definition ischoicebase_type@{i j j1 ij ij1 ij'1} (X : Type@{i}) : Type@{ij'1}
+  := ∏ P : X -> Type@{j}, (∏ x : X, ishinh@{j j1} (P x)) -> ishinh@{ij ij1} (∏ x : X, P x).
 
-Lemma isapropischoicebase@{i i1 i'0} (X : Type@{i}) : isaprop@{i'0} (ischoicebase_type@{i i1 i'0} X).
+Lemma isapropischoicebase@{i j j1 ij ij1 ij'1} (X : Type@{i}) : isaprop@{ij'1} (ischoicebase_type@{i j j1 ij ij1 ij'1} X).
 Proof.
-  apply impred@{i'0}.
-  intro P. apply impred@{i'0}.
+  apply impred@{ij'1}.
+  intro P. apply impred@{ij'1}.
   intro fs.
   exact (propproperty (ishinh (forall x : X, P x))).
 Defined.
 
-Definition ischoicebase (X : Type) : hProp := hProppair (ischoicebase_type X) (isapropischoicebase X).
+Definition ischoicebase@{i j j1 ij ij1 ij'1} (X : Type@{i}) : hProp := hProppair (ischoicebase_type@{i j j1 ij ij1 ij'1} X) (isapropischoicebase X).
 
-Lemma ischoicebaseweqf {X Y : UU} (w : X ≃ Y) (is : ischoicebase X) :
-  ischoicebase Y.
+Lemma ischoicebaseweqf@{i j j1 ij ij1 ij'1} {X Y : Type@{i}} (w : X ≃ Y) (is : ischoicebase@{i j j1 ij ij1 ij'1} X) :
+  ischoicebase@{i j j1 ij ij1 ij'1} Y.
 Proof.
   intros. unfold ischoicebase.
   intros Q fs.
   apply (hinhfun (invweq (weqonsecbase Q w))).
-  apply (is (funcomp w Q) (λ x : X, fs (w x))).
+  apply (is (funcomp@{ij'1} w Q) (λ x : X, fs (w x))).
 Defined.
 
 Lemma ischoicebaseweqb {X Y : UU} (w : X ≃ Y) (is : ischoicebase Y) :
@@ -942,7 +942,7 @@ Defined.
 Lemma isaprop_consecutive {X : Poset} (x y : X) : isaprop (consecutive x y).
 Proof.
   intros. unfold consecutive. apply isapropdirprod.
-  - apply isapropdirprod. { use pr2. } simpl. apply isapropneg.
+  - apply isapropdirprod. { use propproperty. } simpl. apply isapropneg.
   - apply impred; intro z. apply isapropneg.
 Defined.
 
@@ -2378,7 +2378,7 @@ Proof.
   {
     intros x1 x2.
     apply impred. intro.
-    use (pr2 _).
+    exact (propproperty _).
   }
   apply (setquotuniv2prop R (λ x1 x2, hProppair _ (int x1 x2))).
   intros x x'. intros r.
@@ -2404,7 +2404,7 @@ Proof.
   {
     intros.
     apply impred. intro.
-    apply (pr2 _).
+    exact (propproperty _).
   }
   apply (setquotuniv3prop R (λ x1 x2 x3, hProppair  _ (int x1 x2 x3))).
   intros x x' x''. intros r.
@@ -2465,7 +2465,7 @@ Proof.
   {
     intros x0 x0'.
     apply impred. intro.
-    apply (pr2 _).
+    exact (propproperty _).
   }
   apply (setquotuniv2prop _ (λ x0 x0', hProppair _ (int x0 x0'))).
   intros x0 x0'. change (L x0 x0' -> L' x0 x0').
@@ -2520,7 +2520,7 @@ Proof.
                          <-> (quotrel is x x'))).
   {
     intros x x'. apply isapropdirprod.
-    - apply impred. intro. use (pr2 (quotrel _ _ _)).
+    - apply impred. intro. exact (propproperty (quotrel _ _ _)).
     - apply impred. intro. apply isasetbool.
   }
   apply (setquotuniv2prop R (λ x x', hProppair _ (int x x'))).

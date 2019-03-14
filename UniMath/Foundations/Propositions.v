@@ -80,16 +80,21 @@ Require Export UniMath.Foundations.Resizing.
 (** [hProp] is essentially defined as [∑ T:Type, isaprop T], but
     here we make the universe levels explicit. *)
 
-Definition hProp@{} : Type@{uu1} := @total2@{uu1} Type@{uu0} isaprop@{uu0}.
+Definition hProp@{} : Type@{uu1} := @total2@{uu1} Type@{uu0} (λ P, dirprod@{uu0} (isaprop@{uu0} P) unit).
+(* we just temporarily add the redundant unit here to detect case where pr2 is used instead of propproperty *)
 
-Definition hProppair@{i} (X : Type@{i}) (is : isaprop@{i} X) : hProp
-  := tpair@{uu1} isaprop@{uu0} (ResizeProp@{uu0 i} X is) is.
+Definition hProppair@{i} (X : Type@{i}) (is : isaprop@{i} X) : hProp.
+Proof.
+  exists (ResizeProp@{uu0 i} X is).
+  exists is.
+  exact tt.
+Defined.
 
 Definition hProptoType@{} : hProp -> Type@{uu0} := pr1@{uu1}.
 
 Coercion hProptoType : hProp >-> Sortclass.
 
-Definition propproperty@{i} (P : hProp) := pr2 P : isaprop@{i} P.
+Definition propproperty@{i} (P : hProp) := pr1 (pr2 P) : isaprop@{i} P.
 (* The presence of i above offers a mysterious advantage in avoiding universes being needlessly identified with low ones. *)
 
 (** ** The type [tildehProp] of pairs (P, p : P) where [P : hProp] *)
@@ -210,6 +215,15 @@ Definition hinhfun {X Y : UU} (f : X -> Y) : ∥ X ∥ -> ∥ Y ∥ :=
   placed in [hProp UU1]). The first place where RR1 is essentially required is
   in application of [hinhuniv] to a function [X -> ishinh Y] *)
 
+Definition change_ishinh@{i j j1 k k1} (X:Type@{i}) : ishinh@{j j1} X -> ishinh@{k k1} X
+  := λ h, hinhfun (idfun X) h.
+
+Section CheckUniverseConstraints.
+  (* verify there is no constraint on j and k above *)
+  Context (foo := change_ishinh@{_ uu0 _ uu1 _}).
+  Context (bar := change_ishinh@{_ uu1 _ uu0 _}).
+End CheckUniverseConstraints.
+
 Definition hinhuniv {X : Type} {P : hProp} (f : X -> P) (wit : ishinh X) : P
   := wit P f.
 
@@ -251,7 +265,7 @@ Proof.
       simpl. intro nx. apply nx.
     - apply hinhpr.
   }
-  apply (weqimplimpl (pr1 lg) (pr2 lg) (pr2 (ishinh _)) (isapropneg X)).
+  apply (weqimplimpl (pr1 lg) (pr2 lg) (propproperty (ishinh _)) (isapropneg X)).
 Defined.
 
 Lemma weqnegtonegishinh (X : UU) : ¬ X ≃ ¬ ∥ X ∥.
@@ -404,7 +418,7 @@ Definition htrue : hProp := hProppair unit isapropunit.
 Definition hfalse : hProp := hProppair empty isapropempty.
 
 Definition hconj (P Q : hProp) : hProp
-  := hProppair (P × Q) (isapropdirprod _ _ (pr2 P) (pr2 Q)).
+  := hProppair (P × Q) (isapropdirprod _ _ (propproperty P) (propproperty Q)).
 
 Notation "A ∧ B" := (hconj A B) (at level 80, right associativity) : type_scope.
   (* precedence same as /\ *)
@@ -686,7 +700,7 @@ Theorem hPropUnivalence : ∏ (P Q : hProp), (P -> Q) -> (Q -> P) -> P = Q.
 Proof.
   intros ? ? f g.
   apply subtypeEquality.
-  - intro X. apply isapropisaprop.
+  - intro X. apply isapropdirprod. { apply isapropisaprop. } { apply isapropunit. }
   - apply propositionalUnivalenceAxiom.
     + apply propproperty.
     + apply propproperty.
@@ -706,7 +720,7 @@ Definition weqpathsweqhProp {P P' : hProp} (w : P ≃ P') :
   eqweqmaphProp (weqtopathshProp w) = w.
 Proof.
   intros. apply proofirrelevance.
-  apply (isapropweqtoprop P P' (pr2 P')).
+  apply (isapropweqtoprop P P' (propproperty P')).
 Defined.
 
 
@@ -753,7 +767,7 @@ Corollary isasethProp : isaset hProp.
 Proof.
   unfold isaset. simpl. intros x x'.
   apply (isofhlevelweqb (S O) (weqeqweqhProp x x')
-                        (isapropweqtoprop x x' (pr2 x'))).
+                        (isapropweqtoprop x x' (propproperty x'))).
 Defined.
 
 Definition weqpathsweqhProp' {P P' : hProp} (e : P = P') :
@@ -765,7 +779,7 @@ Defined.
 Lemma iscontrtildehProp : iscontr tildehProp.
 Proof.
   split with (tpair _ htrue tt). intro tP. induction tP as [ P p ].
-  apply (invmaponpathsincl _ (isinclpr1 (λ P : hProp, P) (λ P, pr2 P))).
+  apply (invmaponpathsincl _ (isinclpr1 (λ P : hProp, P) (λ P, propproperty P))).
   simpl. apply hPropUnivalence. apply (λ x, tt). intro t. apply p.
 Defined.
 
@@ -783,7 +797,7 @@ Defined.
 (* ** Logical equivalence yields weak equivalence *)
 
 Definition logeqweq (P Q : hProp) : (P -> Q) -> (Q -> P) -> P ≃ Q :=
-  λ f g, weqimplimpl f g (pr2 P) (pr2 Q).
+  λ f g, weqimplimpl f g (propproperty P) (propproperty Q).
 
 (* ** A variant of a lemma proved in uu0b.v *)
 Theorem total2_paths_hProp_equiv {A : Type} (B : A -> hProp)

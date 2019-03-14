@@ -53,7 +53,7 @@ Local Lemma ident_is_prop : ∏ (P : UU -> hProp) (X X' : UU)
 Proof.
   intros P X X' pX pX' w.
   use isapropifcontr.
-  use (pr2 (P X')).
+  exact (propproperty (P X') _ _).
 Defined.
 
 
