@@ -141,3 +141,25 @@ strive for.
 
 Another advantage of coding in this style is that the proofs should be easier
 to transport to another proof assistant.
+
+## Debugging hints for universe management
+
+Polymorphic universe management in Coq is difficult, because Coq often imposes
+constraints on universes that are not required and lead to conflicts later on.
+One sort of needless optimization it can do is to replace a universe level by
+its lower bound, if there is just one.  To prevent this, we write our code to
+always be agnostic about whether a universe level associated to a parameter
+type is less than or greater than one of the global universe constants.  We
+have two global universe constants: `uu0`, in which global types such as `nat`
+and `unit` live, and `uu1`, in which `hProp` lives.
+
+* If there is a universe conflict, it often helps to replace uses of the tactic `apply` by
+  `refine` or `use`.
+  
+* To see what's going on, the following commands may be useful.
+    * Set Printing Universes.
+    * Set Printing Coercions.
+    * Unset Printing Notations.
+    * Set Printing All.
+  Then you can use `Print` or `Check` to display identifiers and terms, along
+  with any universe constraints. 

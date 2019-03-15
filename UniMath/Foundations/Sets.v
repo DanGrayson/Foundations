@@ -538,7 +538,7 @@ Definition isnegrel {X : UU} (R : hrel X) : UU
   quotients of types - the quotient relation can be (co-)antisymmetric while
   the original relation was not. *)
 
-Definition isantisymm@{i k} {X : Type@{i}} (R : hrel@{i k} X) : Type@{k}
+Definition isantisymm@{i i1} {X : Type@{i}} (R : hrel@{i i1} X) : Type@{i1}
   := ∏ (x1 x2 : X), R x1 x2 -> R x2 x1 -> x1 = x2.
 
 Definition isPartialOrder@{i i1} {X : Type@{i}} (R : hrel@{i i1} X) : Type@{i1}
@@ -583,7 +583,10 @@ Defined.
 Lemma isaprop_isantisymm {X : hSet} (R : hrel X) : isaprop (isantisymm R).
 Proof.
   intros. unfold isantisymm. apply impred; intro x. apply impred; intro y.
-  apply impred; intro r. apply impred; intro s. apply setproperty.
+  apply impred; intro r. apply impred; intro s.
+  assert (Q := setproperty X x y).
+  apply change_isaprop.
+  exact (setproperty X x y).
 Defined.
 
 Lemma isaprop_ispreorder {X : hSet} (R : hrel X) : isaprop (ispreorder R).
@@ -611,8 +614,15 @@ Definition isaset_hrel (X : hSet) : isaset (hrel X).
   intros. unfold hrel.
   apply impred_isaset; intro x.
   apply impred_isaset; intro y.
+  apply change_isaset.
   exact isasethProp.
 Defined.
+
+Section CheckUniverseConstraints.
+  Universe i j k.
+  Constraint uu1 < i, uu1 < j, uu1 < k.
+  Context (foo := isaset_hrel@{i j k}).
+End CheckUniverseConstraints.
 
 (** *** Elementary implications between properties of relations *)
 
@@ -884,7 +894,7 @@ Proof.
 Defined.
 
 Section CheckUniverseConstraints.
-  Context (foo := @isaprop_isPosetEquivalence@{uu0 _ _ _ _ _ _ _ _}).
+  Context (foo := @isaprop_isPosetEquivalence@{uu0 _ _ _ _ _ _ _}).
 End CheckUniverseConstraints.
 
 Definition isPosetEquivalence_idweq (X : Poset) : isPosetEquivalence (idweq X).

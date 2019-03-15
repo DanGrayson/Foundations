@@ -1305,7 +1305,7 @@ Defined.
 
 (** **** General definitions *)
 
-Definition setwithbinop@{i j} : Type@{j} := total2 (λ X : hSet@{i j}, binop X).
+Definition setwithbinop : Type := total2 (λ X : hSet, binop X).
 
 Definition setwithbinoppair (X : hSet) (opp : binop X) : setwithbinop :=
   tpair (λ X : hSet, binop X) X opp.
@@ -1786,8 +1786,8 @@ Coercion carrierofasubsetwithbinop : subsetswithbinop >-> setwithbinop.
 
 (** **** Relations compatible with a binary operation and quotient objects *)
 
-Definition isbinophrel@{i j|uu1<=i,i<j} {X : setwithbinop@{i j}} (R : hrel@{i} X) : Type@{i} :=
-  dirprod@{i} (∏ a b c : X, R a b -> R (op c a) (op c b)) (∏ a b c : X, R a b -> R (op a c) (op b c)).
+Definition isbinophrel {X : setwithbinop} (R : hrel X) : Type :=
+  dirprod (∏ a b c : X, R a b -> R (op c a) (op c b)) (∏ a b c : X, R a b -> R (op a c) (op b c)).
 
 Definition mk_isbinophrel {X : setwithbinop} {R : hrel X}
            (H1 : ∏ a b c : X, R a b -> R (op c a) (op c b))
@@ -1804,7 +1804,7 @@ Proof.
     apply ((pr1 (lg _ _) ((pr2 isl) _ _ _ (pr2 (lg  _ _) rab)))).
 Defined.
 
-Lemma isapropisbinophrel@{i j} {X : setwithbinop@{i j}} (R : hrel X) : isaprop (isbinophrel R).
+Lemma isapropisbinophrel {X : setwithbinop} (R : hrel X) : isaprop (isbinophrel R).
 Proof.
   apply isapropdirprod.
   - apply impred. intro a.
@@ -1826,7 +1826,7 @@ Proof.
   destruct (is c a). destruct (is c b). apply (isl _ _ _ rab).
 Defined.
 
-Lemma iscompbinoptransrel@{i j} {X : setwithbinop@{i j}} (R : hrel X) (ist : istrans@{i i i} R) (isb : isbinophrel R) :
+Lemma iscompbinoptransrel {X : setwithbinop} (R : hrel X) (ist : istrans R) (isb : isbinophrel R) :
   iscomprelrelfun2 R R (@op X).
 Proof.
   intros a b c d. intros rab rcd.
@@ -1834,7 +1834,7 @@ Proof.
   apply (ist _ _ _ racbc rbcbd).
 Defined.
 
-Lemma isbinopreflrel@{i j} {X : setwithbinop@{i j}} (R : hrel X) (isr : isrefl@{i i i} R)
+Lemma isbinopreflrel {X : setwithbinop} (R : hrel X) (isr : isrefl R)
       (isb : iscomprelrelfun2 R R (@op X)) : isbinophrel R.
 Proof.
   split.
@@ -1869,13 +1869,13 @@ Definition binoppopair {X : setwithbinop} :
 Definition pr1binoppo (X : setwithbinop) : binoppo X -> po X := @pr1 _ (λ R : po X, isbinophrel R).
 Coercion pr1binoppo : binoppo >-> po.
 
-Definition binopeqrel@{i j} (X : setwithbinop@{i j}) : Type@{i} := total2 (λ R : eqrel@{i} X, isbinophrel R).
+Definition binopeqrel (X : setwithbinop) : Type := total2 (λ R : eqrel X, isbinophrel R).
 
-Definition binopeqrelpair@{i j} {X : setwithbinop@{i j}} :
+Definition binopeqrelpair {X : setwithbinop} :
   ∏ (t : eqrel X), (λ R : eqrel X, isbinophrel R) t → ∑ R : eqrel X, isbinophrel R :=
   tpair (λ R : eqrel X, isbinophrel R).
 
-Definition pr1binopeqrel@{i j} (X : setwithbinop@{i j}) : binopeqrel X -> eqrel X :=
+Definition pr1binopeqrel (X : setwithbinop) : binopeqrel X -> eqrel X :=
   @pr1 _ (λ R : eqrel X, isbinophrel R).
 Coercion pr1binopeqrel : binopeqrel >-> eqrel.
 
@@ -1887,7 +1887,7 @@ Definition binopeqrel_resp_right {X : setwithbinop} (R : binopeqrel X)
            {a b : X} (c : X) (r : R a b) : R (op a c) (op b c) :=
   pr2 (pr2 R) a b c r.
 
-Definition setwithbinopquot@{i j} {X : setwithbinop@{i j}} (R : binopeqrel X) : setwithbinop@{i j}.
+Definition setwithbinopquot {X : setwithbinop} (R : binopeqrel X) : setwithbinop.
 Proof.
   split with (setquotinset R).
   set (qt  := setquot R). set (qtset := setquotinset R).

@@ -27,12 +27,11 @@ Local Open Scope poset. (* So we can write ≤ *)
 
 (** ** Least upper bounds *)
 Section leastupperbound.
-Universes i j.
-Context {X : Poset@{i j}}.
-Context {I : Type@{i}}.
+Context {X : Poset}.
+Context {I : UU}.
 Variable (f : I -> X). (* Indexing family *)
 
-Definition isupperbound@{} (u : X) : Type@{i} := ∏ (i : I), f i ≤ u.
+Definition isupperbound (u : X) : UU := ∏ (i : I), f i ≤ u.
 Lemma isaprop_isupperbound (u : X) : isaprop (isupperbound u).
 Proof.
   apply impred_isaprop; intro i; apply propproperty.
@@ -65,13 +64,11 @@ End leastupperbound.
 
 (** ** Directed families *)
 Section directedfamily.
-Universe i j.
-Context {X : Poset@{i j}}.
-Context {I : Type@{i}}.
+Context {X : Poset}.
+Context {I : UU}.
 
-Definition isdirected@{} (f : I -> X) : Type@{i} :=
-  dirprod@{i} (ishinh@{i} I) (∏ (i j : I), ∥∑ (k : I), dirprod@{i} (f i ≤ f k) (f j ≤ f k)∥).
-
+Definition isdirected (f : I -> X) : UU :=
+  ∥ I ∥ × ∏ (i j : I), ∥∑ (k : I), f i ≤ f k × f j ≤ f k∥.
 Lemma isaprop_isdirected (f : I -> X) : isaprop (isdirected f).
 Proof.
   apply isapropdirprod.
@@ -106,7 +103,7 @@ Proof.
   apply proofirrelevance. apply isaprop_islub.
 Qed.
 
-Definition dcpo@{i j} := ∑ (X : Poset@{i j}), isdirectedcomplete@{j i i j} X.
+Definition dcpo := ∑ (X : Poset), isdirectedcomplete X.
 Definition dcpoposet : dcpo -> Poset := pr1.
 Coercion dcpoposet : dcpo >-> Poset.
 Definition dcpoisdirectedcomplete (D : dcpo) : isdirectedcomplete D := pr2 D.
@@ -129,19 +126,18 @@ End dcpo.
 (** ** Morphisms of dcpos *)
 
 Section morphismofdcpos.
-Definition preserveslub@{i j} {P Q : Poset@{i j}} (f : P -> Q) {I : Type@{i}} (u : I -> P) : Type@{i} :=
+Definition preserveslub {P Q : Poset} (f : P -> Q) {I : UU} (u : I -> P) : UU :=
   ∏ (v : P), islub u v -> islub (f ∘ u) (f v).
-Lemma isaprop_preserveslub@{i j} {P Q : Poset@{i j}} (f : P -> Q) {I : Type@{i}} (u : I -> P) :
-  isaprop@{i} (preserveslub f u).
+Lemma isaprop_preserveslub {P Q : Poset} (f : P -> Q) {I : UU} (u : I -> P) :
+  isaprop (preserveslub f u).
 Proof.
   apply impred_isaprop; intro v.
   apply isapropimpl. apply isaprop_islub.
 Qed.
 
-Definition isdcpomorphism@{i j} {D D' : dcpo@{i j}} (f : D -> D') : Type@{j} :=
-  dirprod@{j}
-         (isaposetmorphism@{i j} f)
-         (∏ (I : Type@{i}) (u : I -> D), isdirected u -> preserveslub f u).
+Definition isdcpomorphism {D D' : dcpo} (f : D -> D') :=
+  isaposetmorphism f ×
+  ∏ (I : UU) (u : I -> D), isdirected u -> preserveslub f u.
 Lemma isaprop_isdcpomorphism {D D' : dcpo} (f : D -> D') :
   isaprop (isdcpomorphism f).
 Proof.
@@ -149,10 +145,10 @@ Proof.
   - apply isaprop_isaposetmorphism.
   - apply impred_isaprop; intro I.
     apply impred_isaprop; intro u.
-    apply isapropimpl; use isaprop_preserveslub.
+    apply isapropimpl; apply isaprop_preserveslub.
 Qed.
 
-Definition dcpomorphism@{i j} (D D' : dcpo@{i j}) := ∑ (f : D -> D'), isdcpomorphism@{i j} f.
+Definition dcpomorphism (D D' : dcpo) := ∑ (f : D -> D'), isdcpomorphism f.
 
 Definition dcpomorphism_posetmorphism (D D' : dcpo) :
   dcpomorphism D D' -> posetmorphism D D'.
@@ -253,9 +249,9 @@ End morphismofdcpos.
 
 (** ** The morphisms between two dcpos form a dcpo with the pointwise order. *)
 Section morphismsofdcpos_formdcpo.
-Definition pointwiseorder@{i j} (D D' : dcpo@{i j}) : hrel@{j} (dcpomorphism@{i j} D D').
+Definition pointwiseorder (D D' : dcpo) : hrel (dcpomorphism D D').
 Proof.
-  intros f g. use hProppair@{j}.
+  intros f g. use hProppair.
   - exact (∏ (d : D), f d ≤ g d).
   - apply impred_isaprop; intro d. apply propproperty.
 Defined.
@@ -279,7 +275,7 @@ Proof.
     apply proofirrelevance, isaprop_isdcpomorphism.
 Qed.
 
-Definition posetofdcpomorphisms@{i j k} (D D' : dcpo@{i j}) : Poset@{j k}.
+Definition posetofdcpomorphisms (D D' : dcpo) : Poset.
 Proof.
   use Posetpair.
   - use hSetpair.
@@ -288,7 +284,7 @@ Proof.
       ++ apply impred_isaset; intro d.
          apply setproperty.
       ++ intro f; apply isasetaprop, isaprop_isdcpomorphism.
-  - refine (PartialOrderpair@{j k} _ _).
+  - use PartialOrderpair.
     + apply pointwiseorder.
     + apply ispartialorder_pointwiseorder.
 Defined.
@@ -307,8 +303,8 @@ Qed.
 
 (** Given a family of dcpo morphisms from D to D' and a point d : D
    we have a pointwise family in D' by evaluating each morphism at d. *)
-Definition pointwisefamily@{i j} {D D' : dcpo@{i j}} {I : Type@{i}}
-           (F : I -> dcpomorphism@{j i i j} D D') : D -> I -> D' :=
+Definition pointwisefamily {D D' : dcpo} {I : UU}
+           (F : I -> dcpomorphism D D') : D -> I -> D' :=
   λ (d : D), λ (i : I), (F i) d.
 
 Lemma pointwisefamily_isdirected {D D' : dcpo} {I : UU}
@@ -588,9 +584,8 @@ Qed.
 Definition leastfixedpoint {D : dcpowithbottom} : (D --> D) --> D.
 Proof.
   use mkdcpomorphism.
-  - eapply pointwiselub.
-    apply iter'_isdirected.
-  - apply pointwiselub_isdcpomorphism'.
+  - exact (pointwiselub iter' (iter'_isdirected D)).
+  - exact (pointwiselub_isdcpomorphism' iter' (iter'_isdirected D)).
 Defined.
 
 Notation "'μ'" := leastfixedpoint : DCPO.

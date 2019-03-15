@@ -1327,11 +1327,7 @@ now intros x; simpl; intros H; apply H, WO_isrefl.
 Qed.
 
 (** Equivalent definition (assuming decidable equality) of the WOlt relation *)
-Definition WOlt' (X : WellOrderedSet) (x y : X) : hProp.
-Proof.
-exists ((x ≤ y) ∧ (x != y))%type.
-abstract (now apply isapropdirprod; [ apply propproperty | apply isapropneg ]).
-Defined.
+Definition WOlt' (X : WellOrderedSet) (x y : X) : hProp := (x ≤ y) ∧ (x != y).
 
 Lemma WOlt'_to_WOlt (X : WellOrderedSet) (x y : X) : WOlt' X x y → x < y.
 Proof.
@@ -1440,7 +1436,7 @@ Local Open Scope prop.
 (** The empty set is well-ordered *)
 Definition empty_woset : WellOrderedSet.
 Proof.
-exists (_,,isasetempty).
+exists (empty,,isasetempty).
 use tpair.
 - intros [].
 - abstract (repeat split; try (now intros []);

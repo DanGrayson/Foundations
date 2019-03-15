@@ -99,7 +99,7 @@ Proof.
     -- apply (isaprop_isaroot E r).
 Qed.
 
-Definition TRRGraphData@{i j k} (V : hSet@{i j}) : Type@{k} := ∑ (E : hrel V) (r : V), isTRR@{i j k} V E r.
+Definition TRRGraphData@{i i' i1} (V : hSet@{i i'}) : Type@{i1} := ∑ (E : hrel V) (r : V), isTRR@{i i' i1} V E r.
 
 Lemma isaset_TRRGraphData (V : hSet) : isaset (TRRGraphData V).
 Proof.
@@ -112,15 +112,15 @@ Proof.
      -- intros.  apply hlevelntosn. apply isaprop_isTRR.
 Qed.
 
-Definition TRRGraph@{i j k} : Type@{k} := ∑ (V : hSet@{i j}), TRRGraphData@{i j k} V.
+Definition TRRGraph@{i i' i1 i'1} : Type@{i'1} := total2@{i'1} (λ V : hSet@{i i'}, TRRGraphData@{i i' i1} V).
 
-Definition TRRG_edgerel@{i j k} (G : TRRGraph@{i j k}) : hrel (pr1 G) := pr12 G.
+Definition TRRG_edgerel@{i i' i1 i'1} (G : TRRGraph@{i i' i1 i'1}) : hrel (pr1 G) := pr12 G.
 
 Local Notation "x ≤ y" := (TRRG_edgerel _ x y)(at level 70).
 
 Definition TRRG_root (G : TRRGraph) := pr1 (pr2 (pr2 G)).
 
-Definition TRRG_transitivity@{i j k} (G : TRRGraph@{i j k}) : istrans@{i k} (TRRG_edgerel@{i j k} G) := pr12 (pr222 G).
+Definition TRRG_transitivity@{i i' i1 i'1} (G : TRRGraph@{i i' i1 i'1}) : istrans@{i i1} (TRRG_edgerel@{i i' i1 i'1} G) := pr12 (pr222 G).
 
 Definition selfedge (G : TRRGraph) (x : pr1 G) : pr1 (pr2 G) x x :=
   (pr1 (pr2 (pr2 (pr2 G))) x).
@@ -128,19 +128,27 @@ Definition selfedge (G : TRRGraph) (x : pr1 G) : pr1 (pr2 G) x x :=
 (** Definition of [TRRGraph] homomorphisms [isTRRGhomo], isomorphisms [TRRGraphiso], and a proof
     that isomorphisms are equivalent to identities [TRRGraph_univalence] **)
 
-Definition isTRRGhomo@{i j k} {G H : TRRGraph@{i j k}} (f : pr1 G → pr1 H) : Type@{k} :=
-  dirprod@{k}
+Definition isTRRGhomo@{i i' i1 i'1 i0} {G H : TRRGraph@{i i' i1 i'1}} (f : pr1 G → pr1 H) : Type@{i0} :=
+  dirprod@{i0}
          (∏ (x y : pr1 G), (x ≤ y) <-> (f x ≤ f y))
          (f (TRRG_root G) = TRRG_root H).
 
-Lemma isaprop_isTRRGhomo@{i j k} {G H : TRRGraph@{i j k}} (f : pr1 G → pr1 H) : isaprop (isTRRGhomo f).
+Lemma isaprop_isTRRGhomo@{i i' i1 i'1 i0} {G H : TRRGraph@{i i' i1 i'1}} (f : pr1 G → pr1 H) :
+  isaprop (isTRRGhomo@{i i' i1 i'1 i0} f).
 Proof.
-  apply isapropdirprod.
-  - repeat (apply impred ; intros). apply isapropdirprod.
-    -- repeat (apply impred; intros; apply propproperty).
-    -- repeat (apply impred; intros; apply propproperty).
-  - apply setproperty.
+  unfold isTRRGhomo.
+  use isapropdirprod.
+  - repeat (use impred ; intros).
+    use isapropdirprod. (* "apply" here would lead to a universe constraint *)
+    -- repeat (use impred; intros; use propproperty).
+    -- repeat (use impred; intros; use propproperty).
+  - use setproperty@{i i'}.     (* Coq puts {i0 i'} here by mistake. *)
 Qed.
+
+Section CheckUniverseConstraints.
+  Context (X : TRRGraph@{uu1 _ _ _}) (foo := @isaprop_isTRRGhomo X).
+  Context (b := @isaprop_isTRRGhomo@{uu0 _ _ _ uu1}).
+End CheckUniverseConstraints.
 
 Lemma TRRGhomo_frompath (X Y : hSet) (G : TRRGraphData X) (H : TRRGraphData Y) (p : X = Y) :
   transportf (λ x : hSet, TRRGraphData x) p G = H →
@@ -204,7 +212,7 @@ Proof.
   apply (helper X (pr1 G) (pr1 H) (pr12 G) (pr12 H) _ _ q σ).
 Qed.
 
-Definition TRRGraphiso@{i j k} (G H : TRRGraph@{i j k}) : Type@{k} := ∑ (f : pr1 G ≃ pr1 H), isTRRGhomo f.
+Definition TRRGraphiso (G H : TRRGraph) : Type := ∑ (f : pr1 G ≃ pr1 H), isTRRGhomo f.
 
 Local Notation "G ≅ H" := (TRRGraphiso G H).
 
@@ -226,7 +234,8 @@ Defined.
 Definition TRRGraph_univalence_weq1 (G H : TRRGraph) : G = H ≃ G ╝ H :=
   total2_paths_equiv _ G H.
 
-Definition TRRGraph_univalence_weq2 (G H : TRRGraph) : G ╝ H ≃ G ≅ H.
+Definition TRRGraph_univalence_weq2 (G H : TRRGraph)
+  : PathPair G H ≃ TRRGraphiso G H.
 Proof.
   use weqbandf.
   - exact (hSet_univalence (pr1 G) (pr1 H)).
@@ -238,11 +247,7 @@ Proof.
 Defined.
 
 Section TestConstraints.
-  Universe i j k.
-  Constraint uu1 < i.
-  Context (T : TRRGraph@{i j k}).
-  Goal @TRRGraph_univalence_weq2 T = @TRRGraph_univalence_weq2 T.
-  Abort.
+  Context (T : TRRGraph@{uu1 _ _ _}) (foo := @TRRGraph_univalence_weq2 T).
 End TestConstraints.
 
 Lemma TRRGraph_univalence_weq2_idpath (G : TRRGraph) :

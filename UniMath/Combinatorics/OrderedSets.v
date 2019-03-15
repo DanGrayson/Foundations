@@ -80,7 +80,9 @@ Proof.
     unfold isaposetmorphism in e; simpl in e.
     induction e as [e e'].
     unfold posetRelation in *. unfold invmap in *; simpl in *.
-    apply hPropUnivalence. { apply e. } { apply e'. } }
+    use hPropUnivalence.
+    - apply e.
+    - apply e'. }
   { intros p. induction p. apply isPosetEquivalence_idweq. }
 Defined.
 

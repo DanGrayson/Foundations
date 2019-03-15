@@ -492,7 +492,7 @@ Defined.
 
 Definition isaprop := isofhlevel 1.
 
-Definition change_isaprop@{i j k|i<=j, i<=k} (X:Type@{i}) : isaprop@{j} X -> isaprop@{k} X
+Definition change_isaprop@{i j k|i<=j, i<=k} {X:Type@{i}} : isaprop@{j} X -> isaprop@{k} X
   (* trivial universe level changing *)
   := λ ip, ip.
 
@@ -500,7 +500,7 @@ Definition isPredicate {X : UU} (Y : X -> UU) := ∏ x : X, isaprop (Y x).
 
 Definition isapropunit : isaprop unit := iscontrpathsinunit.
 
-Definition isapropdirprod (X Y : UU) : isaprop X -> isaprop Y -> isaprop (X × Y)
+Definition isapropdirprod@{i} (X Y : Type@{i}) : isaprop X -> isaprop Y -> isaprop (X × Y)
   := isofhleveldirprod 1 X Y.
 
 Lemma isapropifcontr@{i i0} {X : Type@{i}} : iscontr X -> isaprop X.
@@ -869,7 +869,8 @@ Defined.
 
 Definition isaset@{i} (X : Type@{i}) : Type@{i} := ∏ x x' : X, isaprop (x = x').
 
-(* Definition isaset := isofhlevel 2. *)
+Definition change_isaset@{i j k | i <= j, i <= k} {X:Type@{i}} : isaset@{j} X -> isaset@{k} X
+  := λ p, p.
 
 Notation isasetdirprod := (isofhleveldirprod 2).
 
