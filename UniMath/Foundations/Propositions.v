@@ -468,7 +468,7 @@ Local Notation "A ⇒ B" := (himpl A B) : logic.
      CategoryTheory/UnicodeNotations.v *)
 Local Open Scope logic.
 
-Definition hexists {X : Type} (P : X -> Type) := ishinh (total2 P).
+Definition hexists@{i i1} {X : Type@{i}} (P : X -> Type@{i}) := ishinh@{i i1} (total2@{i} P).
 
 Notation "'∃' x .. y , P"
   := (ishinh (∑ x ,.. (∑ y , P)..))

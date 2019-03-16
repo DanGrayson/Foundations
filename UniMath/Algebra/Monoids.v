@@ -50,7 +50,7 @@ Require Import UniMath.MoreFoundations.All.
 
 (** ****  Basic definitions *)
 
-Definition monoid : Type := total2 (λ X : setwithbinop, ismonoidop (@op X)).
+Definition monoid@{i i'|i<i'} : Type@{i'} := total2 (λ X : setwithbinop@{i i'}, ismonoidop@{i} (@op X)).
 
 Definition monoidpair :
   ∏ (t : setwithbinop), (λ X : setwithbinop, ismonoidop op) t → ∑ X : setwithbinop, ismonoidop op :=
@@ -350,8 +350,8 @@ Opaque monoid_univalence.
 
 (** **** Subobjects *)
 
-Definition issubmonoid {X : monoid} (A : hsubtype X) : Type :=
-  dirprod (issubsetwithbinop (@op X) A) (A (unel X)).
+Definition issubmonoid@{i i' i0 i1} {X : monoid@{i i'}} (A : hsubtype@{i i1} X) : Type@{i1} :=
+  dirprod (issubsetwithbinop@{i i' i0 i1} (@op X) A) (A (unel X)).
 
 Definition issubmonoidpair {X : monoid} {A : hsubtype X} (H1 : issubsetwithbinop (@op X) A)
            (H2 : A (unel X)) : issubmonoid A := dirprodpair H1 H2.
@@ -364,7 +364,7 @@ Proof.
   - apply (pr2 (A (unel X))).
 Defined.
 
-Definition submonoid (X : monoid) : Type := total2 (λ A : hsubtype X, issubmonoid A).
+Definition submonoid@{i i' i0 i1} (X : monoid@{i i'}) : Type@{i1} := total2@{i1} (λ A : hsubtype@{i i1} X, issubmonoid@{i i' i0 i1} A).
 
 Definition submonoidpair {X : monoid} :
   ∏ (t : hsubtype X), (λ A : hsubtype X, issubmonoid A) t → ∑ A : hsubtype X, issubmonoid A :=
@@ -622,7 +622,7 @@ Defined.
 
 (** **** Basic definitions *)
 
-Definition abmonoid : Type := total2 (λ X : setwithbinop, isabmonoidop (@op X)).
+Definition abmonoid@{i i'|i<i'} : Type@{i'} := total2@{i'} (λ X : setwithbinop@{i i'}, isabmonoidop@{i} (@op X)).
 
 Definition abmonoidpair :
   ∏ (t : setwithbinop), (λ X : setwithbinop, isabmonoidop op) t →
@@ -828,7 +828,7 @@ Opaque abmonoid_univalence.
 
 (** **** Subobjects *)
 
-Definition subabmonoid (X : abmonoid) := submonoid X.
+Definition subabmonoid@{i i' i0 i1} (X : abmonoid@{i i'}) : Type@{i1} := submonoid@{i i' i0 i1} X.
 Identity Coercion id_subabmonoid : subabmonoid >-> submonoid.
 
 Lemma iscommcarrier {X : abmonoid} (A : submonoid X) : iscomm (@op A).
@@ -1142,10 +1142,10 @@ Defined.
 
 (** **** Relations on the abelian monoid of fractions *)
 
-Definition abmonoidfracrelint (X : abmonoid) (A : subabmonoid X) (L : hrel X) :
-  hrel (setwithbinopdirprod X A) :=
-  λ xa yb, hexists (λ c0 : A, L (((pr1 xa) + (pr1 (pr2 yb))) + (pr1 c0))
-                                  (((pr1 yb) + (pr1 (pr2 xa))) + (pr1 c0))).
+Definition abmonoidfracrelint (X : abmonoid) (A : subabmonoid X) (L : hrel X)
+  : hrel (setwithbinopdirprod X A)
+  := λ xa yb, hexists (λ c0 : A, L (((pr1 xa) + (pr1 (pr2 yb))) + (pr1 c0))
+                                         (((pr1 yb) + (pr1 (pr2 xa))) + (pr1 c0))).
 
 Lemma iscomprelabmonoidfracrelint (X : abmonoid) (A : subabmonoid X) {L : hrel X}
       (is : ispartbinophrel A L) : iscomprelrel (eqrelabmonoidfrac X A) (abmonoidfracrelint X A L).
@@ -1264,9 +1264,6 @@ Lemma issymmabmonoidfracrel (X : abmonoid) (A : subabmonoid X) {L : hrel X}
       (is : ispartbinophrel A L) (isl : issymm L) : issymm (abmonoidfracrel X A is).
 Proof.
   exact (issymmquotrel (iscomprelabmonoidfracrelint X A is) (issymmabmonoidfracrelint X A is isl)).
-  use issymmquotrel. apply issymmabmonoidfracrelint.
-  - apply is.
-  - apply isl.
 Defined.
 
 Lemma isreflabmonoidfracrelint (X : abmonoid) (A : subabmonoid X) {L : hrel X}
@@ -1685,7 +1682,7 @@ Proof.
     apply l.
   - apply ii2. generalize nl. clear nl. apply negf.
     unfold abmonoidfracrelint. simpl.
-    apply (@hinhuniv _ (hProppair _ (pr2 (L _ _)))).
+    apply (@hinhuniv _ (hProppair _ (propproperty (L _ _)))).
     intro t2l. destruct t2l as [ c0a l ].
     simpl.
     apply ((pr2 is) _ _ _ (pr2 c0a) l).

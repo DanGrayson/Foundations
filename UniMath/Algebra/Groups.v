@@ -1108,7 +1108,7 @@ Proof.
     {
       intros x x'.
       apply impred. intro.
-      apply (pr2 _).
+      exact (propproperty _).
     }
     generalize x1 x2. clear x1 x2.
     apply (setquotuniv2prop _ (λ x x', hProppair _ (int x x'))).
@@ -1118,7 +1118,7 @@ Proof.
   - assert (int : ∏ x x', isaprop (abgrdiffrel X is x x' -> abgrdiffrel' X is x x')).
     intros x x'.
     apply impred. intro.
-    apply (pr2 _).
+    exact (propproperty _).
     generalize x1 x2. clear x1 x2.
     apply (setquotuniv2prop _ (λ x x', hProppair _ (int x x'))).
     intros x x'.
@@ -1331,7 +1331,7 @@ Proof.
   - apply ii1. unfold abgrdiffrelint. apply hinhpr. split with (unel X).
     rewrite (runax X _). rewrite (runax X _). apply l.
   - apply ii2. generalize nl. clear nl. apply negf. unfold abgrdiffrelint.
-    simpl. apply (@hinhuniv _ (hProppair _ (pr2 (L _ _)))).
+    simpl. apply (@hinhuniv _ (hProppair _ (propproperty (L _ _)))).
     intro t2l. destruct t2l as [ c0a l ]. simpl. apply ((pr2 is) _ _ c0a l).
 Defined.
 

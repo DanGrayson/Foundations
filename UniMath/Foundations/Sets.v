@@ -84,7 +84,9 @@ Definition hSet@{i i'} : Type@{i'} := @total2@{i'} Type@{i} isaset@{i}.
 Definition hSetpair (X : UU) (i : isaset X) := tpair isaset X i : hSet.
 Definition pr1hSet@{i u} : hSet@{i u} -> Type@{i} := pr1.
 Coercion pr1hSet: hSet >-> Sortclass.
-Definition hSetRaise@{i j u v | i<j, j<u} (X:hSet@{i u}) : hSet@{j u} := hSetpair@{j u} (pr1 X) (pr2 X).
+
+Definition change_hSet@{i i' j j'|i < i', j < j', i <= j} : hSet@{i i'} -> hSet@{j j'}
+  := λ s, hSetpair@{j j'} (pr1 s) (pr2 s).
 
 Definition eqset {X : hSet} (x x' : X) : hProp
   := hProppair (x = x') (pr2 X x x').
@@ -98,15 +100,21 @@ Notation "a != b" := (neqset a b) (at level 70, no associativity) : set.
 
 Definition setproperty (X : hSet) := pr2 X.
 
-Definition setdirprod (X Y : hSet) : hSet.
-Proof.
-  intros. exists (X × Y).
-  apply (isofhleveldirprod 2); apply setproperty.
-Defined.
+Definition setdirprod@{i i' j j' k k'| i<i', j<j', k<k', i<=k, j<=k +}
+           (X : hSet@{i i'}) (Y : hSet@{j j'}) : hSet@{k k'}
+  := hSetpair@{k k'}
+             (dirprod@{k} X Y)
+             (isofhleveldirprod@{k k} 2 X Y (setproperty@{i i'} X) (setproperty@{j j'} Y)).
+(* if we don't annotate this definition with universe levels, then X and Y are forced to
+   be at the same level *)
 
-Definition setcoprod (X Y : hSet) : hSet.
+Definition setcoprod
+           (X : hSet) (Y : hSet) : hSet.
 Proof.
-  intros. exists (X ⨿ Y). apply isasetcoprod; apply setproperty.
+  intros. exists (coprod X Y).
+  apply isasetcoprod.
+  apply setproperty.
+  apply setproperty.
 Defined.
 
 Lemma isaset_total2_hSet (X : hSet) (Y : X -> hSet) : isaset (∑ x, Y x).
@@ -277,11 +285,11 @@ Defined.
 
 (** *** General definitions *)
 
-Definition hsubtype@{i k} (X : Type@{i}) : Type@{k} := X -> hProp.
+Definition hsubtype@{i i1} (X : Type@{i}) : Type@{i1} := X -> hProp.
 (* Note the use here of two universe levels, so we can be agnostic about whether i>=uu1. *)
 Identity Coercion id_hsubtype :  hsubtype >-> Funclass.
 
-Definition carrier {X : Type} (A : hsubtype X) := total2 A.
+Definition carrier@{i i0 i1} {X : Type@{i}} (A : hsubtype@{i i1} X) := total2@{i0} A.
 Coercion carrier : hsubtype >-> Sortclass.
 Definition carrierpair {X : UU} (A : hsubtype X) :
    ∏ t : X, A t → ∑ x : X, A x := tpair A.

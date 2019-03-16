@@ -127,7 +127,7 @@ Defined.
 
 (** *)
 
-Definition ismonoidop {X : UU} (opp : binop X) : UU := (isassoc opp) × (isunital opp).
+Definition ismonoidop@{i} {X : Type@{i}} (opp : binop@{i} X) : Type@{i} := (isassoc opp) × (isunital opp).
 
 Definition mk_ismonoidop {X : UU} {opp : binop X} (H1 : isassoc opp) (H2 : isunital opp) :
   ismonoidop opp := dirprodpair H1 H2.
@@ -383,7 +383,7 @@ Proof.
   apply (setproperty X).
 Defined.
 
-Definition isabmonoidop {X : UU} (opp : binop X) : UU := (ismonoidop opp) × (iscomm opp).
+Definition isabmonoidop@{i} {X : Type@{i}} (opp : binop@{i} X) : Type@{i} := (ismonoidop opp) × (iscomm opp).
 
 Definition mk_isabmonoidop {X : UU} {opp : binop X} (H1 : ismonoidop opp) (H2 : iscomm opp) :
   isabmonoidop opp := dirprodpair H1 H2.
@@ -1305,10 +1305,13 @@ Defined.
 
 (** **** General definitions *)
 
-Definition setwithbinop : Type := total2 (λ X : hSet, binop X).
+Definition setwithbinop@{i i'|i<i'} : Type@{i'} := total2@{i'} (λ X : hSet@{i i'}, binop@{i} X).
 
 Definition setwithbinoppair (X : hSet) (opp : binop X) : setwithbinop :=
   tpair (λ X : hSet, binop X) X opp.
+
+Definition change_setwithbinop@{i i' j j'|i < i', j < j', i <= j} : setwithbinop@{i i'} -> setwithbinop@{j j'}
+  := λ s, setwithbinoppair (change_hSet@{i i' j j'} (pr1 s)) (pr2 s).
 
 Definition pr1setwithbinop : setwithbinop -> hSet := @pr1 _ (λ X : hSet, binop X).
 Coercion pr1setwithbinop : setwithbinop >-> hSet.
@@ -1737,11 +1740,11 @@ Definition isabgropisob {X Y : setwithbinop} (f : binopiso X Y) (is : isabgrop (
 
 (** **** Subobjects *)
 
-Definition issubsetwithbinop {X : hSet} (opp : binop X) (A : hsubtype X) : UU :=
-  ∏ a a' : A, A (opp (pr1 a) (pr1 a')).
+Definition issubsetwithbinop@{i i' i0 i1} {X : hSet@{i i'}} (opp : binop@{i} X) (A : hsubtype@{i i1} X) : Type@{i0} :=
+  ∏ a a' : carrier@{i i0 i1} A, A (opp (pr1 a) (pr1 a')).
 
-Lemma isapropissubsetwithbinop {X : hSet} (opp : binop X) (A : hsubtype X) :
-  isaprop (issubsetwithbinop opp A).
+Lemma isapropissubsetwithbinop@{i i' i0 i1} {X : hSet@{i i'}} (opp : binop@{i} X) (A : hsubtype@{i i1} X) :
+  isaprop (issubsetwithbinop@{i i' i0 i1} opp A).
 Proof.
   apply impred. intro a.
   apply impred. intros a'.
@@ -2187,13 +2190,11 @@ Defined.
 
 (** **** Direct products *)
 
-Definition setwithbinopdirprod (X Y : setwithbinop) : setwithbinop.
+Definition setwithbinopdirprod@{i i' j j' k k'| i<i', j<j', k<k', i<=k, j<=k+}
+           (X : setwithbinop@{i i'}) (Y : setwithbinop@{j j'}) : setwithbinop@{k k'}.
 Proof.
   split with (setdirprod X Y). unfold binop. simpl.
-  (* ??? in 8.4-8.5-trunk the following apply generates an error message if the
-     type of xy and xy' is left as _ despite the fact that the type of goal is
-     dirprod X Y -> dirprod X Y ->.. *)
-  apply (λ xy xy' : dirprod X Y, dirprodpair (op (pr1 xy) (pr1 xy')) (op (pr2 xy) (pr2 xy'))).
+  exact (λ xy xy', dirprodpair (op (pr1 xy) (pr1 xy')) (op (pr2 xy) (pr2 xy'))).
 Defined.
 
 
