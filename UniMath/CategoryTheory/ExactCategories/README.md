@@ -37,5 +37,6 @@ Study for supporting my stay at the Institute for Advanced Study in Spring,
 2017, where I continued working on this code.
 
 I thank the Center for Advanced Study of the Norwegian Academy of Science and
-Letters, where much work on this was done, in October-November, 2018, and in
-February-March, 2019.
+Letters, for its support for this work was done as part of the project
+"Homotopy Type Theory and Univalent Foundations", October-March, 2018-19.
+See <https://cas.oslo.no/research-groups/homotopy-type-theory-and-univalent-foundations-article2083-827.html>.
