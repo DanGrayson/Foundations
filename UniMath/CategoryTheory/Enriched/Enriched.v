@@ -9,12 +9,15 @@
 
 Require Import UniMath.Foundations.PartA.
 Require Import UniMath.Foundations.Propositions.
-Require Import UniMath.CategoryTheory.Categories.
-Require Import UniMath.CategoryTheory.functor_categories.
+Require Import UniMath.CategoryTheory.Core.Categories.
+Require Import UniMath.CategoryTheory.Core.Functors.
+Require Import UniMath.CategoryTheory.Core.NaturalTransformations.
 Require Import UniMath.CategoryTheory.Monoidal.MonoidalCategories.
 Require Import UniMath.CategoryTheory.PrecategoryBinProduct.
 
 Local Open Scope cat.
+
+Section A.
 
 (** For the whole file, fix a monoidal category. *)
 Context (Mon_V : monoidal_precat).
@@ -235,3 +238,5 @@ Proof.
 
     apply enriched_functor_on_comp.
 Defined.
+
+End A.

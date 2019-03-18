@@ -2,8 +2,11 @@
  - Anthony Bordg, March-April 2017
  - Langston Barrett (@siddharthist), November-December 2017 *)
 
+Require Import UniMath.Algebra.Groups.
 Require Import UniMath.Algebra.RigsAndRings.
-Require Import UniMath.CategoryTheory.Categories.
+Require Import UniMath.CategoryTheory.Core.Categories.
+Require Import UniMath.CategoryTheory.Core.Isos.
+Require Import UniMath.CategoryTheory.Core.Univalence.
 Require Import UniMath.Algebra.Modules.
 Require Import UniMath.Algebra.Modules.Examples.
 Require Import UniMath.CategoryTheory.limits.zero.
@@ -120,9 +123,9 @@ Defined.
 (** Equivalence between isomorphisms and moduleiso in Mod R *)
 
 Lemma moduleisweq_iso {M N : ob mod_precategory} (f : iso M N) :
-  isweq (pr1modulefun (morphism_from_iso _ _ _ f)).
+  isweq (pr1modulefun (morphism_from_iso f)).
 Proof.
-   use (isweq_iso (pr1modulefun (morphism_from_iso _ _ _ f))).
+   use (isweq_iso (pr1modulefun (morphism_from_iso f))).
    - exact (pr1modulefun (inv_from_iso f)).
    - intro; set (T:= iso_inv_after_iso f).
      apply subtypeInjectivity in T.
@@ -139,9 +142,9 @@ Proof.
    intro f.
    use mk_moduleiso.
    - use weqpair.
-     + exact (pr1modulefun (morphism_from_iso _ _ _ f)).
+     + exact (pr1modulefun (morphism_from_iso f)).
      + exact (moduleisweq_iso f).
-   - exact (modulefun_ismodulefun (morphism_from_iso _ _ _ f)).
+   - exact (modulefun_ismodulefun (morphism_from_iso f)).
 Defined.
 
 Lemma moduleiso_is_iso {M N : ob mod_precategory} (f : moduleiso M N) :
@@ -235,7 +238,7 @@ Proof.
   exact (fun x => isProofIrrelevantUnit _ _).
 Defined.
 
-Lemma isZero_zero_module : isZero mod_category (zero_module R).
+Lemma isZero_zero_module : @isZero mod_category (zero_module R).
 Proof.
   exact (@mk_isZero mod_category (zero_module _)
                     iscontrfromzero_module iscontrtozero_module).

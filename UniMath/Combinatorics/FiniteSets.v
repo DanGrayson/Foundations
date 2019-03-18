@@ -14,6 +14,7 @@ This file contains the definition and main properties of finite sets. At the end
 
 Require Import UniMath.MoreFoundations.Tactics.
 Require Import UniMath.MoreFoundations.DecidablePropositions.
+Require Import UniMath.MoreFoundations.NegativePropositions.
 Require Export UniMath.Combinatorics.StandardFiniteSets .
 
 
@@ -240,6 +241,7 @@ Proof.
   - intros i. exact (pr2 (X i)).
 Defined.
 
+(* Declare Scope finset. *)
 Delimit Scope finset with finset.
 
 Notation "'∑' x .. y , P" := (FiniteSetSum (λ x,.. (FiniteSetSum (λ y, P))..))

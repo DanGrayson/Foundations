@@ -87,6 +87,7 @@ Coercion pr1hSet: hSet >-> UU.
 
 Definition eqset {X : hSet} (x x' : X) : hProp
   := hProppair (x = x') (pr2 X x x').
+(* Declare Scope set. *)
 Notation "a = b" := (eqset a b) (at level 70, no associativity) : set.
 
 Definition neqset {X : hSet} (x x' : X) : hProp
@@ -155,8 +156,6 @@ Definition hPropset : hSet := tpair _ hProp isasethProp.
 
 Definition hProp_to_hSet (P : hProp) : hSet
   := hSetpair P (isasetaprop (propproperty P)).
-
-Coercion hProp_to_hSet : hProp >-> hSet.
 
 (** *** Booleans as a set *)
 
@@ -292,6 +291,7 @@ Defined.
 Definition carrier_subset {X : hSet} (Y : hsubtype X) : hSet
   := hSetpair (∑ x, Y x) (isaset_carrier_subset X Y).
 
+(* Declare Scope subset. *)
 Notation "'∑' x .. y , P"
   := (carrier_subset (λ x,.. (carrier_subset (λ y, P))..))
   (at level 200, x binder, y binder, right associativity) : subset.
@@ -809,6 +809,7 @@ Proof.
   intros x y l m. exact (pr2 (pr2 (pr2 X)) x y l m).
 Defined.
 
+(* Declare Scope poset. *)
 Delimit Scope poset with poset.
 Notation "m ≤ n" := (posetRelation _ m n) (no associativity, at level 70) :
                       poset.
@@ -985,16 +986,6 @@ Proof.
   intros. intros x1 x2 x3 r12 r23.
   apply (negf (isr x1 x2 x3)).
   apply (toneghdisj (dirprodpair r12 r23)).
-Defined.
-
-Lemma iscotrans_to_istrans_negReln {X : UU} {R : hrel X} (NR : negReln R) :
-  isdeccotrans R -> istrans NR.
-(* uses no axioms; compare to istransnegrel *)
-Proof.
-  intros i ? ? ? nxy nyz. apply neg_to_negProp.
-  apply (negf (i x1 x2 x3)). intro c. induction c as [c|c].
-  - exact (negProp_to_neg nxy c).
-  - exact (negProp_to_neg nyz c).
 Defined.
 
 Lemma isasymmnegrel {X : UU} (R : hrel X) (isr : iscoasymm R) :
@@ -1601,10 +1592,6 @@ Lemma isinclpr1setquot {X : UU} (R : hrel X) : isincl (pr1setquot R).
 Proof.
   apply isinclpr1. intro x0. apply isapropiseqclass.
 Defined.
-
-Definition setquottouu0 {X : UU} (R : hrel X) (a : setquot R)
-  := carrier (pr1 a).
-Coercion setquottouu0 : setquot >-> Sortclass.
 
 Theorem isasetsetquot {X : UU} (R : hrel X) : isaset (setquot R).
 Proof.
@@ -2695,13 +2682,6 @@ Definition pathseqrel (X : UU) : eqrel X
 Definition pi0 (X : UU) : UU := setquot (pathshrel X).
 Definition pi0pr (X : UU) : X -> setquot (pathseqrel X)
   := setquotpr (pathseqrel X).
-
-
-
-
-
-
-
 
 (** **  Set quotients. Construction 2.
 

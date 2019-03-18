@@ -25,10 +25,10 @@ Require Import UniMath.Foundations.PartD.
 Require Import UniMath.Foundations.Propositions.
 Require Import UniMath.Foundations.Sets.
 
-Require Import UniMath.Algebra.Monoids_and_Groups.
+Require Import UniMath.Algebra.Monoids.
 
-Require Import UniMath.CategoryTheory.total2_paths.
-Require Import UniMath.CategoryTheory.Categories.
+Require Import UniMath.CategoryTheory.Core.Categories.
+Require Import UniMath.CategoryTheory.Core.Isos.
 Require Import UniMath.CategoryTheory.opp_precat.
 Require Import UniMath.CategoryTheory.Monics.
 Require Import UniMath.CategoryTheory.Epis.
@@ -168,7 +168,9 @@ Section def_abelian.
 End def_abelian.
 Arguments to_Zero [C].
 
+(* Declare Scope abelian_precat_scope. *)
 Bind Scope abelian_precat_scope with precategory.
+(* Declare Scope abelian_precat. *)
 Notation "0" := Zero : abelian_precat.
 Delimit Scope abelian_precat_scope with precategory.
 

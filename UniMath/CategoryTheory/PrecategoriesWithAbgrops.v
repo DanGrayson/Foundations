@@ -3,25 +3,25 @@ Require Import UniMath.Foundations.PartD.
 Require Import UniMath.Foundations.Propositions.
 Require Import UniMath.Foundations.Sets.
 
-Require Import UniMath.Algebra.Monoids_and_Groups.
+Require Import UniMath.Algebra.Monoids.
+Require Import UniMath.Algebra.Groups.
 
-Require Import UniMath.CategoryTheory.total2_paths.
-Require Import UniMath.CategoryTheory.Categories.
+Require Import UniMath.CategoryTheory.Core.Categories.
 Local Open Scope cat.
 Require Import UniMath.CategoryTheory.PrecategoryBinProduct.
 
 Require Import UniMath.CategoryTheory.CategoriesWithBinOps.
 Require Import UniMath.CategoryTheory.opp_precat.
-Require Import UniMath.CategoryTheory.functor_categories.
+Require Import UniMath.CategoryTheory.Core.Functors.
 
 Section def_precategory_with_abgrops.
 
   (** Definition of precategories such that homsets are abgrops. *)
   Definition categoryWithAbgropsData (PB : precategoryWithBinOps) (hs : has_homsets PB) : UU :=
-    ∏ (x y : PB), @isabgrop (hSetpair (PB⟦x,y⟧) (hs x y)) (to_binop x y).
+    ∏ (x y : PB), @isabgrop (hSetpair (PB⟦x,y⟧) (hs x y)) (@to_binop _ x y).
 
   Definition mk_categoryWithAbgropsData {PB : precategoryWithBinOps} (hs : has_homsets PB)
-             (H : ∏ (x y : PB), @isabgrop (hSetpair (PB⟦x,y⟧) (hs x y)) (to_binop x y)) :
+             (H : ∏ (x y : PB), @isabgrop (hSetpair (PB⟦x,y⟧) (hs x y)) (@to_binop _ x y)) :
     categoryWithAbgropsData PB hs := H.
 
   Definition categoryWithAbgrops : UU :=
@@ -199,6 +199,7 @@ Arguments to_inv [PA] [x] [y] _.
 Arguments inv_inv_eq [PA] [x] [y] _.
 Arguments cancel_inv [PA] [x] [y] _ _ _.
 
+(* Declare Scope abgrcat. *)
 Delimit Scope abgrcat with abgrcat.
 Notation "b <-- a" := (to_abgr a b) : abgrcat.
 Notation "a --> b" := (to_abgr a b) : abgrcat.

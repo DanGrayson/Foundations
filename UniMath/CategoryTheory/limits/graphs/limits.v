@@ -16,12 +16,16 @@ Require Import UniMath.Foundations.Propositions.
 Require Import UniMath.Foundations.Sets.
 
 Require Import UniMath.MoreFoundations.Tactics.
+Require Import UniMath.MoreFoundations.Propositions.
 
-Require Import UniMath.CategoryTheory.total2_paths.
-Require Import UniMath.CategoryTheory.Categories.
-Require Import UniMath.CategoryTheory.functor_categories.
+Require Import UniMath.CategoryTheory.Core.Categories.
+Require Import UniMath.CategoryTheory.Core.Functors.
+Require Import UniMath.CategoryTheory.Core.Isos.
+Require Import UniMath.CategoryTheory.Core.NaturalTransformations.
+Require Import UniMath.CategoryTheory.Core.Univalence.
+Require Import UniMath.CategoryTheory.Adjunctions.Core.
+Require Import UniMath.CategoryTheory.FunctorCategory.
 Require Import UniMath.CategoryTheory.limits.graphs.colimits.
-Require Import UniMath.CategoryTheory.Adjunctions.
 
 Local Open Scope cat.
 
@@ -190,7 +194,7 @@ Lemma lim_endo_is_identity {g : graph} (D : diagram g C)
   (H : ∏ u, k · limOut CC u = limOut CC u) :
   identity _ = k.
 Proof.
-use (uniqueExists _ _ (limUnivProp CC _ _)).
+use (uniqueExists (limUnivProp CC _ _)).
 - now apply (limCone CC).
 - intros v; simpl.
   unfold compose. simpl.
@@ -773,7 +777,7 @@ Lemma lim_endo_is_identity {g : graph} (D : diagram g C^op)
   (H : ∏ u, k · limOut CC u = limOut CC u) :
   identity _ = k.
 Proof.
-use (uniqueExists _ _ (limUnivProp CC _ _)).
+use (uniqueExists (limUnivProp CC _ _)).
 - now apply (limCone CC).
 - intros v; simpl.
   unfold compose. simpl.

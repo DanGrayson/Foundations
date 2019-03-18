@@ -2,7 +2,8 @@
 
 Require Import UniMath.MoreFoundations.All.
 Require Import UniMath.Algebra.RigsAndRings.
-Require Import UniMath.Algebra.Monoids_and_Groups.
+Require Import UniMath.Algebra.Groups.
+Require Import UniMath.Algebra.Monoids.
 
 (** ** Contents
 - The ring of endomorphisms of an abelian group
@@ -15,7 +16,7 @@ Require Import UniMath.Algebra.Monoids_and_Groups.
 *)
 
 Local Open Scope addmonoid_scope.
-Import UniMath.Algebra.Monoids_and_Groups.AddNotation.
+Import UniMath.Algebra.Monoids.AddNotation.
 
 (** ** The ring of endomorphisms of an abelian group *)
 
@@ -44,6 +45,7 @@ Proof.
   apply (monoidfuncomp g f).
 Defined.
 
+(* Declare Scope abgr_scope. *)
 Notation "f + g" := (ringofendabgr_op1 f g) : abgr_scope.
 
 (** The underlying set of the ring of endomorphisms of an abelian group *)
@@ -298,6 +300,7 @@ Defined.
 Definition module_mult {R : ring} (M : module R) : R -> M -> M :=
   λ r : R, λ x : M, (pr1setofendabgr (pr2module M r) x).
 
+(* Declare Scope module_scope. *)
 Notation "r * x" := (module_mult _ r x) : module_scope.
 
 Delimit Scope module_scope with module.

@@ -1323,7 +1323,11 @@ Proof.
 Defined.
 Opaque isasetbinoponhSet.
 
+(* Declare Scope addoperation_scope. *)
+Delimit Scope addoperation_scope with addoperation.
 Notation "x + y" := (op x y) : addoperation_scope.
+(* Declare Scope multoperation_scope. *)
+Delimit Scope multoperation_scope with multoperation.
 Notation "x * y" := (op x y) : multoperation_scope.
 
 (* The reverse/opposite binary operation where the arguments are flipped. *)
@@ -1426,7 +1430,7 @@ Defined.
 Opaque isasetbinopiso.
 
 Definition binopisotobinopmono (X Y : setwithbinop) :
-  binopiso X Y -> binopmono X Y := λ f, binopmonopair (pr1 f) (pr2 f).
+  binopiso X Y -> binopmono X Y := λ f, binopmonopair (weqtoincl (pr1 f)) (pr2 f).
 Coercion binopisotobinopmono : binopiso >-> binopmono.
 
 Definition binopisocomp {X Y Z : setwithbinop} (f : binopiso X Y) (g : binopiso Y Z) :
@@ -2214,6 +2218,7 @@ Definition setwithbinop1 (X : setwith2binop) : setwithbinop := setwithbinoppair 
 
 Definition setwithbinop2 (X : setwith2binop) : setwithbinop := setwithbinoppair (pr1 X) (@op2 X).
 
+(* Declare Scope twobinops_scope. *)
 Notation "x + y" := (op1 x y) : twobinops_scope.
 Notation "x * y" := (op2 x y) : twobinops_scope.
 
@@ -2332,7 +2337,7 @@ Definition pr1twobinopiso (X Y : setwith2binop) : twobinopiso X Y -> X ≃ Y := 
 Coercion pr1twobinopiso : twobinopiso >-> weq.
 
 Definition twobinopisototwobinopmono (X Y : setwith2binop) :
-  twobinopiso X Y -> twobinopmono X Y := λ f, twobinopmonopair (pr1 f) (pr2 f).
+  twobinopiso X Y -> twobinopmono X Y := λ f, twobinopmonopair (weqtoincl (pr1 f)) (pr2 f).
 Coercion twobinopisototwobinopmono : twobinopiso >-> twobinopmono.
 
 Definition twobinopisototwobinopfun {X Y : setwith2binop} (f : twobinopiso X Y) :

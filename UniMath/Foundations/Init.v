@@ -1,8 +1,11 @@
 (** Initial setup unrelated to Univalent Foundations *)
 
-Require Export Coq.Init.Logic.  (* this fixes the advanced forms of the 'rewrite' tactic, but we want to eliminate it eventually *)
+Require Export Coq.Init.Logic.
+(* this fixes the advanced forms of the 'rewrite' tactic, but we want to eliminate it eventually *)
+(* Unfortunately, it also defines some notations, which we need to override later, hence the necessity to suppress such warnings. *)
 
-Require Export Coq.Init.Notations. (* get the standard Coq reserved notations *)
+Require Export Coq.Init.Notations.
+(* get the standard Coq reserved notations *)
 
 (** Notations *)
 
@@ -80,6 +83,8 @@ Reserved Notation "! p " (at level 50, left associativity).
 Reserved Notation "p #' x" (right associativity, at level 65, only parsing).
 
 Reserved Notation "C '^op'" (at level 3, format "C ^op").
+
+Reserved Notation "q '^-1'" (at level 10).
 
 Reserved Notation "a <-- b" (at level 55).
 

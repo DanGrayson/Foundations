@@ -2,16 +2,21 @@
 
 Require Import UniMath.Foundations.Sets.
 Require Import UniMath.MoreFoundations.PartA.
-Require Import UniMath.CategoryTheory.Categories.
-Require Import UniMath.CategoryTheory.functor_categories.
+Require Import UniMath.CategoryTheory.Core.Categories.
+Require Import UniMath.CategoryTheory.Core.Isos.
+Require Import UniMath.CategoryTheory.Core.NaturalTransformations.
+Require Import UniMath.CategoryTheory.Core.Univalence. (* only coercions *)
+Require Import UniMath.CategoryTheory.Core.Functors.
 Require Import UniMath.CategoryTheory.categories.HSET.Core.
 Require Import UniMath.CategoryTheory.categories.HSET.MonoEpiIso.
 Require Import UniMath.CategoryTheory.categories.HSET.Univalence.
 Require Import UniMath.CategoryTheory.limits.pullbacks.
-Require Import UniMath.CategoryTheory.Adjunctions.
-Require Import UniMath.CategoryTheory.equivalences.
+Require Import UniMath.CategoryTheory.Adjunctions.Core.
+Require Import UniMath.CategoryTheory.Equivalences.Core.
+Require Import UniMath.CategoryTheory.FunctorCategory.
 Require Import UniMath.CategoryTheory.opp_precat.
 Require Import UniMath.CategoryTheory.Presheaf.
+Local Open Scope cat.
 
 Require Import UniMath.CategoryTheory.DisplayedCats.Auxiliary.
 Require Import UniMath.CategoryTheory.DisplayedCats.Core.
@@ -304,7 +309,7 @@ Proof.
   { intros ff. repeat (apply impred; intro).
     apply isapropiscontr. }
   etrans.
-    use (@functtransportf_2 (D c') _ _ (λ x, pr1)).
+  { exact (! transport_map (λ x:D c', pr1) _ _). }
   cbn. etrans. apply transportf_precompose_disp.
   rewrite idtoiso_isotoid_disp.
   use (pathscomp0 (maponpaths _ _) (transportfbinv _ _ _)).
@@ -330,19 +335,6 @@ Proof.
 Defined.
 
 End Fibrations.
-
-(** a proof principle for use with discrete fibrations *)
-(** TODO: upstream *)
-Lemma eq_exists_unique (A : UU) (B : A → UU) (H : iscontr (∑ a : A, B a))
-  : ∏ a, B a → a = pr1 (iscontrpr1 H).
-Proof.
-  intros a b.
-  assert (g : ((a,,b) : total2 B)
-                =
-              ( (pr1 (iscontrpr1 H),, pr2 (iscontrpr1 H)) : total2 B)).
-  { etrans. apply (pr2 H). reflexivity. }
-  apply (maponpaths pr1 g).
-Defined.
 
 Section Discrete_Fibrations.
 
@@ -534,12 +526,12 @@ Proof.
   split.
   + intro c; cbn.
     apply funextsec; intro x. simpl.
-    apply pathsinv0. apply eq_exists_unique.
+    apply pathsinv0. apply path_to_ctr.
       apply id_disp.
   + intros c c' c'' f g. cbn in *.
     apply funextsec; intro x.
     apply pathsinv0.
-    apply eq_exists_unique.
+    apply path_to_ctr.
     eapply comp_disp.
     * apply (pr2 (iscontrpr1 (unique_lift g _))).
     * apply (pr2 (iscontrpr1 (unique_lift f _ ))).
@@ -560,7 +552,7 @@ Proof.
   - abstract (
         intros x y f; cbn in *;
         apply funextsec; intro d;
-        apply eq_exists_unique;
+        apply path_to_ctr;
         apply #a;
         apply (pr2 (iscontrpr1 (unique_lift f _ )))
       ).

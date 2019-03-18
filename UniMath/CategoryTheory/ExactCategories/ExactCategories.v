@@ -13,6 +13,18 @@
  *)
 
 Require Export UniMath.Foundations.All.
+Require Export UniMath.MoreFoundations.Notations.
+Require Export UniMath.MoreFoundations.PartA.
+Require Export UniMath.MoreFoundations.Propositions.
+Require Export UniMath.Algebra.BinaryOperations.
+Require Export UniMath.Algebra.Monoids.
+Require Import UniMath.Algebra.Groups.
+
+Require Export UniMath.CategoryTheory.Core.Categories.
+Require Import UniMath.CategoryTheory.Core.Isos.
+Require Export UniMath.CategoryTheory.Core.Functors.
+Require Export UniMath.CategoryTheory.Core.NaturalTransformations.
+
 Require Export UniMath.CategoryTheory.Monics.
 Require Export UniMath.CategoryTheory.Epis.
 Require Export UniMath.CategoryTheory.limits.zero.
@@ -25,40 +37,19 @@ Require Export UniMath.CategoryTheory.limits.pushouts.
 Require Export UniMath.CategoryTheory.limits.BinDirectSums.
 Require Export UniMath.CategoryTheory.limits.Opp.
 Require Export UniMath.CategoryTheory.CategoriesWithBinOps.
-Require Export UniMath.CategoryTheory.Categories.
 Require Export UniMath.CategoryTheory.opp_precat.
 Require Export UniMath.Algebra.BinaryOperations.
-Require Export UniMath.Algebra.Monoids_and_Groups.
+Require Export UniMath.Algebra.Groups.
 Require Export UniMath.CategoryTheory.PrecategoriesWithAbgrops.
 Require Export UniMath.CategoryTheory.PreAdditive.
 Require Export UniMath.CategoryTheory.Morphisms.
 Require Export UniMath.CategoryTheory.Additive.
-Require Export UniMath.CategoryTheory.functor_categories.
 Require Export UniMath.CategoryTheory.Subcategory.Full.
 Require Export UniMath.MoreFoundations.Notations.
 Require Export UniMath.MoreFoundations.PartA.
 Require Export UniMath.MoreFoundations.Propositions.
 
-
-(* some of these might be appropriate upstream: *)
-Local Arguments isZero {_} _.
-Local Arguments BinDirectSumOb {_ _ _}.
-Local Arguments to_binop {_ _ _}.
 Local Arguments grinv {_}.
-Local Arguments BinDirectSum {_}.
-Local Arguments to_Pr1 {_ _ _} _.
-Local Arguments to_Pr2 {_ _ _} _.
-Local Arguments to_In1 {_ _ _} _.
-Local Arguments to_In2 {_ _ _} _.
-Local Arguments to_BinOpId {_ _ _ _ _ _ _ _}.
-Local Arguments to_IdIn1 {_ _ _ _ _ _ _ _}.
-Local Arguments to_IdIn2 {_ _ _ _ _ _ _ _}.
-Local Arguments to_Unel1 {_ _ _ _ _ _ _ _}.
-Local Arguments to_Unel2 {_ _ _ _ _ _ _ _}.
-Local Arguments MorphismPair : clear implicits.
-Local Arguments morphism_from_iso {_ _ _}.
-Local Arguments ToBinDirectSum {_ _ _} _ {_}.
-Local Arguments isBinDirectSum {_ _ _ _}.
 
 Local Open Scope logic.
 Local Open Scope cat.
@@ -488,7 +479,7 @@ Section PreAdditive.
       + cbn. intros T f g e. exact (to_isBinCoproduct M S T f g).
   Defined.
   Definition directSumMap {M:PreAdditive} {a b c d:M} (ac : BinDirectSum a c) (bd : BinDirectSum b d) (f : a --> b) (g : c --> d) : ac --> bd
-    := BinDirectSumIndAr M f g _ _.
+    := BinDirectSumIndAr f g _ _.
   Lemma directSumMapEqPr1 {M:PreAdditive} {a b c d:M} {ac : BinDirectSum a c} {bd : BinDirectSum b d} {f : a --> b} {g : c --> d} :
     directSumMap ac bd f g · π₁ = π₁ · f.
   Proof.
@@ -982,6 +973,7 @@ Section theDefinition.
   Defined.
 End theDefinition.
 
+(* Declare Scope excat. *)
 Delimit Scope excat with excat.
 Local Open Scope excat.
 Notation "A ↣ B" := (AdmissibleMonomorphism A B) : excat.

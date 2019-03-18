@@ -182,6 +182,7 @@ Ltac unwrap_OrderedSet X :=
 Local Definition underlyingPoset (X:OrderedSet) : Poset := pr1 X.
 Coercion underlyingPoset : OrderedSet >-> Poset.
 
+(* Declare Scope oset. *)
 Delimit Scope oset with oset.
 
 Definition Poset_lessthan {X:Poset} (x y:X) := ∥ x ≤ y  ×  x != y ∥.
@@ -341,6 +342,7 @@ Definition FiniteOrderedSetDecidableLessThan (X:FiniteOrderedSet) : DecidableRel
   - apply isfinite_isdec_lessthan. apply finitenessProperty.
 Defined.
 
+(* Declare Scope foset. *)
 Notation "x ≐ y" := (FiniteOrderedSetDecidableEquality _ x y) (at level 70, no associativity) : foset. (* in agda mode, \doteq *)
 Notation "x ≠ y" := (FiniteOrderedSetDecidableInequality _ x y) (at level 70, no associativity) : foset. (* in agda mode, \ne *)
 Notation " x ≤ y " := ( FiniteOrderedSetDecidableOrdering _ x y ) (at level 70, no associativity) : foset. (* in agda mode, \le *)
@@ -602,7 +604,7 @@ Abort.
 (* Here we abstract from Chapter 11 of the HoTT book just the order
    properties of the real numbers, as constructed there. *)
 
-Open Scope logic.
+Local Open Scope logic.
 
 Definition isLattice {X:hSet} (le:hrel X) (min max:binop X) :=
   ∑ po : isPartialOrder le,

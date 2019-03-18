@@ -15,15 +15,17 @@ Local Open Scope set.
 Local Open Scope subtype.
 Local Open Scope poset.
 
+(* Declare Scope tosubset. *)
 Delimit Scope tosubset with tosubset. (* subsets equipped with a well ordering *)
 Local Open Scope tosubset.
 
+(* Declare Scope wosubset. *)
 Delimit Scope wosubset with wosubset. (* subsets equipped with a well ordering *)
 Local Open Scope wosubset.
 
 (** ** Totally ordered subsets of a set *)
 
-Definition TotalOrdering (S:hSet) : hSet := ∑ (R : hrel_set S), isTotalOrder R.
+Definition TotalOrdering (S:hSet) : hSet := ∑ (R : hrel_set S), hProp_to_hSet (isTotalOrder R).
 
 Definition TOSubset_set (X:hSet) : hSet := ∑ (S:subtype_set X), TotalOrdering (carrier_set S).
 
@@ -334,7 +336,7 @@ Definition hasSmallest {X : UU} (R : hrel X) : hProp
 
 Definition isWellOrder {X : hSet} (R : hrel X) : hProp := isTotalOrder R ∧ hasSmallest R.
 
-Definition WellOrdering (S:hSet) : hSet := ∑ (R : hrel_set S), isWellOrder R.
+Definition WellOrdering (S:hSet) : hSet := ∑ (R : hrel_set S), hProp_to_hSet (isWellOrder R).
 
 Definition WOSubset_set (X:hSet) : hSet := ∑ (S:subtype_set X), WellOrdering (carrier_set S).
 
@@ -918,7 +920,7 @@ Proof.
     exact (chain_union_rel_initial Schain i (s,,Ss) (t,,Tt)).
 Defined.
 
-Definition proper_subtypes_set (X:UU) : hSet := ∑ S : subtype_set X, ∃ x, ¬ (S x).
+Definition proper_subtypes_set (X:UU) : hSet := ∑ S : subtype_set X, hProp_to_hSet (∃ x, ¬ (S x)).
 
 (* the interval up to c, as a proper subset of X *)
 Definition upto' {X:hSet} {C:WOSubset X} (c:C) : proper_subtypes_set X.
@@ -932,13 +934,13 @@ Defined.
 
 (** A choice function provides an element not in each proper subset.  *)
 
-Definition choice_fun (X:hSet) := ∏ S : proper_subtypes_set X, ∑ x : X, ¬ pr1 S x.
+Definition choice_fun (X:hSet) : hSet := ∏ S : proper_subtypes_set X, ∑ x : X, hProp_to_hSet (¬ pr1 S x).
 
 Lemma AC_to_choice_fun (X:hSet) : AxiomOfChoice ⇒ ∥ choice_fun X ∥.
 Proof.
   intros ac.
   exact (squash_to_hProp (ac (proper_subtypes_set X)
-                             (λ S, ∑ x, ¬ (pr1 S x)) pr2)
+                             (λ S, ∑ x, hProp_to_hSet (¬ (pr1 S x))) pr2)
                          hinhpr).
 Defined.
 
@@ -1269,9 +1271,10 @@ Definition WellOrderedSet_to_hSet : WellOrderedSet -> hSet := pr1.
 
 Coercion WellOrderedSet_to_hSet : WellOrderedSet >-> hSet.
 
+(* Declare Scope woset. *)
 Delimit Scope woset with woset.
 
-Open Scope woset.
+Local Open Scope woset.
 
 Definition WOrel (X:WellOrderedSet) : hrel X := pr12 X.
 
@@ -1283,7 +1286,7 @@ Notation "x < y" := (WOlt x y) : woset.
 
 Lemma isaprop_theSmallest {X : hSet}
       (R : hrel X) (total : isTotalOrder R) (S : hsubtype X) :
-  isaprop (∑ s:X, S s ∧ ∀ t:X, S t ⇒ R s t).
+  isaprop (∑ s:X, hProp_to_hSet (S s ∧ ∀ t:X, S t ⇒ R s t)).
 Proof.
   induction total as [[po anti] tot].
   apply invproofirrelevance; intros s t. apply subtypeEquality_prop.
@@ -1325,7 +1328,7 @@ Qed.
 (** Equivalent definition (assuming decidable equality) of the WOlt relation *)
 Definition WOlt' (X : WellOrderedSet) (x y : X) : hProp.
 Proof.
-exists ((x ≤ y) × (x != y)).
+exists ((x ≤ y) × (x != y))%type.
 abstract (now apply isapropdirprod; [ apply propproperty | apply isapropneg ]).
 Defined.
 
@@ -1362,7 +1365,7 @@ Qed.
 
 Definition theSmallest {X : WellOrderedSet} (S : hsubtype X) : hProp
   := (∃ s, S s) ⇒ hProppair
-                (∑ s:X, S s ∧ ∀ t:X, S t ⇒ WOrel X s t)
+                (∑ s:X, S s ∧ ∀ t:X, S t ⇒ WOrel X s t)%type
                 (isaprop_theSmallest _ (WO_isTotalOrder X) S).
 
 (** actually get the smallest element: *)
@@ -1498,7 +1501,7 @@ Proof.
 
 Abort.
 
-Lemma bigSet (X:Type) : ∑ Y:hSet, ∏ f : Y -> X, ¬ isincl f.
+Lemma bigSet (X:Type) : (∑ Y:hSet, ∏ f : Y -> X, ¬ isincl f)%type.
 Proof.
   (*
      This lemma is useful in arguments by contradiction, where one uses

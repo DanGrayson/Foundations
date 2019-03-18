@@ -18,8 +18,14 @@
 Require Import UniMath.Foundations.PartA.
 Require Import UniMath.Foundations.PartD.
 Require Import UniMath.Foundations.Propositions.
-Require Import UniMath.CategoryTheory.Categories.
-Require Import UniMath.CategoryTheory.functor_categories.
+
+Require Import UniMath.CategoryTheory.Core.Categories.
+Require Import UniMath.CategoryTheory.Core.Isos.
+Require Import UniMath.CategoryTheory.Core.NaturalTransformations.
+Require Import UniMath.CategoryTheory.Core.Setcategories.
+Require Import UniMath.CategoryTheory.Core.Univalence.
+Require Import UniMath.CategoryTheory.FunctorCategory.
+Require Import UniMath.CategoryTheory.Core.Functors.
 Require Import UniMath.CategoryTheory.opp_precat.
 
 Local Open Scope cat.
@@ -83,7 +89,7 @@ Definition is_univalent_pregroupoid (pgpd : pregroupoid) :=
 
 (** The morphism part of an isomorphism is an inclusion. *)
 Lemma morphism_from_iso_is_incl (C : category) (a b : ob C) :
-  isincl (morphism_from_iso C a b).
+  isincl (@morphism_from_iso C a b).
 Proof.
   intro g.
   apply (isofhlevelweqf _ (ezweqpr1 _ _)).
@@ -99,7 +105,7 @@ Proof.
   intros ig.
   split.
   - intros a b.
-    use (isofhlevelff 0 idtoiso (morphism_from_iso _ _ _)).
+    use (isofhlevelff 0 idtoiso morphism_from_iso).
     + use (isweqhomot (idtomor _ _)).
       * intro p; destruct p; reflexivity.
       * apply ig.

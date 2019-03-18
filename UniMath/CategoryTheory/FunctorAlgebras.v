@@ -26,8 +26,10 @@ Require Import UniMath.Foundations.Propositions.
 Require Import UniMath.Foundations.Sets.
 Require Import UniMath.MoreFoundations.Tactics.
 
-Require Import UniMath.CategoryTheory.Categories.
-Require Import UniMath.CategoryTheory.functor_categories.
+Require Import UniMath.CategoryTheory.Core.Categories.
+Require Import UniMath.CategoryTheory.Core.Isos.
+Require Import UniMath.CategoryTheory.Core.Univalence.
+Require Import UniMath.CategoryTheory.Core.Functors.
 Require Import UniMath.CategoryTheory.whiskering.
 Require Import UniMath.CategoryTheory.limits.initial.
 
@@ -346,7 +348,7 @@ Proof.
   apply idpath.
 Qed.
 
-Corollary idtoiso_FunctorAlg_commutes (hsC: has_homsets C)(X Y: FunctorAlg hsC)(e: X = Y): mor_from_algebra_mor _ _ (morphism_from_iso _ _ _ (idtoiso e)) = idtoiso (maponpaths alg_carrier e).
+Corollary idtoiso_FunctorAlg_commutes (hsC: has_homsets C)(X Y: FunctorAlg hsC)(e: X = Y): mor_from_algebra_mor _ _ (morphism_from_iso (idtoiso e)) = idtoiso (maponpaths alg_carrier e).
 Proof.
   unfold morphism_from_iso.
   do 2 rewrite eq_idtoiso_idtomor.

@@ -2,12 +2,14 @@
 (** Catherine Lelay. Sep. 2015 *)
 
 Require Import UniMath.MoreFoundations.Tactics.
+Require Import UniMath.MoreFoundations.Notations.
 
 Require Import UniMath.RealNumbers.Sets.
 Require Export UniMath.Algebra.ConstructiveStructures.
 Require Import UniMath.RealNumbers.Prelim.
 Require Import UniMath.RealNumbers.NonnegativeRationals.
 
+(* Declare Scope Dcuts_scope. *)
 Delimit Scope Dcuts_scope with Dcuts.
 Local Open Scope NRat_scope.
 Local Open Scope Dcuts_scope.
@@ -89,9 +91,10 @@ Proof.
 Qed.
 Definition Dcuts_set : hSet := hSetpair _ isaset_Dcuts.
 Definition pr1Dcuts (x : Dcuts_set) : hsubtype NonnegativeRationals := pr1 x.
+(* Declare Scope DC_scope. *)
 Notation "x ∈ X" := (pr1Dcuts X x) (at level 70, no associativity) : DC_scope.
 
-Open Scope DC_scope.
+Local Open Scope DC_scope.
 
 Lemma is_Dcuts_bot (X : Dcuts_set) : Dcuts_def_bot (pr1 X).
 Proof.
@@ -194,8 +197,8 @@ Proof.
   { apply ispositive_minusNonnegativeRationals.
     exact (pr2 (pr2 r')). }
   generalize (is_Dcuts_corr y _ Hr0) ; apply hinhuniv ; apply sumofmaps ; [intros Yq | intros q].
-  - apply Utilities.squash_element ;
-    right ; apply Utilities.squash_element.
+  - apply squash_element ;
+    right ; apply squash_element.
     exists (pr1 r') ; split.
     + intro H0 ; apply Yq.
       apply is_Dcuts_bot with (pr1 r').
@@ -4446,8 +4449,9 @@ Global Opaque Dcuts_zero
               Dcuts_half.
 Global Opaque Dcuts_lim_cauchy_seq.
 
+(* Declare Scope NR_scope. *)
 Delimit Scope NR_scope with NR.
-Open Scope NR_scope.
+Local Open Scope NR_scope.
 
 Definition NonnegativeReals : ConstructiveCommutativeDivisionRig
   := Dcuts_ConstructiveCommutativeDivisionRig.

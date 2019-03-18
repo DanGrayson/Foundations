@@ -25,13 +25,16 @@ Require Import UniMath.Foundations.Sets.
 Require Import UniMath.MoreFoundations.Tactics.
 Require Import UniMath.MoreFoundations.Univalence.
 
-Require Import UniMath.CategoryTheory.Categories.
-Require Import UniMath.CategoryTheory.functor_categories.
+Require Import UniMath.CategoryTheory.Core.Categories.
+Require Import UniMath.CategoryTheory.Core.Isos.
+Require Import UniMath.CategoryTheory.Core.Univalence.
+Require Import UniMath.CategoryTheory.Core.Functors.
+Require Import UniMath.CategoryTheory.FunctorCategory.
 Require Import UniMath.CategoryTheory.whiskering.
 
 Local Open Scope cat.
 
-Local Notation "FF ^-1" := (fully_faithful_inv_hom FF _ _ ) (at level 20).
+Local Notation "FF ^-1" := (fully_faithful_inv_hom FF _ _ ).
 Local Notation "F '^-i'" := (iso_from_fully_faithful_reflection F) (at level 20).
 Local Notation "G 'O' F" := (functor_compose _ _ _ F G) (at level 25).
 

@@ -13,7 +13,7 @@ Require Import UniMath.Foundations.NaturalNumbers.
 Require Import UniMath.Algebra.RigsAndRings.
 Require Import UniMath.Algebra.Domains_and_Fields.
 Require Import UniMath.NumberSystems.Integers.
-Require Import UniMath.Algebra.Monoids_and_Groups.
+Require Import UniMath.Algebra.Monoids.
 
 Unset Kernel Term Sharing. (** for quicker proof-checking, approx. by factor 25 *)
 
@@ -344,7 +344,7 @@ Defined.
 
 (** * II. Lemmas on rings *)
 
-Open Scope ring_scope.
+Local Open Scope ring_scope.
 
 Lemma ringminusdistr { X : commring } ( a b c : X ) :
   a * (b - c) = a * b - a * c.
@@ -441,7 +441,7 @@ Close Scope ring_scope.
 
 (** * III. Lemmas on hz *)
 
-Open Scope hz_scope.
+Local Open Scope hz_scope.
 
 Lemma hzaddinvplus ( n m : hz ) : - ( n + m ) = ( - n ) + ( - m ).
 Proof.
@@ -796,7 +796,7 @@ Defined.
 
 (** * V. Apartness relations on rings *)
 
-Open Scope ring_scope.
+Local Open Scope ring_scope.
 
 Definition acommring := ∑ (X : commring) (R : apart X),
   isbinopapart R ( @op1 X ) × isbinopapart R ( @op2 X ).

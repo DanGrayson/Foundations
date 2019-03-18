@@ -1,6 +1,7 @@
 (** * A library about decidable Real Numbers *)
 (** Author: Catherine LELAY. Oct 2015 - *)
 
+Require Export UniMath.Algebra.Groups.
 Require Import UniMath.Foundations.Preamble.
 Require Import UniMath.MoreFoundations.Tactics.
 
@@ -9,7 +10,7 @@ Require Import UniMath.RealNumbers.Sets.
 Require Import UniMath.RealNumbers.NonnegativeRationals.
 Require Export UniMath.RealNumbers.NonnegativeReals.
 
-Open Scope NR_scope.
+Local Open Scope NR_scope.
 
 (** ** Definition *)
 
@@ -1378,8 +1379,9 @@ Definition Rabs : Reals → NonnegativeReals := hr_abs.
 Definition NRNRtoR : NonnegativeReals → NonnegativeReals → Reals := λ (x y : NonnegativeReals), NR_to_hr (x,,y).
 Definition RtoNRNR : Reals → NonnegativeReals × NonnegativeReals := λ x : Reals, (hr_to_NR x).
 
+(* Declare Scope R_scope. *)
 Delimit Scope R_scope with R.
-Open Scope R_scope.
+Local Open Scope R_scope.
 
 Infix "≠" := Rap : R_scope.
 Infix "<" := Rlt : R_scope.

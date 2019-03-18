@@ -1,5 +1,8 @@
+Dcpo.v
 BinaryOperations.v
-Monoids_and_Groups.v
+Monoids.v
+Groups.v
+GroupAction.v
 RigsAndRings.v
 RigsAndRings/Ideals.v
 Domains_and_Fields.v

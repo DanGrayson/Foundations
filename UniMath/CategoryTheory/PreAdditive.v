@@ -12,11 +12,11 @@ Require Import UniMath.Foundations.Propositions.
 Require Import UniMath.Foundations.Sets.
 
 Require Import UniMath.Algebra.BinaryOperations.
-Require Import UniMath.Algebra.Monoids_and_Groups.
+Require Import UniMath.Algebra.Monoids.
+Require Import UniMath.Algebra.Groups.
 
-Require Import UniMath.CategoryTheory.total2_paths.
-Require Import UniMath.CategoryTheory.Categories.
-Require Import UniMath.CategoryTheory.functor_categories.
+Require Import UniMath.CategoryTheory.Core.Categories.
+Require Import UniMath.CategoryTheory.Core.Functors.
 Local Open Scope cat.
 Require Import UniMath.CategoryTheory.Monics.
 Require Import UniMath.CategoryTheory.Epis.
@@ -29,7 +29,7 @@ Require Import UniMath.CategoryTheory.limits.zero.
 Require Import UniMath.CategoryTheory.limits.kernels.
 Require Import UniMath.CategoryTheory.limits.cokernels.
 Import AddNotation.
-Open Scope addmonoid_scope.
+Local Open Scope addmonoid_scope.
 
 (** * Definition of a PreAdditive precategory
    A preadditive precategory is a precategory such that the sets of morphisms are abelian groups and
@@ -1001,7 +1001,7 @@ Section preadditive_quotient.
 
   Variable Z : Zero PA.
 
-  Lemma Quotcategory_isZero : isZero Quotcategory Z.
+  Lemma Quotcategory_isZero : isZero (C:=Quotcategory) Z.
   Proof.
     use mk_isZero.
     - intros a.

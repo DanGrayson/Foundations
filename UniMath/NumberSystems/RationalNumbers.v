@@ -15,13 +15,11 @@ Unset Kernel Term Sharing.
 
 (** Imports *)
 
+Require Import UniMath.Algebra.Monoids.
+Require Import UniMath.Algebra.Groups.
 Require Export UniMath.NumberSystems.Integers .
 
 Opaque hz .
-
-(** Upstream *)
-
-
 
 
 (** ** The commutative ring [ hq ] of integres *)
@@ -44,6 +42,7 @@ Definition hqzero : hq := unel hqaddabgr .
 Definition hqmult : hq -> hq -> hq := @op2 hq .
 Definition hqone : hq := unel hqmultabmonoid .
 
+(* Declare Scope hq_scope. *)
 Bind Scope hq_scope with hq .
 Notation " x + y " := ( hqplus x y ) : hq_scope .
 Notation " 0 " := hqzero : hq_scope .
@@ -102,10 +101,10 @@ Lemma hqrminus  ( x : hq ) : paths ( x - x ) 0 .
 Proof . apply ( ringrinvax1 hq x ) . Defined .
 
 Lemma isinclhqplusr ( n : hq ) : isincl ( λ m : hq, m + n ) .
-Proof. apply ( pr2 ( weqtoincl _ _ ( weqrmultingr hqaddabgr n ) ) ) . Defined.
+Proof. apply ( pr2 ( weqtoincl ( weqrmultingr hqaddabgr n ) ) ) . Defined.
 
 Lemma isinclhqplusl ( n : hq ) : isincl ( λ m : hq, n + m ) .
-Proof.  intro.  apply ( pr2 ( weqtoincl _ _ ( weqlmultingr hqaddabgr n ) ) ) . Defined .
+Proof.  intro.  apply ( pr2 ( weqtoincl ( weqlmultingr hqaddabgr n ) ) ) . Defined .
 
 
 Lemma hqpluslcan ( a b c : hq ) ( is : paths ( c + a ) ( c + b ) ) : a = b .

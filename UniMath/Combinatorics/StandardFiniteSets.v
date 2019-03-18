@@ -12,6 +12,7 @@ This file contains main constructions related to the standard finite sets define
 Require Export UniMath.Foundations.NaturalNumbers.
 Require Import UniMath.MoreFoundations.Tactics.
 Require Import UniMath.MoreFoundations.DecidablePropositions.
+Require Import UniMath.MoreFoundations.NegativePropositions.
 
 (** ** Standard finite sets [ stn ]. *)
 
@@ -32,6 +33,7 @@ Defined.
 Notation " 'stnpr' j " := (j,,idpath _) ( at level 70 ).
 Notation " 'stnel' ( i , j ) " := ( (j,,idpath _) : stn i ) ( at level 70 ).
 
+(* Declare Scope stn. *)
 Delimit Scope stn with stn.
 
 Notation "⟦ n ⟧" := (stn n) : stn.
@@ -2281,5 +2283,5 @@ Defined.
 Lemma stn_ord_bij {n : nat} (f : ⟦ n ⟧ ≃ ⟦ n ⟧) :
   (∏ (i j: ⟦n⟧ ), i ≤ j → f i ≤ f j) -> ∏ i, f i = i.
 Proof.
-  apply (stn_ord_inj (weqtoincl _ _ f)).
+  apply (stn_ord_inj (weqtoincl f)).
 Defined.
