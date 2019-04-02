@@ -22,6 +22,15 @@ structures.  That is the approach of Mac Lane in sections 18, 19, and 21 of
 groups](http://projecteuclid.org/DPubS/Repository/1.0/Disseminate?view=body&id=pdf_1&handle=euclid.bams/1183515045),
 Bull. Amer. Math. Soc., Volume 56, Number 6 (1950), 485-516.
 
+Note: when we show that an exact category can be embedded as a full subcategory
+of an abelian category, closed under extensions, that abelian category is
+automatically univalent, since it is a functor category to the (univalent)
+category of abelian groups, so if we take the essential image of the embedding
+(consisting of the representable functors) we get a new exact category that is
+univalent and equivalent to the old one.  Of course, we could have just done
+that with the category of representable functors to sets.  Is there any
+advantage to the additional point of view?
+
 Acknowledgments
 ===============
 
